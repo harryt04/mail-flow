@@ -18,7 +18,7 @@ voice pipeline's client-side hooks call.
 - `src/hooks/useVoiceSession.ts` → `POST /api/stt/token`
 - `src/hooks/useAudioPlayback.ts` → `POST /api/tts`
 
-Both hooks are consumed by `src/app/listen/ListenClient.tsx` — see [docs/hooks.md](../../hooks.md) and [docs/app/listen.md](../listen.md).
+Both hooks are consumed by `src/app/(authenticated)/listen/ListenClient.tsx` — see [docs/hooks.md](../../hooks.md) and [docs/app/listen.md](../listen.md).
 
 ## Where to add new code here
 Provider swaps or synthesis-option changes belong in `src/lib/voice/{stt,tts}.ts`, not these

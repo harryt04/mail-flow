@@ -17,7 +17,7 @@ listening, speaking, thinking, or confirming a command. Rendered entirely from
 - `src/components/ui/` — icons (`IconMic`, `IconCheck`, `IconAlert`, `IconDots`, `IconSkip`, `IconArchive`, `IconReply`, `IconSnooze`, `IconFolder`, `IconPlay`) and `IconButton`.
 
 ## Depended on by
-- `src/app/listen/ListenClient.tsx` renders `StatusIndicator` (with `state={uiState}`) and `ManualControls` directly — see [docs/app/listen.md](../app/listen.md).
+- `src/app/(authenticated)/listen/ListenClient.tsx` renders `StatusIndicator` (with `state={uiState}`) and `ManualControls` directly — see [docs/app/listen.md](../app/listen.md).
 - `src/components/landing/LandingHero.tsx` renders `Waveform` standalone, decoratively.
 
 ## Conventions

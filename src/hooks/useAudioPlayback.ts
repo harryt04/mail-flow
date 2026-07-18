@@ -9,6 +9,10 @@ export function useAudioPlayback() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const rateRef = useRef(1)
   const [status, setStatus] = useState<PlaybackStatus>('idle')
+  // Lets stop() settle the pending speak() promise immediately (pause() fires neither
+  // 'ended' nor 'error'), so an interrupted speak() resolves right away instead of
+  // dangling until the caller's generation check would have ignored it anyway.
+  const pendingResolveRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     const audio = new Audio()
@@ -51,6 +55,7 @@ export function useAudioPlayback() {
           const cleanup = () => {
             audio.removeEventListener('ended', onEnded)
             audio.removeEventListener('error', onError)
+            pendingResolveRef.current = null
           }
           const onEnded = () => {
             cleanup()
@@ -59,6 +64,10 @@ export function useAudioPlayback() {
           const onError = () => {
             cleanup()
             reject(new Error('Audio playback failed'))
+          }
+          pendingResolveRef.current = () => {
+            cleanup()
+            resolve()
           }
           audio.addEventListener('ended', onEnded)
           audio.addEventListener('error', onError)
@@ -84,6 +93,10 @@ export function useAudioPlayback() {
       audio.pause()
       audio.currentTime = 0
     }
+    // Settle any pending speak() promise now — pause() alone never fires 'ended'/'error',
+    // so without this the caller's await would hang until the audio element happened to
+    // emit one of those events for an unrelated reason.
+    pendingResolveRef.current?.()
     setStatus('idle')
   }, [])
 

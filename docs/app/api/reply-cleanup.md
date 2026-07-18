@@ -14,7 +14,7 @@ before the user confirms and sends via `/api/actions/reply`.
 - `src/lib/voice/replyCleanup` (`cleanupReply`, Claude via `@anthropic-ai/sdk`) — see [docs/lib/voice.md](../../lib/voice.md)
 
 ## Depended on by
-- `src/app/listen/ListenClient.tsx`'s `runDictationFlow` — the reply sub-flow is
+- `src/app/(authenticated)/listen/ListenClient.tsx`'s `runDictationFlow` — the reply sub-flow is
   dictate → this endpoint (`cleaning` stage) → user confirms → `/api/actions/reply` sends it.
   See [docs/app/listen.md](../listen.md) and the reply-by-dictation flow in
   [docs/ARCHITECTURE.md](../../ARCHITECTURE.md).

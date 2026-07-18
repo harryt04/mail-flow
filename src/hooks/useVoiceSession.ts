@@ -96,12 +96,32 @@ export function useVoiceSession() {
         setState('connecting')
 
         const tokenRes = await fetch('/api/stt/token', { method: 'POST' })
-        if (!tokenRes.ok) throw new Error('Could not start listening')
+        if (!tokenRes.ok) {
+          const payload = await tokenRes.json().catch(() => ({}))
+          console.error('STT token request failed:', payload)
+          throw new Error(
+            "Couldn't reach the voice service — use the buttons below.",
+          )
+        }
         const { key } = (await tokenRes.json()) as { key: string }
 
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        } catch (err) {
+          console.error('getUserMedia failed:', err)
+          throw new Error(
+            'Microphone access is blocked — check your browser permissions.',
+          )
+        }
         audioContext = new AudioContext()
-        await audioContext.audioWorklet.addModule('/audio/pcm-worklet.js')
+        try {
+          await audioContext.audioWorklet.addModule('/audio/pcm-worklet.js')
+        } catch (err) {
+          console.error('audioWorklet.addModule failed:', err)
+          throw new Error(
+            "Couldn't start the microphone — try reloading the page.",
+          )
+        }
         source = audioContext.createMediaStreamSource(stream)
         workletNode = new AudioWorkletNode(
           audioContext,
@@ -159,11 +179,18 @@ export function useVoiceSession() {
         })
 
         socket.addEventListener('error', () => {
-          fail(new Error('Speech recognition connection failed'))
+          fail(
+            new Error(
+              'Lost connection to the voice service — use the buttons below.',
+            ),
+          )
         })
       })().catch((err) => {
+        console.error('Voice session failed to start:', err)
         fail(
-          err instanceof Error ? err : new Error('Could not start listening'),
+          err instanceof Error
+            ? err
+            : new Error("Couldn't start listening — use the buttons below."),
         )
       })
     })

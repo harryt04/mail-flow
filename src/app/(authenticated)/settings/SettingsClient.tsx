@@ -121,25 +121,25 @@ export function SettingsClient() {
 
   if (loadState === 'loading') {
     return (
-      <main className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <p className="text-body text-text-secondary">Loading settings…</p>
-      </main>
+      </div>
     )
   }
 
   if (loadState === 'error' || !settings) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-body text-danger">{error}</p>
         <Button variant="secondary" onClick={() => router.push('/home')}>
           Back home
         </Button>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-6 py-10">
       <div className="flex w-full items-center justify-between">
         <h1 className="text-h1 text-text-primary font-bold">Settings</h1>
         {savedFlash && (
@@ -282,6 +282,6 @@ export function SettingsClient() {
           <p className="text-body text-text-secondary">Disconnecting…</p>
         )}
       </Card>
-    </main>
+    </div>
   )
 }

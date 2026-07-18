@@ -19,7 +19,7 @@ the feature that gives the module its name.
 - `src/lib/types.ts` — `ListeningSessionDoc`, `InboxScope`, `InboxOrder`, `EmailAction`, `CheckpointPayload`.
 
 ## Depended on by
-- `src/app/home/page.tsx` — `getActiveSessionProgress` and `getActionCounts` for the dashboard.
+- `src/app/(authenticated)/home/page.tsx` — `getActiveSessionProgress` and `getActionCounts` for the dashboard.
 - `src/app/api/session/route.ts` — `getOrCreateActiveSession`, `getActiveSessionProgress`, `buildCheckpointResponse`.
 - `src/app/api/session/next/route.ts` and all four `src/app/api/actions/{archive,reply,snooze,move}` routes — `advanceSession` + `buildCheckpointResponse` after the underlying Gmail action completes. See [docs/app/api/session.md](../app/api/session.md) and [docs/app/api/actions.md](../app/api/actions.md).
 - `src/app/api/inbox/jump/route.ts` — `jumpToMessage` + `buildCheckpointResponse`. See [docs/app/api/inbox.md](../app/api/inbox.md).

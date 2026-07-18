@@ -79,26 +79,26 @@ export function InboxClient() {
 
   if (loadError) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-body text-danger">{loadError}</p>
         <Link href="/home">
           <Button variant="secondary">Back home</Button>
         </Link>
-      </main>
+      </div>
     )
   }
 
   if (!data) {
     return (
-      <main className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <p className="text-body text-text-secondary">Loading your inbox…</p>
-      </main>
+      </div>
     )
   }
 
   if (!data.active) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-h1 text-text-primary font-semibold">
           No active session yet.
         </p>
@@ -109,7 +109,7 @@ export function InboxClient() {
         <Link href="/home">
           <Button variant="secondary">Back home</Button>
         </Link>
-      </main>
+      </div>
     )
   }
 
@@ -127,7 +127,7 @@ export function InboxClient() {
       : ''
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-6 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-6 px-6 py-10">
       <div className="flex w-full flex-col gap-1">
         <h1 className="text-h1 text-text-primary font-bold">Inbox</h1>
         <p className="text-body text-text-secondary">
@@ -197,6 +197,6 @@ export function InboxClient() {
           Next
         </Button>
       </div>
-    </main>
+    </div>
   )
 }

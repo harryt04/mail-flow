@@ -25,7 +25,7 @@ files import runtime code from each other or anything else in `src/lib` (`labelM
 - `src/app/api/reply/cleanup/route.ts` → `cleanupReply`.
 - `src/app/api/stt/token/route.ts` → `mintSttToken`.
 - `src/app/api/tts/route.ts` → `getTtsProvider().synthesize`.
-- `src/app/listen/ListenClient.tsx` calls `matchCommand` and `findMatchingLabels` directly (client-side, not via an API route) inside its command-handling loop and `runMoveVoiceFlow`. See [docs/app/listen.md](../app/listen.md).
+- `src/app/(authenticated)/listen/ListenClient.tsx` calls `matchCommand` and `findMatchingLabels` directly (client-side, not via an API route) inside its command-handling loop and `runMoveVoiceFlow`. See [docs/app/listen.md](../app/listen.md).
 
 ## Conventions
 - Each concern (match/label-match/cleanup/stt/tts) stays in its own file with no cross-imports between them at runtime — a route/component composes them, they don't compose each other. Keep new voice-pipeline code following this shape rather than merging concerns into one file.

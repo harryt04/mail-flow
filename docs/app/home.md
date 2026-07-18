@@ -1,22 +1,24 @@
-# src/app/home/
+# src/app/(authenticated)/home/
 
 ## Purpose
-The authenticated landing/dashboard page — shows current listening-session progress (or a
-"fresh inbox" message), an idle-state confidence-boost dashboard of what's been sorted so far,
-and buttons into `/listen` and `/inbox`.
+The authenticated landing/dashboard page (served at `/home`) — shows current listening-session
+progress (or a "fresh inbox" message), an idle-state confidence-boost dashboard of what's been
+sorted so far, and buttons into `/listen` and `/inbox`.
 
 ## Key files
 | File | Role |
 |---|---|
-| `page.tsx` | Server component. Checks `auth()`, calls `getActiveSessionProgress` and `getActionCounts` directly (not via an API route), renders `AppHeader`, `Button`s linking to `/listen` and `/inbox`, and `DashboardStats`. |
+| `page.tsx` | Server component. Re-checks `auth()` (the route group layout already gates access, but this page also needs the session's `user.id` for its own queries), calls `getActiveSessionProgress` and `getActionCounts` directly (not via an API route), renders `Button`s linking to `/listen` and `/inbox`, and `DashboardStats`. The sidebar comes from `(authenticated)/layout.tsx`, not this file. |
 
 ## Depends on
 - `src/lib/auth/options` (`auth`)
 - `src/lib/bookmark/session` (`getActiveSessionProgress`) and `src/lib/bookmark/stats` (`getActionCounts`) — see [docs/lib/bookmark.md](../lib/bookmark.md)
-- `src/components/ui/{AppHeader,Button}`, `src/components/home/DashboardStats`
+- `src/components/ui/Button`, `src/components/home/DashboardStats`
 
 ## Depended on by
-Entry point after login — `src/app/page.tsx` redirects here, and `proxy.ts` gates access (see [docs/proxy-and-routing.md](../proxy-and-routing.md)).
+Entry point after login — `src/app/page.tsx` redirects here, `(authenticated)/layout.tsx` gates
+access, and `proxy.ts` also protects `/home` at the edge (see
+[docs/proxy-and-routing.md](../proxy-and-routing.md)).
 
 ## Conventions
 - When the active session's snapshot was capped (`MAX_SNAPSHOT_SIZE` guardrail, see

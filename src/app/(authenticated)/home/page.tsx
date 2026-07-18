@@ -7,7 +7,6 @@ import {
   type SessionWithProgress,
 } from '@/lib/bookmark/session'
 import { getActionCounts } from '@/lib/bookmark/stats'
-import { AppHeader } from '@/components/ui/AppHeader'
 import { Button } from '@/components/ui/Button'
 import { DashboardStats } from '@/components/home/DashboardStats'
 
@@ -19,10 +18,10 @@ function buildBookmarkStatus(progress: SessionWithProgress | null): string {
   const snapshotSize = session.messageIds.length
 
   if (totalEstimate > snapshotSize) {
-    return `Working through the oldest ${snapshotSize.toLocaleString()} of ~${totalEstimate.toLocaleString()} unread emails — ${remaining} left in this batch.`
+    return `Working through the oldest ${snapshotSize.toLocaleString()} of ~${totalEstimate.toLocaleString()} unread emails — ${remaining.toLocaleString()} left in this batch.`
   }
 
-  return `You have ${remaining} email${remaining === 1 ? '' : 's'} left in this session.`
+  return `You have ${remaining.toLocaleString()} email${remaining === 1 ? '' : 's'} left in this session.`
 }
 
 export default async function HomePage() {
@@ -37,25 +36,22 @@ export default async function HomePage() {
   const bookmarkStatus = buildBookmarkStatus(progress)
 
   return (
-    <div className="flex flex-1 flex-col">
-      <AppHeader />
-      <main className="flex flex-1 flex-col items-center gap-10 px-6 py-12 text-center">
-        <div className="flex flex-col items-center gap-6">
-          <p className="text-body text-text-secondary">{bookmarkStatus}</p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/listen">
-              <Button size="lg">Start Listening</Button>
-            </Link>
-            <Link href="/inbox">
-              <Button size="lg" variant="secondary">
-                Browse inbox
-              </Button>
-            </Link>
-          </div>
+    <div className="flex flex-1 flex-col items-center gap-10 px-6 py-12 text-center">
+      <div className="flex flex-col items-center gap-6">
+        <p className="text-body text-text-secondary">{bookmarkStatus}</p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link href="/listen">
+            <Button size="lg">Start Listening</Button>
+          </Link>
+          <Link href="/inbox">
+            <Button size="lg" variant="secondary">
+              Browse inbox
+            </Button>
+          </Link>
         </div>
+      </div>
 
-        <DashboardStats counts={counts} />
-      </main>
+      <DashboardStats counts={counts} />
     </div>
   )
 }

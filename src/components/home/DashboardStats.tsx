@@ -39,7 +39,10 @@ export function DashboardStats({ counts }: { counts: ActionCounts }) {
       count: counts.archive,
       tone: 'positive',
       icon: <IconArchive className="h-6 w-6" />,
-      footnote: counts.delete > 0 ? `${counts.delete} deleted` : undefined,
+      footnote:
+        counts.delete > 0
+          ? `${counts.delete.toLocaleString()} deleted`
+          : undefined,
     },
     {
       label: 'Replied',
@@ -71,7 +74,9 @@ export function DashboardStats({ counts }: { counts: ActionCounts }) {
     <Card className="w-full max-w-2xl">
       <p className="text-body text-text-secondary">
         You&apos;ve sorted{' '}
-        <span className="text-text-primary font-semibold">{counts.total}</span>{' '}
+        <span className="text-text-primary font-semibold">
+          {counts.total.toLocaleString()}
+        </span>{' '}
         email{counts.total === 1 ? '' : 's'} so far.
       </p>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -83,7 +88,9 @@ export function DashboardStats({ counts }: { counts: ActionCounts }) {
             <Badge tone={tile.tone} icon={tile.icon}>
               {tile.label}
             </Badge>
-            <p className="text-h1 text-text-primary font-bold">{tile.count}</p>
+            <p className="text-h1 text-text-primary font-bold">
+              {tile.count.toLocaleString()}
+            </p>
             {tile.footnote && (
               <p className="text-meta text-text-muted">{tile.footnote}</p>
             )}

@@ -17,8 +17,8 @@ mutation, unlike archive/reply/snooze).
 - `src/lib/bookmark/session` (`getOrCreateActiveSession`, `getActiveSessionProgress`, `advanceSession`, `buildCheckpointResponse`) — see [docs/lib/bookmark.md](../../lib/bookmark.md)
 
 ## Depended on by
-- `src/app/listen/ListenClient.tsx`: `POST /api/session` on mount to load the first checkpoint; `POST /api/session/next` for the "skip" command. See [docs/app/listen.md](../listen.md).
-- `src/app/home/page.tsx` reads progress via `getActiveSessionProgress` directly (not through this route — it's a server component calling the lib function inline).
+- `src/app/(authenticated)/listen/ListenClient.tsx`: `POST /api/session` on mount to load the first checkpoint; `POST /api/session/next` for the "skip" command. See [docs/app/listen.md](../listen.md).
+- `src/app/(authenticated)/home/page.tsx` reads progress via `getActiveSessionProgress` directly (not through this route — it's a server component calling the lib function inline).
 
 ## Where to add new code here
 A new way to advance a session without a corresponding Gmail mutation → follow `session/next`'s

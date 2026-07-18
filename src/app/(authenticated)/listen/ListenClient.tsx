@@ -181,7 +181,10 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       return
     }
 
-    await runEmailLoop(payload.email, payload.sessionId, gen)
+    // Fire-and-forget: the caller (e.g. handleManualAction) only needs to wait for the
+    // confirmation to finish speaking, not for the rest of the session — awaiting this would
+    // hold `busy` (and thus the manual buttons) locked until the whole session ends.
+    void runEmailLoop(payload.email, payload.sessionId, gen)
   }
 
   /**
@@ -297,7 +300,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       return
     }
 
-    await runEmailLoop(payload.email, payload.sessionId, gen)
+    // Fire-and-forget for the same reason as runAction above — don't hold `busy`/handleSendReplyManual
+    // locked for the rest of the session.
+    void runEmailLoop(payload.email, payload.sessionId, gen)
   }
 
   /** IMPLEMENTATION-PLAN.md §7.4 — dictate, clean up via Claude, read back, confirm/redo. */
@@ -674,26 +679,26 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
 
   if (phase === 'loading') {
     return (
-      <main className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <p className="text-body text-text-secondary">Loading your inbox…</p>
-      </main>
+      </div>
     )
   }
 
   if (phase === 'error' && !checkpoint?.email) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-body text-danger">{error}</p>
         <Link href="/home">
           <Button variant="secondary">Back home</Button>
         </Link>
-      </main>
+      </div>
     )
   }
 
   if (phase === 'done' || !checkpoint?.email) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-h1 text-text-primary font-semibold">
           You&apos;re all caught up.
         </p>
@@ -703,22 +708,22 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         <Link href="/home">
           <Button variant="secondary">Back home</Button>
         </Link>
-      </main>
+      </div>
     )
   }
 
   const { email, remaining, totalEstimate, snapshotSize } = checkpoint
   const sessionLabel =
     totalEstimate > snapshotSize
-      ? `${remaining} left in this batch of ${snapshotSize.toLocaleString()} (out of ~${totalEstimate.toLocaleString()} unread)`
-      : `${remaining} left in this session`
+      ? `${remaining.toLocaleString()} left in this batch of ${snapshotSize.toLocaleString()} (out of ~${totalEstimate.toLocaleString()} unread)`
+      : `${remaining.toLocaleString()} left in this session`
   const paragraphLabel =
     paragraphIndex !== null
       ? `Paragraph ${paragraphIndex + 1} of ${email.paragraphs.length}`
       : null
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-6 py-10">
       <div className="flex items-center gap-3">
         <p className="text-meta text-text-muted">{sessionLabel}</p>
         <Button
@@ -882,6 +887,6 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           disabled={busy}
         />
       )}
-    </main>
+    </div>
   )
 }

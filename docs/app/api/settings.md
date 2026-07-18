@@ -16,7 +16,7 @@ Read/write user settings (inbox scope, inbox order, theme, voice tone), and disc
 - `src/lib/auth/tokenCrypto` (disconnect only, to identify/clear stored tokens)
 
 ## Depended on by
-- `src/app/settings/SettingsClient.tsx` — `GET/POST /api/settings` for reading/saving preferences, `POST /api/settings/disconnect` for the disconnect button. See [docs/app/settings.md](../settings.md).
+- `src/app/(authenticated)/settings/SettingsClient.tsx` — `GET/POST /api/settings` for reading/saving preferences, `POST /api/settings/disconnect` for the disconnect button. See [docs/app/settings.md](../settings.md).
 
 ## Conventions
 `settings/route.ts` validates against a `VALID_THEME`-style allowlist array (mirroring the

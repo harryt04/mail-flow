@@ -1,15 +1,15 @@
-# src/app/inbox/
+# src/app/(authenticated)/inbox/
 
 ## Purpose
-A browsable, paginated view of the active listening session's ordered snapshot — lets the user
-see individual emails (sender/subject/snippet) and jump the bookmark straight to one, instead
-of only ever moving sequentially. Added because a fixed-order-only queue gave no way to see or
-choose what's coming up.
+A browsable, paginated view of the active listening session's ordered snapshot (served at
+`/inbox`) — lets the user see individual emails (sender/subject/snippet) and jump the bookmark
+straight to one, instead of only ever moving sequentially. Added because a fixed-order-only
+queue gave no way to see or choose what's coming up.
 
 ## Key files
 | File | Role |
 |---|---|
-| `page.tsx` | Server component — `auth()` redirect gate, renders `AppHeader` + `InboxClient`. |
+| `page.tsx` | Server component — thin wrapper rendering `InboxClient`. Auth gating and the sidebar both come from `(authenticated)/layout.tsx`, not this file. |
 | `InboxClient.tsx` | Client component. Fetches `GET /api/inbox?page=`, renders paginated `Card` rows, marks the bookmark row with a "Current" `Badge`, and POSTs `/api/inbox/jump` + `router.push("/listen")` on "Start here". |
 
 ## Depends on
@@ -17,8 +17,9 @@ choose what's coming up.
 - Calls `/api/inbox` and `/api/inbox/jump` — see [docs/app/api/README.md](./api/README.md).
 
 ## Depended on by
-Reached via `AppHeader`'s "Inbox" link and `/home`'s "Browse inbox" button; gated by `proxy.ts`
-(`/inbox` is in `PROTECTED_PREFIXES`/`config.matcher`).
+Reached via the sidebar's (`AppSidebar.tsx`) "Inbox" link and `/home`'s "Browse inbox" button;
+gated by both `(authenticated)/layout.tsx` and `proxy.ts` (`/inbox` is in
+`PROTECTED_PREFIXES`/`config.matcher`).
 
 ## Conventions
 - Only fetches metadata (sender/subject/snippet) for the current page of message IDs (25 by

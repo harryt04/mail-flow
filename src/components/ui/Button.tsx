@@ -23,6 +23,9 @@ const buttonVariants = cva(
         // BRAND.md §5: 56px min for primary voice-command fallback buttons, 44px elsewhere.
         md: 'min-h-11 px-6 text-body',
         lg: 'min-h-14 px-8 text-body-lg font-semibold',
+        // 44px square, icon-only (e.g. the sidebar's mobile menu trigger) — meets
+        // BRAND.md §5's 44px minimum touch target for non-primary controls.
+        icon: 'size-11 p-0',
       },
       fullWidth: {
         true: 'w-full',

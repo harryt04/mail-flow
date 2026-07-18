@@ -16,7 +16,7 @@ message" action, for the `/inbox` browser page.
 - `src/lib/gmail/{client,list}` (`getGmailClientForUser`, `fetchMessageSummaries`)
 
 ## Depended on by
-- `src/app/inbox/InboxClient.tsx` — see [docs/app/inbox.md](../inbox.md).
+- `src/app/(authenticated)/inbox/InboxClient.tsx` — see [docs/app/inbox.md](../inbox.md).
 
 ## Conventions
 - Unlike `advanceSession` (skip/archive/reply/snooze/move), `jumpToMessage` does not log an

@@ -24,7 +24,7 @@ the move action.
 - `src/lib/bookmark/session` (`advanceSession`, `buildCheckpointResponse`) — all four actions, called last
 
 ## Depended on by
-- `src/app/listen/ListenClient.tsx` calls all four action routes via its `runAction`/
+- `src/app/(authenticated)/listen/ListenClient.tsx` calls all four action routes via its `runAction`/
   `handleManualAction`/`runMoveVoiceFlow`/`handleConfirmMove` helpers, and fetches `/api/labels`
   once on mount for the move picker. See [docs/app/listen.md](../listen.md).
 
