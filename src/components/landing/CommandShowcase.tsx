@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/Badge";
-import { IconSkip, IconArchive, IconReply, IconSnooze } from "@/components/ui/icons";
+import { IconSkip, IconArchive, IconReply, IconSnooze, IconMic } from "@/components/ui/icons";
 
 const COMMANDS = [
   { label: "Skip", tone: "neutral" as const, icon: IconSkip },
@@ -11,18 +11,30 @@ const COMMANDS = [
 /** Previews the exact icon+color vocabulary used by the in-app manual controls (BRAND.md §6). */
 export function CommandShowcase() {
   return (
-    <section className="px-6 py-20 sm:py-24">
-      <div className="mx-auto flex max-w-md flex-col items-center gap-8 text-center">
+    <section className="px-6 py-20 sm:py-24 md:py-28">
+      <div className="mx-auto flex max-w-lg flex-col items-center gap-8 text-center">
         <h2 className="text-h1 font-bold text-text-primary">Four words, hands-free</h2>
         <p className="text-body text-text-secondary">
           The same vocabulary works whether you&rsquo;re speaking or tapping — say it, or touch it.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          {COMMANDS.map(({ label, tone, icon: Icon }) => (
-            <Badge key={label} tone={tone} icon={<Icon className="h-4 w-4" />}>
-              {label}
-            </Badge>
-          ))}
+        <div className="flex w-full flex-col items-center gap-8 rounded-card border border-border bg-surface p-8 shadow-[var(--shadow-soft)]">
+          <div className="flex flex-col items-center gap-3">
+            <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-attention/10 text-attention">
+              <span
+                className="absolute inset-0 rounded-full border-2 border-attention motion-safe:animate-[pulse-ring_1.6s_ease-out_infinite]"
+                aria-hidden="true"
+              />
+              <IconMic className="h-7 w-7" />
+            </span>
+            <span className="text-label uppercase tracking-wide text-text-muted">Listening&hellip;</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {COMMANDS.map(({ label, tone, icon: Icon }) => (
+              <Badge key={label} tone={tone} icon={<Icon className="h-4 w-4" />}>
+                {label}
+              </Badge>
+            ))}
+          </div>
         </div>
       </div>
     </section>

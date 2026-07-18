@@ -105,6 +105,11 @@
   /* BRAND.md §4 type scale */
   --text-display: 2.25rem;
   --text-display--line-height: 1.15;
+  /* Landing-page-only hero token — BRAND.md §4 scopes --text-display to
+     in-product UI ("Start Listening" hero, empty states). Marketing headline
+     needs more presence without changing that in-product token. */
+  --text-hero: 3.5rem;
+  --text-hero--line-height: 1.08;
   --text-h1: 1.75rem;
   --text-h1--line-height: 1.25;
   --text-h2: 1.375rem;
