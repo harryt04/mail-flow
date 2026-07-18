@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Atkinson_Hyperlegible_Next } from "next/font/google";
+import { Atkinson_Hyperlegible_Next, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ThemeScript } from "@/components/ui/ThemeScript";
 import { ServiceWorkerRegister } from "@/components/ui/ServiceWorkerRegister";
@@ -8,6 +8,15 @@ const atkinson = Atkinson_Hyperlegible_Next({
   variable: "--font-atkinson",
   subsets: ["latin"],
   weight: ["400", "600", "700"],
+});
+
+// BRAND.md §4: Fraunces is sanctioned only for large display headlines on the
+// marketing/landing page — never in the in-app product UI.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -43,7 +52,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${atkinson.variable} h-full antialiased`}>
+    <html lang="en" className={`${atkinson.variable} ${fraunces.variable} h-full antialiased`}>
       <head>
         <ThemeScript />
       </head>

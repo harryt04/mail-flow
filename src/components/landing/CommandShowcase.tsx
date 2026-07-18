@@ -1,0 +1,30 @@
+import { Badge } from "@/components/ui/Badge";
+import { IconSkip, IconArchive, IconReply, IconSnooze } from "@/components/ui/icons";
+
+const COMMANDS = [
+  { label: "Skip", tone: "neutral" as const, icon: IconSkip },
+  { label: "Archive", tone: "positive" as const, icon: IconArchive },
+  { label: "Reply", tone: "brand" as const, icon: IconReply },
+  { label: "Snooze", tone: "attention" as const, icon: IconSnooze },
+];
+
+/** Previews the exact icon+color vocabulary used by the in-app manual controls (BRAND.md §6). */
+export function CommandShowcase() {
+  return (
+    <section className="px-6 py-20 sm:py-24">
+      <div className="mx-auto flex max-w-md flex-col items-center gap-8 text-center">
+        <h2 className="text-h1 font-bold text-text-primary">Four words, hands-free</h2>
+        <p className="text-body text-text-secondary">
+          The same vocabulary works whether you&rsquo;re speaking or tapping — say it, or touch it.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          {COMMANDS.map(({ label, tone, icon: Icon }) => (
+            <Badge key={label} tone={tone} icon={<Icon className="h-4 w-4" />}>
+              {label}
+            </Badge>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -99,6 +99,8 @@
   --color-on-accent: var(--on-accent);
 
   --font-sans: var(--font-atkinson);
+  /* BRAND.md §4: display headline face, marketing/landing page only. */
+  --font-display: var(--font-fraunces);
 
   /* BRAND.md §4 type scale */
   --text-display: 2.25rem;
@@ -126,7 +128,7 @@
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
 }
 
 body {

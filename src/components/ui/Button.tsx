@@ -1,50 +1,65 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary" | "danger" | "ghost";
-type Size = "md" | "lg";
+// shadcn/ui-style cva button, re-themed to BRAND.md's token system instead of
+// the shadcn default palette. Variant/size names match this app's existing
+// call sites (Home/Listen/Settings/Landing) so no callers needed to change.
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 rounded-pill transition-colors duration-200 ease-out disabled:opacity-50 disabled:pointer-events-none",
+  {
+    variants: {
+      variant: {
+        primary: "bg-brand text-on-accent hover:bg-brand-strong",
+        secondary: "bg-surface text-text-primary border border-border hover:bg-surface-sunken",
+        danger: "bg-danger text-on-accent hover:opacity-90",
+        ghost: "bg-transparent text-brand hover:bg-surface-sunken",
+      },
+      size: {
+        // BRAND.md §5: 56px min for primary voice-command fallback buttons, 44px elsewhere.
+        md: "min-h-11 px-6 text-body",
+        lg: "min-h-14 px-8 text-body-lg font-semibold",
+      },
+      fullWidth: {
+        true: "w-full",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      size: "md",
+    },
+  },
+);
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant;
-  size?: Size;
-  fullWidth?: boolean;
-  icon?: ReactNode;
+interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+  icon?: React.ReactNode;
 }
 
-const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: "bg-brand text-on-accent hover:bg-brand-strong",
-  secondary: "bg-surface text-text-primary border border-border hover:bg-surface-sunken",
-  danger: "bg-danger text-on-accent hover:opacity-90",
-  ghost: "bg-transparent text-brand hover:bg-surface-sunken",
-};
-
-// BRAND.md §5: 56px min for primary voice-command fallback buttons, 44px elsewhere.
-const SIZE_CLASSES: Record<Size, string> = {
-  md: "min-h-11 px-6 text-body",
-  lg: "min-h-14 px-8 text-body-lg font-semibold",
-};
-
-export function Button({
-  variant = "primary",
-  size = "md",
-  fullWidth = false,
+function Button({
+  variant,
+  size,
+  fullWidth,
+  asChild = false,
   icon,
-  className = "",
+  className,
   children,
   ...props
 }: ButtonProps) {
+  const Comp = asChild ? Slot : "button";
   return (
-    <button
-      className={[
-        "inline-flex items-center justify-center gap-2 rounded-pill transition-colors duration-200 ease-out disabled:opacity-50 disabled:pointer-events-none",
-        VARIANT_CLASSES[variant],
-        SIZE_CLASSES[size],
-        fullWidth ? "w-full" : "",
-        className,
-      ].join(" ")}
+    <Comp
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, fullWidth, className }))}
       {...props}
     >
       {icon}
       {children}
-    </button>
+    </Comp>
   );
 }
+
+export { Button, buttonVariants };

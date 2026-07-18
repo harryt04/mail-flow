@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Chip } from "@/components/ui/Chip";
+import { Badge } from "@/components/ui/Badge";
 import { IconAlert, IconCheck } from "@/components/ui/icons";
 import { ToggleGroup } from "@/components/settings/ToggleGroup";
 import { useTheme, type ThemePreference } from "@/hooks/useTheme";
@@ -121,9 +121,9 @@ export function SettingsClient() {
       <div className="w-full flex items-center justify-between">
         <h1 className="text-h1 font-bold text-text-primary">Settings</h1>
         {savedFlash && (
-          <Chip tone="positive" icon={<IconCheck className="w-4 h-4" />}>
+          <Badge tone="positive" icon={<IconCheck className="w-4 h-4" />}>
             Saved
-          </Chip>
+          </Badge>
         )}
       </div>
 
