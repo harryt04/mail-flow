@@ -76,14 +76,14 @@ function splitParagraphs(text: string): string[] {
     .filter((p) => p.length > 0);
 }
 
-function headerValue(
+export function headerValue(
   headers: gmail_v1.Schema$MessagePartHeader[] | undefined,
   name: string
 ): string {
   return headers?.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value ?? "";
 }
 
-function parseSenderHeader(raw: string): { name: string; email: string } {
+export function parseSenderHeader(raw: string): { name: string; email: string } {
   const match = raw.match(/^(.*?)\s*<(.+)>$/);
   if (match) {
     const name = match[1].replace(/"/g, "").trim();

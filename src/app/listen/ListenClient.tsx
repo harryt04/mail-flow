@@ -11,7 +11,7 @@ import { StatusIndicator, type ListeningState } from "@/components/listening/Sta
 import { useAudioPlayback } from "@/hooks/useAudioPlayback";
 import { useVoiceSession } from "@/hooks/useVoiceSession";
 import { matchCommand } from "@/lib/voice/commandMatcher";
-import type { CheckpointPayload, ParsedEmail } from "@/lib/types";
+import { PLAYBACK_SPEEDS, type CheckpointPayload, type ParsedEmail, type PlaybackSpeed } from "@/lib/types";
 
 type Phase = "loading" | "ready" | "error" | "done";
 
@@ -33,8 +33,13 @@ async function postJson(url: string, body?: unknown): Promise<CheckpointPayload>
   return res.json();
 }
 
-export function ListenClient() {
+interface ListenClientProps {
+  initialPlaybackSpeed?: PlaybackSpeed;
+}
+
+export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   const [phase, setPhase] = useState<Phase>("loading");
+  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(initialPlaybackSpeed);
   const [checkpoint, setCheckpoint] = useState<CheckpointPayload | null>(null);
   const [started, setStarted] = useState(false);
   const [uiState, setUiState] = useState<ListeningState>("idle");
@@ -75,7 +80,25 @@ export function ListenClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    audio.setRate(initialPlaybackSpeed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isCurrent = (gen: number) => generationRef.current === gen;
+
+  /** Cycles to the next playback speed — applies instantly (local), persists in the background for next time. */
+  function handleSpeedChange() {
+    const currentIndex = PLAYBACK_SPEEDS.indexOf(playbackSpeed);
+    const next = PLAYBACK_SPEEDS[(currentIndex + 1) % PLAYBACK_SPEEDS.length];
+    setPlaybackSpeed(next);
+    audio.setRate(next);
+    void fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ playbackSpeed: next }),
+    });
+  }
 
   async function speakAndShow(
     text: string,
@@ -454,7 +477,11 @@ export function ListenClient() {
     );
   }
 
-  const { email, remaining } = checkpoint;
+  const { email, remaining, totalEstimate, snapshotSize } = checkpoint;
+  const sessionLabel =
+    totalEstimate > snapshotSize
+      ? `${remaining} left in this batch of ${snapshotSize.toLocaleString()} (out of ~${totalEstimate.toLocaleString()} unread)`
+      : `${remaining} left in this session`;
   const paragraphLabel =
     paragraphIndex !== null
       ? `Paragraph ${paragraphIndex + 1} of ${email.paragraphs.length}`
@@ -462,7 +489,18 @@ export function ListenClient() {
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-10 gap-8 max-w-2xl mx-auto w-full">
-      <p className="text-meta text-text-muted">{remaining} left in this session</p>
+      <div className="flex items-center gap-3">
+        <p className="text-meta text-text-muted">{sessionLabel}</p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="md"
+          onClick={handleSpeedChange}
+          aria-label="Change playback speed"
+        >
+          {playbackSpeed}x
+        </Button>
+      </div>
 
       {!started ? (
         <div className="flex flex-col items-center gap-4">

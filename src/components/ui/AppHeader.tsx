@@ -8,6 +8,9 @@ export function AppHeader() {
         MailFlow
       </Link>
       <nav className="flex items-center gap-4">
+        <Link href="/inbox" className="text-body text-text-secondary hover:text-text-primary">
+          Inbox
+        </Link>
         <Link href="/settings" className="text-body text-text-secondary hover:text-text-primary">
           Settings
         </Link>

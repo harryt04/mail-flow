@@ -9,7 +9,15 @@ import { Badge } from "@/components/ui/Badge";
 import { IconAlert, IconCheck } from "@/components/ui/icons";
 import { ToggleGroup } from "@/components/settings/ToggleGroup";
 import { useTheme, type ThemePreference } from "@/hooks/useTheme";
-import type { InboxScope, InboxOrder, UserSettings } from "@/lib/types";
+import { PLAYBACK_SPEEDS, type InboxScope, type InboxOrder, type PlaybackSpeed, type UserSettings } from "@/lib/types";
+
+const SPEED_LABELS: Record<PlaybackSpeed, string> = {
+  1: "1x",
+  1.25: "1.25x",
+  1.5: "1.5x",
+  1.75: "1.75x",
+  2: "2x",
+};
 
 type LoadState = "loading" | "ready" | "error";
 
@@ -161,6 +169,22 @@ export function SettingsClient() {
         <p className="text-meta text-text-muted">
           Changing scope or order starts a fresh session the next time you listen.
         </p>
+      </Card>
+
+      <Card className="w-full flex flex-col gap-4">
+        <h2 className="text-h2 font-semibold text-text-primary">Playback speed</h2>
+        <p className="text-body text-text-secondary">
+          How fast emails are read aloud. Applies immediately, on the listening screen too.
+        </p>
+        <ToggleGroup<string>
+          value={String(settings.playbackSpeed ?? 1)}
+          options={PLAYBACK_SPEEDS.map((speed) => ({
+            value: String(speed),
+            label: SPEED_LABELS[speed],
+          }))}
+          onChange={(value) => updateSetting({ playbackSpeed: Number(value) as PlaybackSpeed })}
+          disabled={saving}
+        />
       </Card>
 
       <Card className="w-full flex flex-col gap-4">

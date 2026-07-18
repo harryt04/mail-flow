@@ -1,6 +1,6 @@
 import { requireUser } from "@/lib/auth/requireUser";
 import { usersCollection } from "@/lib/db/collections";
-import type { InboxScope, InboxOrder, ThemePreference } from "@/lib/types";
+import { PLAYBACK_SPEEDS, type InboxScope, type InboxOrder, type ThemePreference } from "@/lib/types";
 
 export async function GET() {
   const auth = await requireUser();
@@ -47,6 +47,12 @@ export async function POST(request: Request) {
       return Response.json({ error: "Invalid voiceTone" }, { status: 400 });
     }
     update["settings.voiceTone"] = body.voiceTone;
+  }
+  if (body?.playbackSpeed !== undefined) {
+    if (!(PLAYBACK_SPEEDS as readonly number[]).includes(body.playbackSpeed)) {
+      return Response.json({ error: "Invalid playbackSpeed" }, { status: 400 });
+    }
+    update["settings.playbackSpeed"] = body.playbackSpeed;
   }
 
   if (Object.keys(update).length === 0) {

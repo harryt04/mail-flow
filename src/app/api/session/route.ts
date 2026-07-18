@@ -23,6 +23,8 @@ export async function GET() {
     remaining: progress.remaining,
     scope: progress.session.scope,
     order: progress.session.order,
+    snapshotSize: progress.session.messageIds.length,
+    totalEstimate: progress.session.totalEstimate ?? progress.session.messageIds.length,
   });
 }
 

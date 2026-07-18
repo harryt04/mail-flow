@@ -62,7 +62,7 @@ export async function getOrCreateActiveSession(
     );
   }
 
-  const messageIds = await buildInboxSnapshot(gmail, scope, order);
+  const { messageIds, totalEstimate } = await buildInboxSnapshot(gmail, scope, order);
   const now = new Date();
   const newSession: ListeningSessionDoc = {
     _id: new ObjectId(),
@@ -72,6 +72,7 @@ export async function getOrCreateActiveSession(
     order,
     messageIds,
     cursorIndex: 0,
+    totalEstimate,
     createdAt: now,
     updatedAt: now,
   };
@@ -155,17 +156,57 @@ export async function advanceSession(
   return toProgress(updated);
 }
 
+/**
+ * Jumps the session's bookmark directly to a specific message (the inbox browser's
+ * "Start here" action) — no Gmail side effect, no action log entry, since nothing was
+ * actually done to the email, just navigation. `messageId` must belong to this session's
+ * immutable snapshot; rejects otherwise so a stale/foreign ID can't corrupt `cursorIndex`.
+ */
+export async function jumpToMessage(
+  userId: ObjectId,
+  sessionId: ObjectId,
+  messageId: string
+): Promise<SessionWithProgress> {
+  const sessions = await sessionsCollection();
+
+  const session = await sessions.findOne({ _id: sessionId, userId });
+  if (!session) {
+    throw new Error("Session not found");
+  }
+
+  const index = session.messageIds.indexOf(messageId);
+  if (index === -1) {
+    throw new Error("Message is not part of this session's snapshot");
+  }
+
+  const updated = await sessions.findOneAndUpdate(
+    { _id: sessionId, userId },
+    { $set: { cursorIndex: index, status: "active", updatedAt: new Date() } },
+    { returnDocument: "after" }
+  );
+  if (!updated) {
+    throw new Error("Session not found");
+  }
+
+  return toProgress(updated);
+}
+
 /** Shared by every action route: fetches + parses whatever email the session now points at. */
 export async function buildCheckpointResponse(
   gmail: gmail_v1.Gmail,
   progress: SessionWithProgress
 ): Promise<CheckpointPayload> {
+  const totalEstimate = progress.session.totalEstimate ?? progress.session.messageIds.length;
+  const snapshotSize = progress.session.messageIds.length;
+
   if (!progress.currentMessageId) {
     return {
       sessionId: progress.session._id.toString(),
       remaining: 0,
       email: null,
       sessionExhausted: progress.session.status === "exhausted",
+      totalEstimate,
+      snapshotSize,
     };
   }
 
@@ -177,5 +218,7 @@ export async function buildCheckpointResponse(
     remaining: progress.remaining,
     email,
     sessionExhausted: false,
+    totalEstimate,
+    snapshotSize,
   };
 }

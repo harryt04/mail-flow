@@ -7,15 +7,23 @@ export type PlaybackStatus = "idle" | "loading" | "playing" | "error";
 /** Controls a single <audio> element; playback and mic capture are never concurrent (IMPLEMENTATION-PLAN.md §7.2), so this hook only ever owns the "speaking" half. */
 export function useAudioPlayback() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const rateRef = useRef(1);
   const [status, setStatus] = useState<PlaybackStatus>("idle");
 
   useEffect(() => {
     const audio = new Audio();
+    audio.playbackRate = rateRef.current;
     audioRef.current = audio;
     return () => {
       audio.pause();
       audio.src = "";
     };
+  }, []);
+
+  /** Applies immediately to whatever's currently loaded/playing, and to every future `speak()` call. */
+  const setRate = useCallback((rate: number) => {
+    rateRef.current = rate;
+    if (audioRef.current) audioRef.current.playbackRate = rate;
   }, []);
 
   /** Fetches TTS audio for `text` and plays it, resolving once playback ends. */
@@ -54,6 +62,7 @@ export function useAudioPlayback() {
         audio.addEventListener("ended", onEnded);
         audio.addEventListener("error", onError);
         audio.src = url;
+        audio.playbackRate = rateRef.current;
         setStatus("playing");
         audio.play().catch(reject);
       });
@@ -75,5 +84,5 @@ export function useAudioPlayback() {
     setStatus("idle");
   }, []);
 
-  return { speak, stop, status };
+  return { speak, stop, status, setRate };
 }

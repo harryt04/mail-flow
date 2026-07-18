@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/options";
 
-const PROTECTED_PREFIXES = ["/home", "/listen", "/settings", "/api/"];
+const PROTECTED_PREFIXES = ["/home", "/listen", "/settings", "/inbox", "/api/"];
 const PUBLIC_API_PREFIXES = ["/api/auth/"];
 
 export default auth((req) => {
@@ -22,5 +22,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/home/:path*", "/listen/:path*", "/settings/:path*", "/api/:path*"],
+  matcher: ["/home/:path*", "/listen/:path*", "/settings/:path*", "/inbox/:path*", "/api/:path*"],
 };

@@ -11,7 +11,7 @@ export function GoogleSignInForm() {
         await signIn("google", { redirectTo: "/home" });
       }}
     >
-      <Button type="submit" size="lg" icon={<IconGoogle className="w-5 h-5" />}>
+      <Button type="submit" size="lg" variant="google" icon={<IconGoogle className="w-5 h-5" />}>
         Sign in with Google
       </Button>
     </form>

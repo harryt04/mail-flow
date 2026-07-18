@@ -15,6 +15,8 @@ const buttonVariants = cva(
         secondary: "bg-surface text-text-primary border border-border hover:bg-surface-sunken",
         danger: "bg-danger text-on-accent hover:opacity-90",
         ghost: "bg-transparent text-brand hover:bg-surface-sunken",
+        google:
+          "bg-surface text-text-primary border border-border shadow-[var(--shadow-soft)] hover:bg-surface-sunken hover:border-text-muted font-medium",
       },
       size: {
         // BRAND.md §5: 56px min for primary voice-command fallback buttons, 44px elsewhere.

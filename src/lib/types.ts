@@ -10,11 +10,16 @@ export interface EncryptedTokenPayload {
   authTag: string;
 }
 
+export const PLAYBACK_SPEEDS = [1, 1.25, 1.5, 1.75, 2] as const;
+export type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
+
 export interface UserSettings {
   inboxScope: InboxScope;
   inboxOrder: InboxOrder;
   theme: ThemePreference;
   voiceTone?: string;
+  /** Multiplier applied to TTS playback via the client `<audio>` element's `playbackRate`. Optional so existing user docs default to 1x without a migration. */
+  playbackSpeed?: PlaybackSpeed;
 }
 
 export interface UserDoc {
@@ -43,6 +48,8 @@ export interface ListeningSessionDoc {
   order: InboxOrder;
   messageIds: string[];
   cursorIndex: number;
+  /** Gmail's `resultSizeEstimate` for the query behind this snapshot — optional so pre-existing session docs (created before this field existed) don't need a migration. */
+  totalEstimate?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -81,10 +88,14 @@ export interface CheckpointPayload {
   remaining: number;
   email: ParsedEmail | null;
   sessionExhausted: boolean;
+  /** Snapshot size cap vs. Gmail's true (approximate) count — see `ListeningSessionDoc.totalEstimate`. */
+  totalEstimate: number;
+  snapshotSize: number;
 }
 
 export const DEFAULT_USER_SETTINGS: UserSettings = {
   inboxScope: "unread",
   inboxOrder: "oldest",
   theme: "system",
+  playbackSpeed: 1,
 };
