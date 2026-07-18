@@ -7,9 +7,9 @@ const THEME_SCRIPT = `
     }
   } catch (e) {}
 })();
-`;
+`
 
 /** Inline, blocking script so the manual theme override applies before first paint (no FOUC). */
 export function ThemeScript() {
-  return <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />;
+  return <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
 }

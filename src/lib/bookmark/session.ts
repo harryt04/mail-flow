@@ -1,37 +1,37 @@
-import { ObjectId } from "mongodb";
-import type { gmail_v1 } from "googleapis";
+import { ObjectId } from 'mongodb'
+import type { gmail_v1 } from 'googleapis'
 import {
   sessionsCollection,
   bookmarksCollection,
   emailActionLogsCollection,
-} from "@/lib/db/collections";
-import { buildInboxSnapshot } from "@/lib/gmail/list";
-import { fetchMessage } from "@/lib/gmail/client";
-import { parseGmailMessage } from "@/lib/gmail/parse";
+} from '@/lib/db/collections'
+import { buildInboxSnapshot } from '@/lib/gmail/list'
+import { fetchMessage } from '@/lib/gmail/client'
+import { parseGmailMessage } from '@/lib/gmail/parse'
 import type {
   ListeningSessionDoc,
   InboxScope,
   InboxOrder,
   EmailAction,
   CheckpointPayload,
-} from "@/lib/types";
+} from '@/lib/types'
 
 export interface SessionWithProgress {
-  session: ListeningSessionDoc;
-  currentMessageId: string | null;
-  remaining: number;
+  session: ListeningSessionDoc
+  currentMessageId: string | null
+  remaining: number
 }
 
 function toProgress(session: ListeningSessionDoc): SessionWithProgress {
   const currentMessageId =
     session.cursorIndex < session.messageIds.length
       ? session.messageIds[session.cursorIndex]
-      : null;
+      : null
   return {
     session,
     currentMessageId,
     remaining: Math.max(session.messageIds.length - session.cursorIndex, 0),
-  };
+  }
 }
 
 /**
@@ -45,29 +45,33 @@ export async function getOrCreateActiveSession(
   gmail: gmail_v1.Gmail,
   userId: ObjectId,
   scope: InboxScope,
-  order: InboxOrder
+  order: InboxOrder,
 ): Promise<SessionWithProgress> {
-  const sessions = await sessionsCollection();
-  const bookmarks = await bookmarksCollection();
+  const sessions = await sessionsCollection()
+  const bookmarks = await bookmarksCollection()
 
-  const existing = await sessions.findOne({ userId, status: "active" });
+  const existing = await sessions.findOne({ userId, status: 'active' })
   if (existing && existing.scope === scope && existing.order === order) {
-    return toProgress(existing);
+    return toProgress(existing)
   }
 
   if (existing) {
     await sessions.updateOne(
       { _id: existing._id },
-      { $set: { status: "exhausted", updatedAt: new Date() } }
-    );
+      { $set: { status: 'exhausted', updatedAt: new Date() } },
+    )
   }
 
-  const { messageIds, totalEstimate } = await buildInboxSnapshot(gmail, scope, order);
-  const now = new Date();
+  const { messageIds, totalEstimate } = await buildInboxSnapshot(
+    gmail,
+    scope,
+    order,
+  )
+  const now = new Date()
   const newSession: ListeningSessionDoc = {
     _id: new ObjectId(),
     userId,
-    status: "active",
+    status: 'active',
     scope,
     order,
     messageIds,
@@ -75,8 +79,8 @@ export async function getOrCreateActiveSession(
     totalEstimate,
     createdAt: now,
     updatedAt: now,
-  };
-  await sessions.insertOne(newSession);
+  }
+  await sessions.insertOne(newSession)
 
   await bookmarks.updateOne(
     { userId },
@@ -87,18 +91,18 @@ export async function getOrCreateActiveSession(
         updatedAt: now,
       },
     },
-    { upsert: true }
-  );
+    { upsert: true },
+  )
 
-  return toProgress(newSession);
+  return toProgress(newSession)
 }
 
 export async function getActiveSessionProgress(
-  userId: ObjectId
+  userId: ObjectId,
 ): Promise<SessionWithProgress | null> {
-  const sessions = await sessionsCollection();
-  const session = await sessions.findOne({ userId, status: "active" });
-  return session ? toProgress(session) : null;
+  const sessions = await sessionsCollection()
+  const session = await sessions.findOne({ userId, status: 'active' })
+  return session ? toProgress(session) : null
 }
 
 /**
@@ -113,35 +117,38 @@ export async function advanceSession(
   messageId: string,
   action: EmailAction,
   replyText?: string,
-  label?: string
+  label?: string,
 ): Promise<SessionWithProgress> {
-  const sessions = await sessionsCollection();
-  const bookmarks = await bookmarksCollection();
-  const logs = await emailActionLogsCollection();
+  const sessions = await sessionsCollection()
+  const bookmarks = await bookmarksCollection()
+  const logs = await emailActionLogsCollection()
 
   const updated = await sessions.findOneAndUpdate(
     { _id: sessionId, userId },
     { $inc: { cursorIndex: 1 }, $set: { updatedAt: new Date() } },
-    { returnDocument: "after" }
-  );
+    { returnDocument: 'after' },
+  )
 
   if (!updated) {
-    throw new Error("Session not found");
+    throw new Error('Session not found')
   }
 
-  if (updated.cursorIndex >= updated.messageIds.length && updated.status === "active") {
+  if (
+    updated.cursorIndex >= updated.messageIds.length &&
+    updated.status === 'active'
+  ) {
     await sessions.updateOne(
       { _id: sessionId },
-      { $set: { status: "exhausted", updatedAt: new Date() } }
-    );
-    updated.status = "exhausted";
+      { $set: { status: 'exhausted', updatedAt: new Date() } },
+    )
+    updated.status = 'exhausted'
   }
 
   await Promise.all([
     bookmarks.updateOne(
       { userId },
       { $set: { lastProcessedMessageId: messageId, updatedAt: new Date() } },
-      { upsert: true }
+      { upsert: true },
     ),
     logs.insertOne({
       _id: new ObjectId(),
@@ -153,9 +160,9 @@ export async function advanceSession(
       ...(label ? { label } : {}),
       timestamp: new Date(),
     }),
-  ]);
+  ])
 
-  return toProgress(updated);
+  return toProgress(updated)
 }
 
 /**
@@ -167,53 +174,54 @@ export async function advanceSession(
 export async function jumpToMessage(
   userId: ObjectId,
   sessionId: ObjectId,
-  messageId: string
+  messageId: string,
 ): Promise<SessionWithProgress> {
-  const sessions = await sessionsCollection();
+  const sessions = await sessionsCollection()
 
-  const session = await sessions.findOne({ _id: sessionId, userId });
+  const session = await sessions.findOne({ _id: sessionId, userId })
   if (!session) {
-    throw new Error("Session not found");
+    throw new Error('Session not found')
   }
 
-  const index = session.messageIds.indexOf(messageId);
+  const index = session.messageIds.indexOf(messageId)
   if (index === -1) {
-    throw new Error("Message is not part of this session's snapshot");
+    throw new Error("Message is not part of this session's snapshot")
   }
 
   const updated = await sessions.findOneAndUpdate(
     { _id: sessionId, userId },
-    { $set: { cursorIndex: index, status: "active", updatedAt: new Date() } },
-    { returnDocument: "after" }
-  );
+    { $set: { cursorIndex: index, status: 'active', updatedAt: new Date() } },
+    { returnDocument: 'after' },
+  )
   if (!updated) {
-    throw new Error("Session not found");
+    throw new Error('Session not found')
   }
 
-  return toProgress(updated);
+  return toProgress(updated)
 }
 
 /** Shared by every action route: fetches + parses whatever email the session now points at. */
 export async function buildCheckpointResponse(
   gmail: gmail_v1.Gmail,
-  progress: SessionWithProgress
+  progress: SessionWithProgress,
 ): Promise<CheckpointPayload> {
-  const totalEstimate = progress.session.totalEstimate ?? progress.session.messageIds.length;
-  const snapshotSize = progress.session.messageIds.length;
+  const totalEstimate =
+    progress.session.totalEstimate ?? progress.session.messageIds.length
+  const snapshotSize = progress.session.messageIds.length
 
   if (!progress.currentMessageId) {
     return {
       sessionId: progress.session._id.toString(),
       remaining: 0,
       email: null,
-      sessionExhausted: progress.session.status === "exhausted",
+      sessionExhausted: progress.session.status === 'exhausted',
       totalEstimate,
       snapshotSize,
-    };
+    }
   }
 
-  const message = await fetchMessage(gmail, progress.currentMessageId);
-  const email = parseGmailMessage(message);
+  const message = await fetchMessage(gmail, progress.currentMessageId)
+  const email = parseGmailMessage(message)
 
   return {
     sessionId: progress.session._id.toString(),
@@ -222,5 +230,5 @@ export async function buildCheckpointResponse(
     sessionExhausted: false,
     totalEstimate,
     snapshotSize,
-  };
+  }
 }

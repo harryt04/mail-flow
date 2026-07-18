@@ -1,23 +1,29 @@
-import Link from "next/link";
-import { signOut } from "@/lib/auth/options";
+import Link from 'next/link'
+import { signOut } from '@/lib/auth/options'
 
 export function AppHeader() {
   return (
-    <header className="flex items-center justify-between px-6 py-4 border-b border-border">
-      <Link href="/home" className="text-h2 font-bold text-text-primary">
+    <header className="border-border flex items-center justify-between border-b px-6 py-4">
+      <Link href="/home" className="text-h2 text-text-primary font-bold">
         MailFlow
       </Link>
       <nav className="flex items-center gap-4">
-        <Link href="/inbox" className="text-body text-text-secondary hover:text-text-primary">
+        <Link
+          href="/inbox"
+          className="text-body text-text-secondary hover:text-text-primary"
+        >
           Inbox
         </Link>
-        <Link href="/settings" className="text-body text-text-secondary hover:text-text-primary">
+        <Link
+          href="/settings"
+          className="text-body text-text-secondary hover:text-text-primary"
+        >
           Settings
         </Link>
         <form
           action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/" });
+            'use server'
+            await signOut({ redirectTo: '/' })
           }}
         >
           <button
@@ -29,5 +35,5 @@ export function AppHeader() {
         </form>
       </nav>
     </header>
-  );
+  )
 }

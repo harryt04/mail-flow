@@ -1,8 +1,8 @@
-import type { gmail_v1 } from "googleapis";
+import type { gmail_v1 } from 'googleapis'
 
 export interface GmailLabel {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 /**
@@ -11,12 +11,17 @@ export interface GmailLabel {
  * shows up here next time. `type: "system"` labels (INBOX, SPAM, CATEGORY_*, etc.) are
  * excluded — only labels the user created themselves are valid move targets.
  */
-export async function listUserLabels(gmail: gmail_v1.Gmail): Promise<GmailLabel[]> {
-  const res = await gmail.users.labels.list({ userId: "me" });
+export async function listUserLabels(
+  gmail: gmail_v1.Gmail,
+): Promise<GmailLabel[]> {
+  const res = await gmail.users.labels.list({ userId: 'me' })
   return (res.data.labels ?? [])
-    .filter((label): label is gmail_v1.Schema$Label & { id: string; name: string } =>
-      label.type === "user" && typeof label.id === "string" && typeof label.name === "string"
+    .filter(
+      (label): label is gmail_v1.Schema$Label & { id: string; name: string } =>
+        label.type === 'user' &&
+        typeof label.id === 'string' &&
+        typeof label.name === 'string',
     )
     .map((label) => ({ id: label.id, name: label.name }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.name.localeCompare(b.name))
 }

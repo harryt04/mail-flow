@@ -1,15 +1,15 @@
-import { MongoClient } from "mongodb";
+import { MongoClient } from 'mongodb'
 
 declare global {
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
+  var _mongoClientPromise: Promise<MongoClient> | undefined
 }
 
 function createClientPromise(): Promise<MongoClient> {
-  const uri = process.env.MONGODB_URI;
+  const uri = process.env.MONGODB_URI
   if (!uri) {
-    throw new Error("Missing MONGODB_URI environment variable");
+    throw new Error('Missing MONGODB_URI environment variable')
   }
-  return new MongoClient(uri).connect();
+  return new MongoClient(uri).connect()
 }
 
 /**
@@ -19,7 +19,7 @@ function createClientPromise(): Promise<MongoClient> {
  */
 export default function getMongoClient(): Promise<MongoClient> {
   if (!global._mongoClientPromise) {
-    global._mongoClientPromise = createClientPromise();
+    global._mongoClientPromise = createClientPromise()
   }
-  return global._mongoClientPromise;
+  return global._mongoClientPromise
 }

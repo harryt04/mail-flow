@@ -1,18 +1,18 @@
-import type { gmail_v1 } from "googleapis";
-import type { InboxScope, InboxOrder } from "@/lib/types";
-import { headerValue, parseSenderHeader } from "@/lib/gmail/parse";
+import type { gmail_v1 } from 'googleapis'
+import type { InboxScope, InboxOrder } from '@/lib/types'
+import { headerValue, parseSenderHeader } from '@/lib/gmail/parse'
 
 // Friends/family MVP scale (PRD §3) — cap a single snapshot so a truly pathological
 // inbox can't turn "Start Listening" into an unbounded pagination loop. This is deliberately
 // generous (well beyond the "thousands of unread emails" persona PRD §3 targets) — a real
 // user with 2,275 unread was previously hitting the old 2,000 cap and seeing a wrong count.
-const MAX_SNAPSHOT_SIZE = 20000;
-const PAGE_SIZE = 500;
+const MAX_SNAPSHOT_SIZE = 20000
+const PAGE_SIZE = 500
 
 export interface InboxSnapshot {
-  messageIds: string[];
+  messageIds: string[]
   /** Gmail's own approximation of total matching messages (`resultSizeEstimate`), captured from the first page — always an estimate, never exact for large mailboxes. */
-  totalEstimate: number;
+  totalEstimate: number
 }
 
 /**
@@ -23,45 +23,45 @@ export interface InboxSnapshot {
 export async function buildInboxSnapshot(
   gmail: gmail_v1.Gmail,
   scope: InboxScope,
-  order: InboxOrder
+  order: InboxOrder,
 ): Promise<InboxSnapshot> {
-  const query = scope === "unread" ? "in:inbox is:unread" : "in:inbox";
-  const messageIds: string[] = [];
-  let pageToken: string | undefined;
-  let totalEstimate: number | undefined;
+  const query = scope === 'unread' ? 'in:inbox is:unread' : 'in:inbox'
+  const messageIds: string[] = []
+  let pageToken: string | undefined
+  let totalEstimate: number | undefined
 
   do {
     const res = await gmail.users.messages.list({
-      userId: "me",
+      userId: 'me',
       q: query,
       maxResults: PAGE_SIZE,
       pageToken,
-    });
+    })
 
     if (totalEstimate === undefined) {
-      totalEstimate = res.data.resultSizeEstimate ?? undefined;
+      totalEstimate = res.data.resultSizeEstimate ?? undefined
     }
 
     for (const message of res.data.messages ?? []) {
-      if (message.id) messageIds.push(message.id);
+      if (message.id) messageIds.push(message.id)
     }
 
-    pageToken = res.data.nextPageToken ?? undefined;
-  } while (pageToken && messageIds.length < MAX_SNAPSHOT_SIZE);
+    pageToken = res.data.nextPageToken ?? undefined
+  } while (pageToken && messageIds.length < MAX_SNAPSHOT_SIZE)
 
-  const capped = messageIds.slice(0, MAX_SNAPSHOT_SIZE);
+  const capped = messageIds.slice(0, MAX_SNAPSHOT_SIZE)
   return {
-    messageIds: order === "oldest" ? capped.reverse() : capped,
+    messageIds: order === 'oldest' ? capped.reverse() : capped,
     totalEstimate: totalEstimate ?? messageIds.length,
-  };
+  }
 }
 
 export interface EmailSummary {
-  messageId: string;
-  sender: string;
-  senderEmail: string;
-  subject: string;
-  snippet: string;
+  messageId: string
+  sender: string
+  senderEmail: string
+  subject: string
+  snippet: string
 }
 
 /**
@@ -73,26 +73,28 @@ export interface EmailSummary {
  */
 export async function fetchMessageSummaries(
   gmail: gmail_v1.Gmail,
-  messageIds: string[]
+  messageIds: string[],
 ): Promise<EmailSummary[]> {
   const summaries = await Promise.all(
     messageIds.map(async (messageId) => {
       const res = await gmail.users.messages.get({
-        userId: "me",
+        userId: 'me',
         id: messageId,
-        format: "metadata",
-        metadataHeaders: ["From", "Subject"],
-      });
-      const headers = res.data.payload?.headers;
-      const { name: sender, email: senderEmail } = parseSenderHeader(headerValue(headers, "From"));
+        format: 'metadata',
+        metadataHeaders: ['From', 'Subject'],
+      })
+      const headers = res.data.payload?.headers
+      const { name: sender, email: senderEmail } = parseSenderHeader(
+        headerValue(headers, 'From'),
+      )
       return {
         messageId,
         sender,
         senderEmail,
-        subject: headerValue(headers, "Subject") || "(no subject)",
-        snippet: res.data.snippet ?? "",
-      };
-    })
-  );
-  return summaries;
+        subject: headerValue(headers, 'Subject') || '(no subject)',
+        snippet: res.data.snippet ?? '',
+      }
+    }),
+  )
+  return summaries
 }

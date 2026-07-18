@@ -1,7 +1,7 @@
-import { MetadataRoute } from "next";
+import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = `https://mail.harryt.dev`;
+  const baseUrl = `https://mail.harryt.dev`
 
   return [
     {
@@ -20,5 +20,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/tos`,
       lastModified: new Date(),
     },
-  ];
+  ]
 }

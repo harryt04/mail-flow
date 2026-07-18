@@ -13,3 +13,7 @@ doc applies. If the docs don't answer your question, explore as normal, then upd
 relevant `docs/*.md` file with what you learned in the same change — these docs are a map
 (purpose, key files, dependencies, where to add code), not an API reference, so keep additions
 at that level rather than documenting internal logic line-by-line.
+
+
+# Important
+Before considering your work done, please format/validate by running `npm run prettify; npm run ci`

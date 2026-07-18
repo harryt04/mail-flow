@@ -1,15 +1,15 @@
-import type { SVGProps } from "react";
+import type { SVGProps } from 'react'
 
-type IconProps = SVGProps<SVGSVGElement>;
+type IconProps = SVGProps<SVGSVGElement>
 
 const base = {
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
   strokeWidth: 2,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+}
 
 export function IconMic(props: IconProps) {
   return (
@@ -18,7 +18,7 @@ export function IconMic(props: IconProps) {
       <path d="M5 10a7 7 0 0 0 14 0" />
       <line x1="12" y1="19" x2="12" y2="22" />
     </svg>
-  );
+  )
 }
 
 export function IconCheck(props: IconProps) {
@@ -26,7 +26,7 @@ export function IconCheck(props: IconProps) {
     <svg {...base} {...props}>
       <polyline points="20 6 9 17 4 12" />
     </svg>
-  );
+  )
 }
 
 export function IconAlert(props: IconProps) {
@@ -36,7 +36,7 @@ export function IconAlert(props: IconProps) {
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
     </svg>
-  );
+  )
 }
 
 export function IconSkip(props: IconProps) {
@@ -45,7 +45,7 @@ export function IconSkip(props: IconProps) {
       <polygon points="5 4 15 12 5 20 5 4" />
       <line x1="19" y1="5" x2="19" y2="19" />
     </svg>
-  );
+  )
 }
 
 export function IconArchive(props: IconProps) {
@@ -55,7 +55,7 @@ export function IconArchive(props: IconProps) {
       <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" />
       <line x1="10" y1="12" x2="14" y2="12" />
     </svg>
-  );
+  )
 }
 
 export function IconReply(props: IconProps) {
@@ -64,7 +64,7 @@ export function IconReply(props: IconProps) {
       <polyline points="9 10 4 15 9 20" />
       <path d="M20 19v-3a4 4 0 0 0-4-4H4" />
     </svg>
-  );
+  )
 }
 
 export function IconSnooze(props: IconProps) {
@@ -75,7 +75,7 @@ export function IconSnooze(props: IconProps) {
       <line x1="12" y1="13" x2="14.5" y2="15" />
       <path d="M9 2h6" />
     </svg>
-  );
+  )
 }
 
 export function IconPlay(props: IconProps) {
@@ -83,7 +83,7 @@ export function IconPlay(props: IconProps) {
     <svg {...base} fill="currentColor" stroke="none" {...props}>
       <polygon points="6 3 20 12 6 21 6 3" />
     </svg>
-  );
+  )
 }
 
 export function IconPause(props: IconProps) {
@@ -92,7 +92,7 @@ export function IconPause(props: IconProps) {
       <rect x="6" y="4" width="4" height="16" rx="1" />
       <rect x="14" y="4" width="4" height="16" rx="1" />
     </svg>
-  );
+  )
 }
 
 export function IconDots(props: IconProps) {
@@ -102,7 +102,7 @@ export function IconDots(props: IconProps) {
       <circle cx="12" cy="12" r="2" />
       <circle cx="19" cy="12" r="2" />
     </svg>
-  );
+  )
 }
 
 export function IconFolder(props: IconProps) {
@@ -110,7 +110,7 @@ export function IconFolder(props: IconProps) {
     <svg {...base} {...props}>
       <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
     </svg>
-  );
+  )
 }
 
 export function IconGoogle(props: IconProps) {
@@ -133,5 +133,5 @@ export function IconGoogle(props: IconProps) {
         d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.63l3.99 3.1C6.22 6.86 8.87 4.75 12 4.75z"
       />
     </svg>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* BRAND.md §3 — light theme (default) */
 :root {
@@ -47,7 +47,7 @@
 }
 
 /* Manual override persists via data-theme, per BRAND.md §3.4 rule 4 */
-:root[data-theme="light"] {
+:root[data-theme='light'] {
   --bg: #faf7f1;
   --surface: #ffffff;
   --surface-sunken: #f1ece3;
@@ -65,7 +65,7 @@
   --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-:root[data-theme="dark"] {
+:root[data-theme='dark'] {
   --bg: #17140f;
   --surface: #211d17;
   --surface-sunken: #0f0d0a;

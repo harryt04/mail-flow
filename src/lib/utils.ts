@@ -1,5 +1,5 @@
-import { clsx, type ClassValue } from "clsx";
-import { extendTailwindMerge } from "tailwind-merge";
+import { clsx, type ClassValue } from 'clsx'
+import { extendTailwindMerge } from 'tailwind-merge'
 
 // Default tailwind-merge doesn't know this app's custom @theme tokens
 // (src/app/globals.css), so it can't tell a font-size utility like
@@ -11,28 +11,39 @@ import { extendTailwindMerge } from "tailwind-merge";
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
-      "font-size": [
-        { text: ["display", "hero", "h1", "h2", "body-lg", "body", "meta", "label"] },
-      ],
-      "text-color": [
+      'font-size': [
         {
           text: [
-            "primary",
-            "secondary",
-            "muted",
-            "brand",
-            "brand-strong",
-            "positive",
-            "attention",
-            "danger",
-            "on-accent",
+            'display',
+            'hero',
+            'h1',
+            'h2',
+            'body-lg',
+            'body',
+            'meta',
+            'label',
+          ],
+        },
+      ],
+      'text-color': [
+        {
+          text: [
+            'primary',
+            'secondary',
+            'muted',
+            'brand',
+            'brand-strong',
+            'positive',
+            'attention',
+            'danger',
+            'on-accent',
           ],
         },
       ],
     },
   },
-});
+})
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
