@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { requireUser } from '@/lib/auth/requireUser'
 import { getGmailClientForUser } from '@/lib/gmail/client'
+import { markMessageAsRead } from '@/lib/gmail/actions'
 import { advanceSession, buildCheckpointResponse } from '@/lib/bookmark/session'
 
-/** "Skip"/"Next" — no Gmail side effect, just advances the bookmark. */
+/** "Skip"/"Next" — marks the message read (removes UNREAD) but leaves it in the inbox, then advances the bookmark. */
 export async function POST(request: Request) {
   const auth = await requireUser()
   if (!auth)
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
   }
 
   const { gmail } = await getGmailClientForUser(auth.userId.toString())
+  await markMessageAsRead(gmail, messageId)
   const progress = await advanceSession(
     auth.userId,
     new ObjectId(sessionId),

@@ -1,5 +1,16 @@
 import type { gmail_v1 } from 'googleapis'
 
+export async function markMessageAsRead(
+  gmail: gmail_v1.Gmail,
+  messageId: string,
+): Promise<void> {
+  await gmail.users.messages.modify({
+    userId: 'me',
+    id: messageId,
+    requestBody: { removeLabelIds: ['UNREAD'] },
+  })
+}
+
 export async function archiveMessage(
   gmail: gmail_v1.Gmail,
   messageId: string,

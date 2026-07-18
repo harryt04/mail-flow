@@ -14,6 +14,8 @@ interface EmailSummaryItem {
   senderEmail: string
   subject: string
   snippet: string
+  receivedAt: string
+  unread: boolean
 }
 
 interface InboxPage {
@@ -28,6 +30,32 @@ interface InboxPage {
 }
 
 const PAGE_SIZE = 25
+
+/**
+ * Format a timestamp (epoch-ms string) as a relative time string.
+ * Returns "Just now", "Xm ago", "Xh ago", "Xd ago" for recent messages,
+ * or a short absolute date like "Jan 5" for older messages.
+ */
+function formatRelativeTime(dateMs: number): string {
+  const now = Date.now()
+  const diff = now - dateMs
+  const seconds = Math.floor(diff / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+
+  if (seconds < 60) return 'Just now'
+  if (minutes < 60) return `${minutes}m ago`
+  if (hours < 24) return `${hours}h ago`
+  if (days < 30) return `${days}d ago`
+
+  // For older messages, show short absolute date
+  const date = new Date(dateMs)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 export function InboxClient() {
   const router = useRouter()
@@ -141,6 +169,7 @@ export function InboxClient() {
       <div className="flex w-full flex-col gap-3">
         {items.map((item, i) => {
           const isCurrent = page * pageSize + i === cursorIndex
+          const relativeTime = formatRelativeTime(Number(item.receivedAt))
           return (
             <Card key={item.messageId} className="flex w-full flex-col gap-3">
               <div className="flex items-start justify-between gap-4">
@@ -149,6 +178,7 @@ export function InboxClient() {
                     <p className="text-body-lg text-text-primary truncate font-semibold">
                       {item.sender}
                     </p>
+                    {item.unread && <Badge tone="brand">Unread</Badge>}
                     {isCurrent && (
                       <Badge
                         tone="attention"
@@ -158,14 +188,19 @@ export function InboxClient() {
                       </Badge>
                     )}
                   </div>
+                  <p className="text-meta text-text-muted truncate">
+                    {item.senderEmail}
+                  </p>
                   <p className="text-body text-text-secondary truncate">
                     {item.subject}
                   </p>
                   <p className="text-meta text-text-muted truncate">
                     {item.snippet}
                   </p>
+                  <p className="text-meta text-text-muted">{relativeTime}</p>
                 </div>
                 <Button
+                  className="shrink-0 whitespace-nowrap"
                   variant={isCurrent ? 'secondary' : 'primary'}
                   onClick={() => handleStartHere(item.messageId)}
                   disabled={jumpingId !== null}

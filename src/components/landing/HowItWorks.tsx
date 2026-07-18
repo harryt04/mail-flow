@@ -20,7 +20,7 @@ const STEPS = [
   {
     icon: IconCheck,
     title: 'Say the word',
-    body: '“Skip,” “archive,” “reply,” or “snooze.” No typing, no tapping required.',
+    body: '”Skip,” “archive,” or “reply.” No typing, no tapping required.',
   },
 ]
 

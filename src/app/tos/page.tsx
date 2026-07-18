@@ -37,9 +37,9 @@ export default function TermsOfServicePage() {
           </h2>
           <p>
             MailFlow connects to your Gmail account to read your inbox aloud and
-            let you manage email (skip, archive, reply, snooze) by voice or
-            simple commands. The Service is provided on an &ldquo;as is&rdquo;
-            and &ldquo;as available&rdquo; basis.
+            let you manage email (skip, archive, reply) by voice or simple
+            commands. The Service is provided on an &ldquo;as is&rdquo; and
+            &ldquo;as available&rdquo; basis.
           </p>
         </section>
 

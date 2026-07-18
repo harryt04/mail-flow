@@ -138,6 +138,23 @@ describe('parseGmailMessage', () => {
     expect(result.paragraphs).toEqual(['Hello world'])
   })
 
+  it('does not fragment a paragraph wrapped in layout-only <div>s', () => {
+    const result = parseGmailMessage(
+      message({
+        payload: {
+          headers: [{ name: 'From', value: 'jane@example.com' }],
+          mimeType: 'text/html',
+          body: {
+            data: base64Url(
+              '<div><div><div>Hello world</div></div></div>\n<div><div>Second paragraph</div></div>',
+            ),
+          },
+        },
+      }),
+    )
+    expect(result.paragraphs).toEqual(['Hello world Second paragraph'])
+  })
+
   it('recurses into multipart messages, preferring the text/plain part', () => {
     const result = parseGmailMessage(
       message({

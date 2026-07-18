@@ -11,10 +11,10 @@ listening, speaking, thinking, or confirming a command. Rendered entirely from
 | `StatusIndicator.tsx` | The composite status display — pairs shape/motion + color + a text label for every state (`ListeningState`: `speaking`, `listening`, `thinking`, `confirmed`, `error`, `idle`). Color is never the sole signal. Renders `Waveform` for `speaking` and `ListeningRing` for `listening`. |
 | `ListeningRing.tsx` | Pulsing ring around the mic icon, shown during a checkpoint's listening window. |
 | `Waveform.tsx` | Continuous motion while TTS audio plays — the one exception to BRAND.md §7's no-bounce rule. Also used standalone in `landing/LandingHero.tsx`. |
-| `ManualControls.tsx` | Fallback button row (Skip/Archive/Snooze/Move to/Reply/Continue) for when voice isn't practical — mirrors the exact icon+color vocabulary of the voice-command states. `onMove` opens `ListenClient`'s folder picker rather than firing an action directly, since "move" needs a target label first. |
+| `ManualControls.tsx` | Fallback button row (Skip/Archive/Reply/Move to/Continue) for when voice isn't practical — mirrors the exact icon+color vocabulary of the voice-command states. `onMove` opens `ListenClient`'s folder picker rather than firing an action directly, since "move" needs a target label first. |
 
 ## Depends on
-- `src/components/ui/` — icons (`IconMic`, `IconCheck`, `IconAlert`, `IconDots`, `IconSkip`, `IconArchive`, `IconReply`, `IconSnooze`, `IconFolder`, `IconPlay`) and `IconButton`.
+- `src/components/ui/` — icons (`IconMic`, `IconCheck`, `IconAlert`, `IconDots`, `IconSkip`, `IconArchive`, `IconReply`, `IconFolder`, `IconPlay`), `IconButton`, and `Tooltip` (for ManualControls button tooltips).
 
 ## Depended on by
 - `src/app/(authenticated)/listen/ListenClient.tsx` renders `StatusIndicator` (with `state={uiState}`) and `ManualControls` directly — see [docs/app/listen.md](../app/listen.md).

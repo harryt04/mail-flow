@@ -60,7 +60,7 @@ describe('matchCommand', () => {
     })
   })
 
-  it('returns null when nothing matches', () => {
+  it('returns null for unrecognized commands', () => {
     expect(matchCommand('what time is it')).toBeNull()
   })
 

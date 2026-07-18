@@ -1,12 +1,5 @@
 export type Command =
-  | 'continue'
-  | 'skip'
-  | 'archive'
-  | 'reply'
-  | 'snooze'
-  | 'confirm'
-  | 'redo'
-  | 'move'
+  'continue' | 'skip' | 'archive' | 'reply' | 'confirm' | 'redo' | 'move'
 
 // PRD §5.4: "no fuzzy NLU needed beyond basic synonym handling" — plain
 // keyword/synonym matching against the Deepgram transcript.
@@ -15,7 +8,6 @@ const COMMAND_PHRASES: Record<Exclude<Command, 'move'>, string[]> = {
   skip: ['skip', 'next'],
   archive: ['archive', 'delete', 'remove'],
   reply: ['reply', 'respond'],
-  snooze: ['snooze'],
   confirm: ['send', 'yes', 'confirm', 'send it'],
   redo: ['redo', 'try again', 'no'],
 }

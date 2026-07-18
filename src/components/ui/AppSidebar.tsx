@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Headphones, Home, Inbox, LogOut, Settings } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { Headphones, Home, Inbox, Settings } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +14,14 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { signOutAction } from '@/lib/auth/actions'
 
 const NAV_ITEMS = [
@@ -24,6 +33,16 @@ const NAV_ITEMS = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
+
+  const user = session?.user
+  const displayName = user?.name || user?.email || 'User'
+  const initials = displayName
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
 
   return (
     <Sidebar collapsible="icon">
@@ -57,12 +76,51 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <form action={signOutAction} className="w-full">
-              <SidebarMenuButton type="submit" tooltip="Sign out">
-                <LogOut />
-                <span>Sign out</span>
-              </SidebarMenuButton>
-            </form>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage
+                      src={user?.image || ''}
+                      alt={displayName}
+                      className="rounded-lg"
+                    />
+                    <AvatarFallback className="rounded-lg">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                    <span className="truncate font-semibold">
+                      {displayName}
+                    </span>
+                    <span className="text-sidebar-foreground/70 truncate text-xs">
+                      {user?.email}
+                    </span>
+                  </div>
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
+                side="top"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <form action={signOutAction} className="w-full">
+                    <button type="submit" className="w-full text-left">
+                      Sign out
+                    </button>
+                  </form>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

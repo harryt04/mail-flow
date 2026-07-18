@@ -62,6 +62,8 @@ export interface EmailSummary {
   senderEmail: string
   subject: string
   snippet: string
+  receivedAt: string
+  unread: boolean
 }
 
 /**
@@ -93,6 +95,8 @@ export async function fetchMessageSummaries(
         senderEmail,
         subject: headerValue(headers, 'Subject') || '(no subject)',
         snippet: res.data.snippet ?? '',
+        receivedAt: res.data.internalDate ?? '',
+        unread: (res.data.labelIds ?? []).includes('UNREAD'),
       }
     }),
   )

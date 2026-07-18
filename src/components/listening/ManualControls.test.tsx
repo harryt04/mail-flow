@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { ManualControls } from './ManualControls'
 
 function renderControls(
@@ -8,11 +9,14 @@ function renderControls(
   const handlers = {
     onSkip: vi.fn(),
     onArchive: vi.fn(),
-    onSnooze: vi.fn(),
     onReply: vi.fn(),
     onMove: vi.fn(),
   }
-  render(<ManualControls {...handlers} {...overrides} />)
+  render(
+    <TooltipProvider>
+      <ManualControls {...handlers} {...overrides} />
+    </TooltipProvider>,
+  )
   return handlers
 }
 
@@ -22,7 +26,6 @@ describe('ManualControls', () => {
     expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Archive' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reply' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Snooze' })).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Move to folder' }),
     ).toBeInTheDocument()
@@ -47,13 +50,11 @@ describe('ManualControls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
     fireEvent.click(screen.getByRole('button', { name: 'Archive' }))
     fireEvent.click(screen.getByRole('button', { name: 'Reply' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Snooze' }))
     fireEvent.click(screen.getByRole('button', { name: 'Move to folder' }))
 
     expect(handlers.onSkip).toHaveBeenCalledTimes(1)
     expect(handlers.onArchive).toHaveBeenCalledTimes(1)
     expect(handlers.onReply).toHaveBeenCalledTimes(1)
-    expect(handlers.onSnooze).toHaveBeenCalledTimes(1)
     expect(handlers.onMove).toHaveBeenCalledTimes(1)
   })
 

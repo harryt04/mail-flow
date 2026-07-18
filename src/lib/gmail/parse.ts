@@ -45,7 +45,6 @@ function stripHtml(html: string): string {
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n\n')
-    .replace(/<\/div>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')

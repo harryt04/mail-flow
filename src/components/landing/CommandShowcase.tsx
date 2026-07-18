@@ -3,7 +3,6 @@ import {
   IconSkip,
   IconArchive,
   IconReply,
-  IconSnooze,
   IconMic,
 } from '@/components/ui/icons'
 
@@ -11,7 +10,6 @@ const COMMANDS = [
   { label: 'Skip', tone: 'neutral' as const, icon: IconSkip },
   { label: 'Archive', tone: 'positive' as const, icon: IconArchive },
   { label: 'Reply', tone: 'brand' as const, icon: IconReply },
-  { label: 'Snooze', tone: 'attention' as const, icon: IconSnooze },
 ]
 
 /** Previews the exact icon+color vocabulary used by the in-app manual controls (BRAND.md §6). */

@@ -11,8 +11,8 @@ export function LandingHero() {
         Your inbox, read aloud.
       </h1>
       <p className="text-body-lg text-text-secondary mx-auto max-w-sm">
-        MailFlow listens to your inbox for you. Skip, archive, reply, and snooze
-        with a word — no scrolling, no tapping.
+        MailFlow listens to your inbox for you. Skip, archive, and reply with a
+        word — no scrolling, no tapping.
       </p>
       <GoogleSignInForm />
       <Waveform className="mt-6 opacity-80" />

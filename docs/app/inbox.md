@@ -22,9 +22,13 @@ gated by both `(authenticated)/layout.tsx` and `proxy.ts` (`/inbox` is in
 `PROTECTED_PREFIXES`/`config.matcher`).
 
 ## Conventions
-- Only fetches metadata (sender/subject/snippet) for the current page of message IDs (25 by
-  default, capped at 50) — never the whole snapshot at once, to stay within Gmail's per-user
-  quota. See `fetchMessageSummaries` in [docs/lib/gmail.md](../lib/gmail.md).
+- Fetches sender, subject, snippet, received timestamp (`receivedAt`), and unread status for each
+  message via `fetchMessageSummaries` (metadata format, no extra API calls). `InboxClient` renders
+  these as sender name, email, subject, snippet excerpt, relative timestamp ("2h ago", "Jan 5"),
+  and an "Unread" badge for unread messages.
+- Only fetches metadata for the current page of message IDs (25 by default, capped at 50) — never
+  the whole snapshot at once, to stay within Gmail's per-user quota. See `fetchMessageSummaries`
+  in [docs/lib/gmail.md](../lib/gmail.md).
 - "Start here" doesn't archive/skip/log an action — it only moves the bookmark
   (`jumpToMessage` in [docs/lib/bookmark.md](../lib/bookmark.md)) then hands off to `/listen`,
   which resumes the session from the new cursor position automatically.

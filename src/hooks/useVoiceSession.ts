@@ -95,16 +95,10 @@ export function useVoiceSession() {
       ;(async () => {
         setState('connecting')
 
-        const tokenRes = await fetch('/api/stt/token', { method: 'POST' })
-        if (!tokenRes.ok) {
-          const payload = await tokenRes.json().catch(() => ({}))
-          console.error('STT token request failed:', payload)
-          throw new Error(
-            "Couldn't reach the voice service — use the buttons below.",
-          )
-        }
-        const { key } = (await tokenRes.json()) as { key: string }
-
+        // Mic permission is requested first, independent of the STT token mint — a
+        // token-mint failure (misconfig, Deepgram outage) must never suppress the
+        // browser's permission prompt or mask a permission failure behind a generic
+        // "voice service" error.
         try {
           stream = await navigator.mediaDevices.getUserMedia({ audio: true })
         } catch (err) {
@@ -113,6 +107,29 @@ export function useVoiceSession() {
             'Microphone access is blocked — check your browser permissions.',
           )
         }
+
+        const tokenRes = await fetch('/api/stt/token', { method: 'POST' })
+        if (!tokenRes.ok) {
+          const rawText = await tokenRes.text().catch(() => '')
+          const payload = ((): unknown => {
+            try {
+              return JSON.parse(rawText)
+            } catch {
+              return rawText
+            }
+          })()
+          console.error(
+            'STT token request failed:',
+            tokenRes.status,
+            tokenRes.statusText,
+            payload,
+          )
+          throw new Error(
+            "Couldn't reach the voice service — use the buttons below.",
+          )
+        }
+        const { key } = (await tokenRes.json()) as { key: string }
+
         audioContext = new AudioContext()
         try {
           await audioContext.audioWorklet.addModule('/audio/pcm-worklet.js')

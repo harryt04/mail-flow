@@ -26,8 +26,7 @@ import type { GmailLabel } from '@/lib/gmail/labels'
 type Phase = 'loading' | 'ready' | 'error' | 'done'
 
 const MAX_RETRIES = 3
-const RETRY_PROMPT =
-  "Didn't catch that. Say Skip, Archive, Reply, Move, or Continue."
+const RETRY_PROMPT = "Didn't catch that. Say Skip, Archive, Reply, or Move."
 
 class CancelledError extends Error {}
 
@@ -146,6 +145,15 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     const transcript = await voice.listen()
     if (!isCurrent(gen)) throw new CancelledError()
     return transcript
+  }
+
+  /** Surfaces a fatal loop error and makes sure the UI stops implying we're still listening/speaking. */
+  function showFatalError(err: unknown) {
+    const message = err instanceof Error ? err.message : 'Something went wrong'
+    setError(message)
+    setUiState('error')
+    setUiLabel('Not listening')
+    setPromptText(message)
   }
 
   /** Performs a terminal checkpoint action (skip/archive/snooze), speaks a short confirmation, then resumes the loop on whatever email comes next. */
@@ -387,7 +395,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       }
     } catch (err) {
       if (err instanceof CancelledError) return
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      showFatalError(err)
     }
   }
 
@@ -503,7 +511,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       await runParagraphsFrom(email, sessionId, 0, gen)
     } catch (err) {
       if (err instanceof CancelledError) return
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      showFatalError(err)
       setPhase('error')
     }
   }
@@ -615,16 +623,6 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
             )
             return
           }
-          if (match?.command === 'snooze') {
-            await runAction(
-              '/api/actions/snooze',
-              email,
-              sessionId,
-              gen,
-              'Snoozed.',
-            )
-            return
-          }
           if (match?.command === 'reply') {
             enterReplyMode()
             return
@@ -654,7 +652,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       }
     } catch (err) {
       if (err instanceof CancelledError) return
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      showFatalError(err)
       setPhase('error')
     }
   }
@@ -879,7 +877,6 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           onArchive={() =>
             handleManualAction('/api/actions/archive', 'Archived.')
           }
-          onSnooze={() => handleManualAction('/api/actions/snooze', 'Snoozed.')}
           onReply={enterReplyMode}
           onMove={enterMoveMode}
           onContinue={handleContinueButton}

@@ -18,7 +18,7 @@ this doc goes a level deeper than other module docs because of that.
 - `src/lib/types` (`CheckpointPayload`, `ParsedEmail`, `PlaybackSpeed`, `PLAYBACK_SPEEDS`).
 - `src/lib/gmail/labels` (`GmailLabel`, type-only).
 - `src/components/ui/{Card,Button,IconButton,icons}`, `src/components/listening/{ManualControls,StatusIndicator}`.
-- Calls `/api/session`, `/api/session/next`, `/api/actions/{archive,reply,snooze,move}`, `/api/reply/cleanup`, `/api/labels`, and (fire-and-forget) `/api/settings` for the speed control — see [docs/app/api/README.md](./api/README.md).
+- Calls `/api/session`, `/api/session/next`, `/api/actions/{archive,reply,move}`, `/api/reply/cleanup`, `/api/labels`, and (fire-and-forget) `/api/settings` for the speed control — see [docs/app/api/README.md](./api/README.md).
 
 ## State machine shape
 - `phase`: `"loading" | "ready" | "error" | "done"` — overall page lifecycle.
@@ -40,6 +40,6 @@ Reached via `/home`'s "Start Listening" button, the sidebar's "Listen" link, and
 - `runAction` and `sendReplyAndResume` both end with `void runEmailLoop(...)` (fire-and-forget), not `await` — they only need to wait for the action's own round trip and its spoken confirmation before returning, since their callers (`handleManualAction`, `handleConfirmMove`, `handleSendReplyManual`) hold the `busy` flag (which disables `ManualControls`) for exactly as long as they're awaited. Awaiting the full continuation there previously kept `busy` stuck `true` for the rest of the session after the first manual action. Any new terminal-action handler must follow the same fire-and-forget shape.
 
 ## Where to add new code here
-- A new voice command's client-side handling (after `matchCommand` recognizes it in `src/lib/voice/commandMatcher.ts`) → add a case in the command-dispatch logic inside `runEmailLoop`/`runParagraphsFrom`, following the existing `continue`/`skip`/`archive`/`reply`/`snooze`/`move` cases.
+- A new voice command's client-side handling (after `matchCommand` recognizes it in `src/lib/voice/commandMatcher.ts`) → add a case in the command-dispatch logic inside `runEmailLoop`/`runParagraphsFrom`, following the existing `continue`/`skip`/`archive`/`reply`/`move` cases.
 - A new manual (button) action → add to `ManualControls` props ([docs/components/listening.md](../components/listening.md)) and a corresponding `handleManualAction` call here. If it needs a parameter (like `move`'s label), give it its own picker/confirm panel state instead of firing immediately.
 - Do not add Gmail/session logic directly in this file — it should only orchestrate calls to `/api/*` and the two hooks; business logic belongs in `src/lib/`.
