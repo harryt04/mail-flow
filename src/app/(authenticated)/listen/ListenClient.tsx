@@ -716,7 +716,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   const sessionLabel =
     totalEstimate > snapshotSize
       ? `${remaining.toLocaleString()} left in this batch of ${snapshotSize.toLocaleString()} (out of ~${totalEstimate.toLocaleString()} unread)`
-      : `${remaining.toLocaleString()} left in this session`
+      : `${remaining.toLocaleString()} left to listen to`
   const paragraphLabel =
     paragraphIndex !== null
       ? `Paragraph ${paragraphIndex + 1} of ${email.paragraphs.length}`

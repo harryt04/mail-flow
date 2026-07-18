@@ -21,7 +21,7 @@ function buildBookmarkStatus(progress: SessionWithProgress | null): string {
     return `Working through the oldest ${snapshotSize.toLocaleString()} of ~${totalEstimate.toLocaleString()} unread emails — ${remaining.toLocaleString()} left in this batch.`
   }
 
-  return `You have ${remaining.toLocaleString()} email${remaining === 1 ? '' : 's'} left in this session.`
+  return `You have ${remaining.toLocaleString()} email${remaining === 1 ? '' : 's'} to listen to.`
 }
 
 export default async function HomePage() {

@@ -131,7 +131,7 @@ export function InboxClient() {
       <div className="flex w-full flex-col gap-1">
         <h1 className="text-h1 text-text-primary font-bold">Inbox</h1>
         <p className="text-body text-text-secondary">
-          {total.toLocaleString()} emails in this session{capNote}. Pick one to
+          {total.toLocaleString()} emails to listen to{capNote}. Pick one to
           jump straight there.
         </p>
       </div>
