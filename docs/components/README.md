@@ -2,7 +2,7 @@
 
 Four subdirectories, split by scope:
 
-- [ui.md](./ui.md) — generic, app-agnostic design-system primitives (Button, Card, Chip, icons, etc.). No business logic, minimal internal imports.
+- [ui.md](./ui.md) — generic, app-agnostic design-system primitives (Button, Card, Badge, icons, etc.). No business logic, minimal internal imports.
 - [landing.md](./landing.md) — marketing/landing-page-only sections, rendered from `src/app/page.tsx`.
 - [listening.md](./listening.md) — the voice-session status UI, rendered from `src/app/listen/ListenClient.tsx`.
 - [settings.md](./settings.md) — `ToggleGroup`, the one settings-specific control.

@@ -10,7 +10,7 @@ imports — everything here can be used from any feature area.
 | `Button.tsx` | Variant-driven button (`primary`/`secondary`/`danger`/`ghost`, `md`/`lg`, optional icon, `fullWidth`). The base of nearly every clickable element in the app. |
 | `IconButton.tsx` | Accessible icon-only button, requires `icon` + `label` (for a11y), `default`/`primary` variant. |
 | `Card.tsx` | Rounded container with border and shadow — generic content wrapper. |
-| `Chip.tsx` | Tone-based badge/label (`brand`/`positive`/`attention`/`danger`/`neutral`). |
+| `Badge.tsx` | Tone-based badge/label (`brand`/`positive`/`attention`/`danger`/`neutral`). |
 | `AppHeader.tsx` | Server component; app header with a sign-out form (calls `signOut` from `src/lib/auth/options`). Rendered on every authenticated page. |
 | `ServiceWorkerRegister.tsx` | Client-side PWA service worker registration (registers `public/sw.js`); renders `null`. |
 | `ThemeScript.tsx` | Inline theme-persistence script injected in `<head>` to prevent flash-of-unstyled-content before React hydrates. |
@@ -21,7 +21,7 @@ imports — everything here can be used from any feature area.
 - `AppHeader.tsx` is the one exception that reaches into `src/lib/auth/options` (`signOut`) — every other file here has zero internal imports.
 
 ## Depended on by
-Nearly everything: `AppHeader` is used on `home`, `settings`, and `listen` pages; `Button`/`Card`/`IconButton`/`Chip` are used across `app/`, `components/listening/`, `components/landing/`, and `components/settings/`. `ServiceWorkerRegister` and `ThemeScript` are both mounted once, from `src/app/layout.tsx`.
+Nearly everything: `AppHeader` is used on `home`, `settings`, and `listen` pages; `Button`/`Card`/`IconButton`/`Badge` are used across `app/`, `components/listening/`, `components/landing/`, and `components/settings/`. `ServiceWorkerRegister` and `ThemeScript` are both mounted once, from `src/app/layout.tsx`.
 
 ## Conventions
 - These components accept and spread standard HTML attribute types (`ButtonHTMLAttributes<HTMLButtonElement>`, etc.) rather than defining a closed prop set — keep new primitives consistent with that so callers can pass `onClick`, `type`, `aria-*`, etc. through untouched.

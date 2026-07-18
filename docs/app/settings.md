@@ -11,7 +11,7 @@ User preferences UI: inbox scope/order, theme, voice tone, and account disconnec
 
 ## Depends on
 - `src/lib/auth/options` (`auth`) — `page.tsx`.
-- `src/components/ui/{Card,Button,Chip,icons}`, `src/components/settings/ToggleGroup` — `SettingsClient.tsx`.
+- `src/components/ui/{Card,Button,Badge,icons}`, `src/components/settings/ToggleGroup` — `SettingsClient.tsx`.
 - `src/hooks/useTheme` — `SettingsClient.tsx`.
 - `src/lib/types` (`InboxScope`, `InboxOrder`, `UserSettings`) — shared shape with the API route.
 - `next-auth/react` (`signOut`) for the disconnect flow's client-side sign-out.
