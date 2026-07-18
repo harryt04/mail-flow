@@ -1,0 +1,59 @@
+# Testing — unit, component, and e2e
+
+## Scripts
+
+- `npm run test` — run unit/component tests once (Vitest)
+- `npm run test:watch` — watch mode for unit/component tests
+- `npm run test:e2e` — run end-to-end tests (Playwright)
+
+## Unit & component tests
+
+Tests are **colocated** with source files as `*.test.ts(x)` (not in a separate `__tests__` tree).
+Run via Vitest + React Testing Library (jsdom environment).
+
+### Coverage strategy
+
+**Pure logic** (no mocks needed):
+- `src/lib/voice/commandMatcher.test.ts` — voice command parsing
+- `src/lib/voice/labelMatcher.test.ts` — label fuzzy matching
+- `src/lib/gmail/parse.test.ts` — email parsing (body extraction, quote stripping, URL humanizing)
+- `src/lib/auth/tokenCrypto.test.ts` — encrypt/decrypt round-trips
+- `src/lib/utils.test.ts` — tailwind class merging
+
+**Component rendering** (jsdom):
+- `src/components/ui/Button.test.tsx`, `Card.test.tsx`, `Badge.test.tsx`, `IconButton.test.tsx` — basic render/variant/click tests
+- `src/components/listening/StatusIndicator.test.tsx` — render states for the core listening UX
+- `src/components/listening/ManualControls.test.tsx` — fallback manual action buttons
+
+**Hooks** (renderHook):
+- `src/hooks/useTheme.test.ts` — theme preference persistence
+- `src/hooks/useAudioPlayback.test.ts` — playback status state
+- `src/hooks/use-mobile.test.ts` — media query for mobile breakpoint
+
+**Mocked external calls** (vi.mock):
+- `src/lib/voice/stt.test.ts` — Deepgram STT token minting (mocked)
+- `src/lib/voice/tts.test.ts` — OpenAI TTS synthesis (mocked)
+
+## E2E tests
+
+End-to-end tests live in `e2e/` and run via Playwright against a built+running instance of the app.
+
+### Setup
+
+Playwright is configured to start a dev server via `webServer` in `playwright.config.ts`. Tests run in Chromium headless by default.
+
+### Example: smoke test
+
+```ts
+// e2e/landing.spec.ts
+test('landing page displays sign-in flow when unauthenticated', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.locator('h1')).toContainText('MailFlow')
+})
+```
+
+## CI integration
+
+Per AGENTS.md, run `npm run prettify && npm run ci` before considering work done. The `ci` script runs prettier check, eslint, and vitest.
+
+E2E tests are kept separate (`npm run test:e2e`) since they require a built, running server and take longer.

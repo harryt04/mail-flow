@@ -31,7 +31,7 @@ task → file lookup table.
 | [components/listening.md](./components/listening.md) | Voice-session visual states |
 | [components/settings.md](./components/settings.md) | The settings `ToggleGroup` control |
 | [components/landing.md](./components/landing.md) | Logged-out landing page sections |
-| [app/README.md](./app/README.md) | Root layout, landing page, global CSS |
+| [app/README.md](./app/README.md) | Root layout, landing page, global CSS, and the `(authenticated)` route group layout (sidebar nav + auth gate shared by every logged-in page) |
 | [app/home.md](./app/home.md) | The authenticated dashboard |
 | [app/inbox.md](./app/inbox.md) | The paginated inbox browser + bookmark jump |
 | [app/listen.md](./app/listen.md) | The core listening screen + state machine |
@@ -39,6 +39,7 @@ task → file lookup table.
 | [app/api/README.md](./app/api/README.md) | All API routes — route table + conventions |
 | [proxy-and-routing.md](./proxy-and-routing.md) | Auth gating at the edge (`proxy.ts`) |
 | [public-assets.md](./public-assets.md) | The mic-audio worklet and the service worker |
+| [testing.md](./testing.md) | Running unit/component tests (Vitest) and e2e tests (Playwright) |
 
 ## Other docs in this repo
 `mvp-docs/` holds pre-implementation planning docs (PRD, brand guide, provider analysis,
