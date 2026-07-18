@@ -1,11 +1,19 @@
 import { IconButton } from "@/components/ui/IconButton";
-import { IconSkip, IconArchive, IconReply, IconSnooze, IconPlay } from "@/components/ui/icons";
+import {
+  IconSkip,
+  IconArchive,
+  IconReply,
+  IconSnooze,
+  IconPlay,
+  IconFolder,
+} from "@/components/ui/icons";
 
 interface ManualControlsProps {
   onSkip: () => void;
   onArchive: () => void;
   onSnooze: () => void;
   onReply: () => void;
+  onMove: () => void;
   onContinue?: () => void;
   showContinue?: boolean;
   disabled?: boolean;
@@ -17,6 +25,7 @@ export function ManualControls({
   onArchive,
   onSnooze,
   onReply,
+  onMove,
   onContinue,
   showContinue = false,
   disabled,
@@ -75,6 +84,16 @@ export function ManualControls({
           disabled={disabled}
         />
         <span className="text-label uppercase text-text-secondary">Snooze</span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <IconButton
+          icon={<IconFolder className="w-6 h-6" />}
+          label="Move to folder"
+          size="lg"
+          onClick={onMove}
+          disabled={disabled}
+        />
+        <span className="text-label uppercase text-text-secondary">Move to</span>
       </div>
     </div>
   );

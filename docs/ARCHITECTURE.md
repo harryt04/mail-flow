@@ -53,11 +53,13 @@ one checkpoint window → `/api/stt/token` mints a Deepgram key → transcript i
 client-side via `matchCommand` (`lib/voice/commandMatcher.ts`). See
 [docs/lib/bookmark.md](./lib/bookmark.md).
 
-### 3. Command handling (skip/archive/snooze)
-Matched command → `ListenClient`'s `runAction`/`handleManualAction` → the corresponding route
-(`/api/session/next` for skip, `/api/actions/archive`, `/api/actions/snooze`) → Gmail-side
-mutation (except skip) via `lib/gmail/actions.ts` → `advanceSession` +
-`buildCheckpointResponse` → next email loads. See [docs/app/api/actions.md](./app/api/actions.md).
+### 3. Command handling (skip/archive/snooze/move)
+Matched command → `ListenClient`'s `runAction`/`handleManualAction` (or, for the open-vocabulary
+"move" command, `runMoveVoiceFlow`, which fuzzy-matches the spoken folder name against the
+user's real Gmail labels and always confirms before applying) → the corresponding route
+(`/api/session/next` for skip, `/api/actions/{archive,snooze,move}`) → Gmail-side mutation
+(except skip) via `lib/gmail/actions.ts` → `advanceSession` + `buildCheckpointResponse` → next
+email loads. See [docs/app/api/actions.md](./app/api/actions.md).
 
 ### 4. Reply by dictation
 User says "reply" → `ListenClient` enters `replyStage: "dictating"` → mic captures audio via

@@ -1,0 +1,8 @@
+There are some UX issues after signing in. Here is the PRD for context on what I tried to build: 
+/Users/harry/Documents/git/emails/mvp-docs/PRD.md
+/Users/harry/Documents/git/emails/mvp-docs/BRAND.md
+
+- When listening to the agent read/summarize the email, there is no way to interrupt them. The action buttons should at least remain clickable, even if we can't start listening to the user until the correct moment. The user should be able to interrupt the email by clicking on one of the action buttons, which should automatically move on to the next email. 
+- These buttons should basically never be disabled, unless we don't have an actively selected email we are listening to. If that's the case, clicking on these buttons wouldn't mean anything. If there's an active email being inspected, the buttons should be enabled for power users to move through their emails, or ones that were back to back and need to be dismissed or organized in the same way as their email siblings. 
+- Listening doesn't appear to be working. Every time listening begins, it says "Could not start listening" every time, and forces me to click on a button. 
+- There's no sidebar when logged in. No ability to move to different pages if needed or see what there is. No ability to move out of this email and select a different email from which to begin listening to (essentially move the listening bookmark). Right now it feels like the user is trapped in the sequence they are currently in. 

@@ -8,6 +8,19 @@ export async function archiveMessage(gmail: gmail_v1.Gmail, messageId: string): 
   });
 }
 
+/** Sorts the message into a user label (e.g. "Unsubscribe") — applies the label AND archives it, so it drops out of the sequential listening queue but stays findable under that label in Gmail. */
+export async function moveMessageToLabel(
+  gmail: gmail_v1.Gmail,
+  messageId: string,
+  labelId: string
+): Promise<void> {
+  await gmail.users.messages.modify({
+    userId: "me",
+    id: messageId,
+    requestBody: { addLabelIds: [labelId], removeLabelIds: ["INBOX"] },
+  });
+}
+
 interface SendReplyParams {
   gmail: gmail_v1.Gmail;
   threadId: string;

@@ -4,6 +4,8 @@
 |---|---|---|
 | Add a new voice command (e.g. "delete") | [lib/voice.md](./lib/voice.md), [app/listen.md](./app/listen.md) | `src/lib/voice/commandMatcher.ts` (add to `Command` union + matching), `src/app/listen/ListenClient.tsx` (dispatch case) |
 | Add a new Gmail-mutating action (e.g. "mark spam") | [lib/gmail.md](./lib/gmail.md), [app/api/actions.md](./app/api/actions.md) | `src/lib/gmail/actions.ts`, `src/lib/types.ts` (`EmailAction` union), new route under `src/app/api/actions/` |
+| Change "move to folder" (labels, matching, confirm flow) | [lib/gmail.md](./lib/gmail.md), [lib/voice.md](./lib/voice.md), [app/api/actions.md](./app/api/actions.md), [app/listen.md](./app/listen.md) | `src/lib/gmail/labels.ts`, `src/lib/voice/labelMatcher.ts`, `src/lib/voice/commandMatcher.ts` (`MOVE_TRIGGERS`), `src/app/listen/ListenClient.tsx` (`runMoveVoiceFlow`/move picker) |
+| Browse/jump the inbox snapshot | [app/inbox.md](./app/inbox.md), [app/api/inbox.md](./app/api/inbox.md) | `src/app/inbox/InboxClient.tsx`, `src/lib/gmail/list.ts` (`fetchMessageSummaries`), `src/lib/bookmark/session.ts` (`jumpToMessage`) |
 | Add a new API route | [app/api/README.md](./app/api/README.md) | `src/app/api/<name>/route.ts` — call `requireUser()` first; add its prefix to `proxy.ts`'s matcher/`PROTECTED_PREFIXES` if it needs auth gating at the edge |
 | Change checkpoint/bookmark/session-progress logic | [lib/bookmark.md](./lib/bookmark.md) | `src/lib/bookmark/session.ts` |
 | Add a new user setting | [app/settings.md](./app/settings.md), [app/api/settings.md](./app/api/settings.md) | `src/lib/types.ts` (`UserSettings`, `DEFAULT_USER_SETTINGS`), `src/app/api/settings/route.ts`, `src/app/settings/SettingsClient.tsx` |

@@ -8,6 +8,7 @@ export interface ActionCounts {
   delete: number;
   reply: number;
   snooze: number;
+  move: number;
   total: number;
 }
 
@@ -17,6 +18,7 @@ const ZERO_COUNTS: Omit<ActionCounts, "total"> = {
   delete: 0,
   reply: 0,
   snooze: 0,
+  move: 0,
 };
 
 /** All-time per-action tallies for a user's processed emails, for the /home confidence-boost dashboard. */

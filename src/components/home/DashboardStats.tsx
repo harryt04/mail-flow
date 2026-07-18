@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui/Card";
 import { Badge, type badgeVariants } from "@/components/ui/Badge";
-import { IconArchive, IconReply, IconSnooze, IconSkip } from "@/components/ui/icons";
+import { IconArchive, IconReply, IconSnooze, IconSkip, IconFolder } from "@/components/ui/icons";
 import type { ActionCounts } from "@/lib/bookmark/stats";
 import type { VariantProps } from "class-variance-authority";
 
@@ -48,6 +48,12 @@ export function DashboardStats({ counts }: { counts: ActionCounts }) {
       icon: <IconSnooze className="w-6 h-6" />,
     },
     {
+      label: "Moved",
+      count: counts.move,
+      tone: "positive",
+      icon: <IconFolder className="w-6 h-6" />,
+    },
+    {
       label: "Skipped",
       count: counts.skip,
       tone: "neutral",
@@ -61,7 +67,7 @@ export function DashboardStats({ counts }: { counts: ActionCounts }) {
         You&apos;ve sorted <span className="font-semibold text-text-primary">{counts.total}</span>{" "}
         email{counts.total === 1 ? "" : "s"} so far.
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {tiles.map((tile) => (
           <div key={tile.label} className="flex flex-col items-center gap-2 text-center">
             <Badge tone={tile.tone} icon={tile.icon}>

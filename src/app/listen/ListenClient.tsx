@@ -11,12 +11,14 @@ import { StatusIndicator, type ListeningState } from "@/components/listening/Sta
 import { useAudioPlayback } from "@/hooks/useAudioPlayback";
 import { useVoiceSession } from "@/hooks/useVoiceSession";
 import { matchCommand } from "@/lib/voice/commandMatcher";
+import { findMatchingLabels } from "@/lib/voice/labelMatcher";
 import { PLAYBACK_SPEEDS, type CheckpointPayload, type ParsedEmail, type PlaybackSpeed } from "@/lib/types";
+import type { GmailLabel } from "@/lib/gmail/labels";
 
 type Phase = "loading" | "ready" | "error" | "done";
 
 const MAX_RETRIES = 3;
-const RETRY_PROMPT = "Didn't catch that. Say Skip, Archive, Reply, or Continue.";
+const RETRY_PROMPT = "Didn't catch that. Say Skip, Archive, Reply, Move, or Continue.";
 
 class CancelledError extends Error {}
 
@@ -54,6 +56,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   const [replyStage, setReplyStage] = useState<"idle" | "dictating" | "cleaning" | "confirming">(
     "idle"
   );
+  const [labels, setLabels] = useState<GmailLabel[]>([]);
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [moveConfirmLabel, setMoveConfirmLabel] = useState<GmailLabel | null>(null);
 
   const audio = useAudioPlayback();
   const voice = useVoiceSession();
@@ -83,6 +88,13 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   useEffect(() => {
     audio.setRate(initialPlaybackSpeed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/labels")
+      .then((res) => (res.ok ? res.json() : { labels: [] }))
+      .then((data: { labels?: GmailLabel[] }) => setLabels(data.labels ?? []))
+      .catch(() => setLabels([]));
   }, []);
 
   const isCurrent = (gen: number) => generationRef.current === gen;
@@ -155,6 +167,74 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     }
 
     await runEmailLoop(payload.email, payload.sessionId, gen);
+  }
+
+  /**
+   * Voice-triggered "move to <folder>" — fuzzy-matches the spoken folder name against the
+   * user's real Gmail labels, always speaks a confirmation before applying (labels are open
+   * vocabulary, unlike the fixed command set, so misrecognition risk is higher). Returns true
+   * once the checkpoint loop should stop (either the move happened, or retries were exhausted
+   * and the manual buttons take over); false means fall back into the normal retry prompt.
+   */
+  async function runMoveVoiceFlow(
+    rawArgument: string,
+    email: ParsedEmail,
+    sessionId: string,
+    gen: number
+  ): Promise<boolean> {
+    const matches = findMatchingLabels(rawArgument, labels);
+
+    if (matches.length === 0) {
+      await speakAndShow(
+        "You don't have a Gmail label like that yet. Add it in Gmail, then try again.",
+        gen,
+        "No matching folder",
+        "error"
+      );
+      return false;
+    }
+    if (matches.length > 1) {
+      await speakAndShow(
+        "More than one folder matches that — try being more specific.",
+        gen,
+        "Ambiguous folder",
+        "error"
+      );
+      return false;
+    }
+
+    const label = matches[0];
+    await speakAndShow(`Move to ${label.name}? Say yes to confirm, or redo to cancel.`, gen, `Move to ${label.name}?`);
+    if (!isCurrent(gen)) return true;
+
+    let retries = 0;
+    for (;;) {
+      if (!isCurrent(gen)) return true;
+      const transcript = await listenAndShow(gen);
+      const match = matchCommand(transcript);
+
+      if (match?.command === "confirm") {
+        await runAction("/api/actions/move", email, sessionId, gen, `Moved to ${label.name}.`, {
+          labelId: label.id,
+          labelName: label.name,
+        });
+        return true;
+      }
+      if (match?.command === "redo") {
+        return false;
+      }
+
+      retries += 1;
+      if (retries > MAX_RETRIES) {
+        setUiState("error");
+        setUiLabel("Use the buttons below");
+        setPromptText("Having trouble hearing you — use the buttons below.");
+        return true;
+      }
+      setUiState("error");
+      setUiLabel("Didn't catch that");
+      await speakAndShow("Say yes to confirm the move, or redo to cancel.", gen, "Didn't catch that");
+    }
   }
 
   /** Sends via Gmail and resumes the checkpoint loop on whatever email comes next. */
@@ -294,6 +374,55 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     }
   }
 
+  /** Manual (tap-driven) move — opens the folder picker instead of the ManualControls row. */
+  function enterMoveMode() {
+    generationRef.current += 1;
+    voice.cancel();
+    audio.stop();
+    setShowContinue(false);
+    setMoveConfirmLabel(null);
+    setUiState("idle");
+    setUiLabel("Ready");
+    setPromptText(null);
+    setMoveOpen(true);
+  }
+
+  function handleCancelMove() {
+    generationRef.current += 1;
+    const gen = generationRef.current;
+    voice.cancel();
+    audio.stop();
+    setMoveOpen(false);
+    setMoveConfirmLabel(null);
+    setError(null);
+    if (checkpoint?.email) {
+      void runParagraphsFrom(checkpoint.email, checkpoint.sessionId, paragraphIndex ?? 0, gen);
+    }
+  }
+
+  async function handleConfirmMove() {
+    if (!checkpoint?.email || !moveConfirmLabel || busy) return;
+    generationRef.current += 1;
+    const gen = generationRef.current;
+    voice.cancel();
+    audio.stop();
+    const label = moveConfirmLabel;
+    setMoveOpen(false);
+    setMoveConfirmLabel(null);
+    setError(null);
+    setBusy(true);
+    try {
+      await runAction("/api/actions/move", checkpoint.email, checkpoint.sessionId, gen, `Moved to ${label.name}.`, {
+        labelId: label.id,
+        labelName: label.name,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   /** Speaks the intro line, then hands off to the paragraph-checkpoint loop starting at paragraph 0. */
   async function runEmailLoop(email: ParsedEmail, sessionId: string, gen: number) {
     try {
@@ -405,6 +534,11 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           if (match?.command === "reply") {
             enterReplyMode();
             return;
+          }
+          if (match?.command === "move" && match.argument) {
+            const handled = await runMoveVoiceFlow(match.argument, email, sessionId, gen);
+            if (handled) return;
+            continue;
           }
 
           retries += 1;
@@ -569,12 +703,63 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
             </Button>
           </div>
         </div>
+      ) : moveOpen ? (
+        <div className="w-full flex flex-col gap-3">
+          {!moveConfirmLabel ? (
+            <>
+              <p className="text-center text-body text-text-secondary">
+                Move this email to which folder?
+              </p>
+              {labels.length === 0 ? (
+                <p className="text-center text-meta text-text-muted">
+                  No Gmail labels found yet — add one in Gmail, then come back here.
+                </p>
+              ) : (
+                <div className="flex flex-wrap justify-center gap-2">
+                  {labels.map((label) => (
+                    <Button
+                      key={label.id}
+                      variant="secondary"
+                      onClick={() => setMoveConfirmLabel(label)}
+                    >
+                      {label.name}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              <div className="flex justify-center">
+                <Button variant="secondary" onClick={handleCancelMove}>
+                  Cancel
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-center text-body text-text-primary">
+                Move to {moveConfirmLabel.name}?
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={() => setMoveConfirmLabel(null)}
+                  disabled={busy}
+                >
+                  Back
+                </Button>
+                <Button onClick={handleConfirmMove} disabled={busy}>
+                  Confirm
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       ) : (
         <ManualControls
           onSkip={() => handleManualAction("/api/session/next", "Skipped.")}
           onArchive={() => handleManualAction("/api/actions/archive", "Archived.")}
           onSnooze={() => handleManualAction("/api/actions/snooze", "Snoozed.")}
           onReply={enterReplyMode}
+          onMove={enterMoveMode}
           onContinue={handleContinueButton}
           showContinue={showContinue}
           disabled={busy}

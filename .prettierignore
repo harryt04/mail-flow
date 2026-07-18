@@ -1,0 +1,6 @@
+**/*.md
+node_modules
+.next
+dist
+build
+.claude/*

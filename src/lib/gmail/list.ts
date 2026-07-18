@@ -2,9 +2,11 @@ import type { gmail_v1 } from "googleapis";
 import type { InboxScope, InboxOrder } from "@/lib/types";
 import { headerValue, parseSenderHeader } from "@/lib/gmail/parse";
 
-// Friends/family MVP scale (PRD §3) — cap a single snapshot so one huge
-// inbox can't turn "Start Listening" into a runaway pagination loop.
-const MAX_SNAPSHOT_SIZE = 2000;
+// Friends/family MVP scale (PRD §3) — cap a single snapshot so a truly pathological
+// inbox can't turn "Start Listening" into an unbounded pagination loop. This is deliberately
+// generous (well beyond the "thousands of unread emails" persona PRD §3 targets) — a real
+// user with 2,275 unread was previously hitting the old 2,000 cap and seeing a wrong count.
+const MAX_SNAPSHOT_SIZE = 20000;
 const PAGE_SIZE = 500;
 
 export interface InboxSnapshot {

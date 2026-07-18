@@ -4,13 +4,16 @@
 The root Next.js App Router files: global layout, the logged-out landing page, PWA
 manifest/sitemap, and global CSS. Page-specific logic lives in the `home/`, `listen/`, and
 `settings/` subdirectories (see [home.md](./home.md), [listen.md](./listen.md),
-[settings.md](./settings.md)) and API routes in [api/README.md](./api/README.md).
+[settings.md](./settings.md)) and API routes in [api/README.md](./api/README.md). The static,
+unauthenticated `tos/` and `privacy/` pages live alongside them.
 
 ## Key files
 | File | Role |
 |---|---|
 | `layout.tsx` (65 lines) | Root layout — fonts (Atkinson Hyperlegible Next, Fraunces), `metadata`/`viewport` exports, mounts `ThemeScript` and `ServiceWorkerRegister` once for the whole app. |
 | `page.tsx` (24 lines) | Logged-out landing page — redirects to `/home` if already authenticated (checks `auth()` from `src/lib/auth/options`), otherwise renders `LandingNav`, `LandingHero`, `HowItWorks`, `CommandShowcase`, `ClosingCta` from `src/components/landing/`. |
+| `tos/page.tsx` | Static Terms of Service page, no auth check, linked from `GoogleSignInForm`. |
+| `privacy/page.tsx` | Static Privacy Policy page, no auth check, linked from `GoogleSignInForm`. Required for Google OAuth verification — explicitly discloses Gmail API data usage. |
 | `globals.css` (224 lines) | CSS variables for light/dark theme, Tailwind theme config (including the landing-only `--text-hero` token, kept separate from the in-product `--text-display`), and the named animations (`waveform`, `pulse-ring`, `bounce-dot`, `scale-pop`, `shake`) that back the listening-state visuals in `src/components/listening/`. |
 | `manifest.ts` | PWA manifest metadata (Next's typed `MetadataRoute.Manifest` export). |
 | `sitemap.ts` | Sitemap export, base URL `mail.harryt.dev`. |

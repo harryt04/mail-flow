@@ -14,10 +14,14 @@ for all actual logic (Gmail calls, DB access, voice pipeline) rather than implem
 | `/api/emails/[id]` | `emails/[id]/route.ts` | GET | `lib/gmail/client`, `lib/gmail/parse` — see [emails.md](./emails.md) |
 | `/api/session` | `session/route.ts` | GET, POST | `lib/db`, `lib/gmail/client`, `lib/bookmark/session` — see [session.md](./session.md) |
 | `/api/session/next` | `session/next/route.ts` | POST | `lib/gmail/client`, `lib/bookmark/session` — see [session.md](./session.md) |
+| `/api/inbox` | `inbox/route.ts` | GET | `lib/gmail/{client,list}`, `lib/bookmark/session` — see [inbox.md](./inbox.md) |
+| `/api/inbox/jump` | `inbox/jump/route.ts` | POST | `lib/gmail/client`, `lib/bookmark/session` — see [inbox.md](./inbox.md) |
 | `/api/reply/cleanup` | `reply/cleanup/route.ts` | POST | `lib/voice/replyCleanup` — see [reply-cleanup.md](./reply-cleanup.md) |
 | `/api/actions/archive` | `actions/archive/route.ts` | POST | `lib/gmail/{client,actions}`, `lib/bookmark/session` — see [actions.md](./actions.md) |
 | `/api/actions/reply` | `actions/reply/route.ts` | POST | `lib/gmail/{client,parse,actions}`, `lib/bookmark/session` — see [actions.md](./actions.md) |
 | `/api/actions/snooze` | `actions/snooze/route.ts` | POST | `lib/gmail/client`, `lib/bookmark/session` — see [actions.md](./actions.md) |
+| `/api/actions/move` | `actions/move/route.ts` | POST | `lib/gmail/{client,actions}`, `lib/bookmark/session` — see [actions.md](./actions.md) |
+| `/api/labels` | `labels/route.ts` | GET | `lib/gmail/{client,labels}` — see [actions.md](./actions.md) |
 | `/api/stt/token` | `stt/token/route.ts` | POST | `lib/voice/stt` — see [stt-tts.md](./stt-tts.md) |
 | `/api/tts` | `tts/route.ts` | POST | `lib/voice/tts` — see [stt-tts.md](./stt-tts.md) |
 

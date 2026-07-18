@@ -33,6 +33,7 @@ task → file lookup table.
 | [components/landing.md](./components/landing.md) | Logged-out landing page sections |
 | [app/README.md](./app/README.md) | Root layout, landing page, global CSS |
 | [app/home.md](./app/home.md) | The authenticated dashboard |
+| [app/inbox.md](./app/inbox.md) | The paginated inbox browser + bookmark jump |
 | [app/listen.md](./app/listen.md) | The core listening screen + state machine |
 | [app/settings.md](./app/settings.md) | The settings page |
 | [app/api/README.md](./app/api/README.md) | All API routes — route table + conventions |

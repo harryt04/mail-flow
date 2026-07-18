@@ -11,10 +11,10 @@ listening, speaking, thinking, or confirming a command. Rendered entirely from
 | `StatusIndicator.tsx` | The composite status display — pairs shape/motion + color + a text label for every state (`ListeningState`: `speaking`, `listening`, `thinking`, `confirmed`, `error`, `idle`). Color is never the sole signal. Renders `Waveform` for `speaking` and `ListeningRing` for `listening`. |
 | `ListeningRing.tsx` | Pulsing ring around the mic icon, shown during a checkpoint's listening window. |
 | `Waveform.tsx` | Continuous motion while TTS audio plays — the one exception to BRAND.md §7's no-bounce rule. Also used standalone in `landing/LandingHero.tsx`. |
-| `ManualControls.tsx` | Fallback button row (Skip/Archive/Snooze/Reply/Continue) for when voice isn't practical — mirrors the exact icon+color vocabulary of the voice-command states. |
+| `ManualControls.tsx` | Fallback button row (Skip/Archive/Snooze/Move to/Reply/Continue) for when voice isn't practical — mirrors the exact icon+color vocabulary of the voice-command states. `onMove` opens `ListenClient`'s folder picker rather than firing an action directly, since "move" needs a target label first. |
 
 ## Depends on
-- `src/components/ui/` — icons (`IconMic`, `IconCheck`, `IconAlert`, `IconDots`, `IconSkip`, `IconArchive`, `IconReply`, `IconSnooze`, `IconPlay`) and `IconButton`.
+- `src/components/ui/` — icons (`IconMic`, `IconCheck`, `IconAlert`, `IconDots`, `IconSkip`, `IconArchive`, `IconReply`, `IconSnooze`, `IconFolder`, `IconPlay`) and `IconButton`.
 
 ## Depended on by
 - `src/app/listen/ListenClient.tsx` renders `StatusIndicator` (with `state={uiState}`) and `ManualControls` directly — see [docs/app/listen.md](../app/listen.md).
@@ -26,4 +26,4 @@ listening, speaking, thinking, or confirming a command. Rendered entirely from
 
 ## Where to add new code here
 - A new voice-session visual state → add to the `ListeningState` union in `StatusIndicator.tsx`, then add its shape/motion/color/label case there. Check `mvp-docs/BRAND.md` §6 for the established motion/color rules before inventing a new visual treatment.
-- A new manual (non-voice) action → `ManualControls.tsx`, following its existing `on<Action>` callback-prop pattern.
+- A new manual (non-voice) action → `ManualControls.tsx`, following its existing `on<Action>` callback-prop pattern. If the action needs a parameter (like `move` needing a label) it should open a picker/confirm panel in the parent (`ListenClient.tsx`) rather than firing immediately, matching BRAND.md's "redo is always one word away" forgiving-of-mistakes rule.

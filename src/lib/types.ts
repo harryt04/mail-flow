@@ -62,7 +62,7 @@ export interface BookmarkDoc {
   updatedAt: Date;
 }
 
-export type EmailAction = "skip" | "archive" | "delete" | "reply" | "snooze";
+export type EmailAction = "skip" | "archive" | "delete" | "reply" | "snooze" | "move";
 
 export interface EmailActionLogDoc {
   _id: ObjectId;
@@ -71,6 +71,8 @@ export interface EmailActionLogDoc {
   messageId: string;
   action: EmailAction;
   replyText?: string;
+  /** Gmail label name the message was sorted into — set only for "move" actions. */
+  label?: string;
   timestamp: Date;
 }
 

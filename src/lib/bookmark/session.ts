@@ -112,7 +112,8 @@ export async function advanceSession(
   sessionId: ObjectId,
   messageId: string,
   action: EmailAction,
-  replyText?: string
+  replyText?: string,
+  label?: string
 ): Promise<SessionWithProgress> {
   const sessions = await sessionsCollection();
   const bookmarks = await bookmarksCollection();
@@ -149,6 +150,7 @@ export async function advanceSession(
       messageId,
       action,
       ...(replyText ? { replyText } : {}),
+      ...(label ? { label } : {}),
       timestamp: new Date(),
     }),
   ]);

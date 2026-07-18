@@ -8,7 +8,7 @@ self-contained: none imports from another `src/` module.
 ## Key files
 | File | Role |
 |---|---|
-| `useAudioPlayback.ts` | `useAudioPlayback()` → `{ speak, stop, status }`. Controls a single `<audio>` element (calls `/api/tts`). Playback and mic capture are deliberately never concurrent. |
+| `useAudioPlayback.ts` | `useAudioPlayback()` → `{ speak, stop, status, setRate }`. Controls a single `<audio>` element (calls `/api/tts`). `setRate` sets `playbackRate` immediately and is reapplied on every future `speak()` call, for the playback-speed control. Playback and mic capture are deliberately never concurrent. |
 | `useVoiceSession.ts` | `useVoiceSession()` → `{ state, listen, cancel }`. Opens the mic for a single checkpoint's listening window: mints a short-lived Deepgram token (via `/api/stt/token`) and streams audio for that window only — not a continuously-open mic. |
 | `useTheme.ts` | `useTheme()` → `{ preference, setTheme }`. `prefers-color-scheme` drives the default; a manual override persists via a `data-theme` attribute. |
 

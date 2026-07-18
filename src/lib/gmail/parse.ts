@@ -69,6 +69,24 @@ function stripQuotedReplies(text: string): string {
   return text.slice(0, cut).trim();
 }
 
+// Optional surrounding <angle brackets> — a common plain-text convention for marking a URL
+// (e.g. "<https://example.com>") — are consumed too, so they don't linger around the humanized
+// text once the URL itself is replaced.
+const URL_PATTERN = /<?\bhttps?:\/\/[^\s<>()]+>?/gi;
+
+/** Reads like a human summarizing a link rather than a TTS engine spelling out a URL — the raw text this runs on comes from `extractBody`'s text/plain preference, which often contains literal tracking/action URLs (security alerts, unsubscribe footers) that are unlistenable read verbatim. */
+function humanizeUrls(text: string): string {
+  return text.replace(URL_PATTERN, (match) => {
+    const url = match.replace(/^</, "").replace(/>$/, "");
+    try {
+      const hostname = new URL(url).hostname.replace(/^www\./, "");
+      return `a link to ${hostname}`;
+    } catch {
+      return "a link";
+    }
+  });
+}
+
 function splitParagraphs(text: string): string[] {
   return text
     .split(/\n\s*\n/)
@@ -101,7 +119,7 @@ export function parseGmailMessage(message: gmail_v1.Schema$Message): ParsedEmail
   const { text, html } = extractBody(message.payload);
   const rawText = text ?? (html ? stripHtml(html) : "");
   const withoutQuotes = stripQuotedReplies(rawText);
-  const paragraphs = splitParagraphs(withoutQuotes);
+  const paragraphs = splitParagraphs(humanizeUrls(withoutQuotes));
 
   return {
     messageId: message.id ?? "",
