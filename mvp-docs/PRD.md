@@ -36,8 +36,9 @@ MailFlow is the "audiobook app for your inbox." It reads emails aloud sequential
 1. User opens MailFlow on their phone (installed to home screen), logs in with Google.
 2. Grants Gmail read/modify access via OAuth.
 3. Taps "Start listening." App fetches the next unprocessed email starting from their saved bookmark (or the top of the inbox on first run).
-4. App speaks: sender, subject, and body (TTS).
-5. App listens for a voice command after each email finishes (or via barge-in / interrupt at any time — see open question below):
+4. App speaks the email in segments — sender + subject, then the body one paragraph at a time — pausing after each paragraph at a **checkpoint** rather than reading the whole message uninterrupted. **Interrupting playback mid-sentence is explicitly out of scope for MVP** (see resolved decision below); the checkpoint cadence is the supported mechanism for not having to sit through an entire long email.
+5. At each checkpoint, the app tells the user there's more if applicable ("There's more — want me to keep reading, or...") and listens for a voice command:
+   - **"Continue" / "Keep reading"** → play the next paragraph, another checkpoint follows.
    - **"Skip" / "Next"** → move to the next email, no state change on current one, bookmark advances.
    - **"Archive" or "Delete"** → archive the email in Gmail, bookmark advances.
    - **"Snooze"** → treated as skip/next for MVP (no actual snooze scheduling yet), bookmark advances.
@@ -112,10 +113,12 @@ MailFlow is the "audiobook app for your inbox." It reads emails aloud sequential
 
 ## 9. Open Questions
 
-1. **Inbox scope & order:** Unread-only or all inbox mail? Newest-first or oldest-first? This affects both the ingestion query and what "bookmark" conceptually means.
-2. **Barge-in vs. wait-for-finish:** Can the user interrupt playback mid-sentence to issue a command, or must they wait for the email to finish being read?
-3. **Snapshot reconciliation:** Exact rule for how new mail that arrives mid-session (or between sessions) gets folded into the queue relative to the saved bookmark.
-4. **Wake word / always-listening vs. push-to-talk:** Does the mic listen continuously for commands, or does the user tap a button to talk? (Affects battery, privacy, and complexity significantly.)
-5. **TTS/STT provider choice:** Final pick between OpenAI, ElevenLabs, Google, etc. — affects cost and latency; can be decided during implementation and kept swappable.
-6. **Snooze semantics beyond MVP:** Is "real" snooze (resurface after N hours/days) a near-term follow-up, or fine to leave as permanent skip indefinitely?
-7. **Error handling for STT misfires:** What happens if a voice command isn't recognized — silent retry prompt, fallback to on-screen buttons, or something else?
+Resolved during MVP planning (see [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) and [TTS-STT-ANALYSIS.md](./TTS-STT-ANALYSIS.md) for full reasoning); still listed here for the original context, with resolutions noted inline.
+
+1. **Inbox scope & order:** Unread-only or all inbox mail? Newest-first or oldest-first? This affects both the ingestion query and what "bookmark" conceptually means. — **Resolved: user-configurable in Settings** (Unread/All × Oldest/Newest), defaults to Unread + Oldest-first.
+2. ~~**Barge-in vs. wait-for-finish**~~ — **Resolved: no interruption support in MVP.** Playback and mic capture never overlap. Instead the app reads the email a paragraph at a time and pauses at a checkpoint after each paragraph, telling the user there's more and asking if they want to keep listening or act. This gives the same practical benefit (not being stuck through a long email) without the cost/complexity of true concurrent-audio barge-in. See §4 above for the revised flow.
+3. **Snapshot reconciliation:** Exact rule for how new mail that arrives mid-session (or between sessions) gets folded into the queue relative to the saved bookmark. — **Resolved:** snapshot is immutable once created; a new snapshot is built fresh (respecting scope/order settings) once the current one is exhausted.
+4. **Wake word / always-listening vs. push-to-talk:** Does the mic listen continuously for commands, or does the user tap a button to talk? — **Resolved:** no button tap needed, but also no continuous whole-session listening or dedicated wake-word engine. The mic opens automatically at each paragraph checkpoint and closes once a command is recognized or a short silence timeout passes.
+5. **TTS/STT provider choice:** Final pick between OpenAI, ElevenLabs, Google, etc. — **Resolved: OpenAI `gpt-4o-mini-tts` + Deepgram Nova-3** (streaming), kept swappable behind a provider interface. Anthropic has no first-party TTS/STT product to consider here.
+6. **Snooze semantics beyond MVP:** Is "real" snooze (resurface after N hours/days) a near-term follow-up, or fine to leave as permanent skip indefinitely? — Still open; MVP treats it as skip, logged distinctly so real snooze can be added later without a schema change.
+7. **Error handling for STT misfires:** What happens if a voice command isn't recognized — silent retry prompt, fallback to on-screen buttons, or something else? — **Resolved:** always a spoken retry prompt naming the supported commands, never a silent failure, per BRAND.md tone rules.

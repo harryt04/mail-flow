@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+/* BRAND.md §3 — light theme (default) */
+:root {
+  --bg: #faf7f1;
+  --surface: #ffffff;
+  --surface-sunken: #f1ece3;
+  --border: #e3dccf;
+  --text-primary: #221f1a;
+  --text-secondary: #635c4f;
+  --text-muted: #948c7b;
+  --brand: #0b6e8f;
+  --brand-strong: #08536c;
+  --positive: #00786a;
+  --attention: #b4670a;
+  --danger: #ae3b1c;
+  --focus-ring: rgba(11, 110, 143, 0.55);
+  /* Foreground for solid-fill accent buttons. Light theme's accents are dark
+     enough for white text, but dark theme's accents are re-lightened for use
+     as text-on-dark-bg (BRAND.md §3.2) — as a solid fill they need dark
+     foreground text instead, or contrast collapses below 3:1. */
+  --on-accent: #ffffff;
+
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* BRAND.md §3.2 — dark theme (not an inversion, warm-neutral charcoal) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17140f;
+    --surface: #211d17;
+    --surface-sunken: #0f0d0a;
+    --border: #3a342a;
+    --text-primary: #f2eee5;
+    --text-secondary: #c4bca9;
+    --text-muted: #7f7666;
+    --brand: #5fc1e8;
+    --brand-strong: #8ad4f2;
+    --positive: #3fd9be;
+    --attention: #f0a94b;
+    --danger: #f1815c;
+    --focus-ring: rgba(95, 193, 232, 0.55);
+    --on-accent: #17140f;
+
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Manual override persists via data-theme, per BRAND.md §3.4 rule 4 */
+:root[data-theme="light"] {
+  --bg: #faf7f1;
+  --surface: #ffffff;
+  --surface-sunken: #f1ece3;
+  --border: #e3dccf;
+  --text-primary: #221f1a;
+  --text-secondary: #635c4f;
+  --text-muted: #948c7b;
+  --brand: #0b6e8f;
+  --brand-strong: #08536c;
+  --positive: #00786a;
+  --attention: #b4670a;
+  --danger: #ae3b1c;
+  --focus-ring: rgba(11, 110, 143, 0.55);
+  --on-accent: #ffffff;
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="dark"] {
+  --bg: #17140f;
+  --surface: #211d17;
+  --surface-sunken: #0f0d0a;
+  --border: #3a342a;
+  --text-primary: #f2eee5;
+  --text-secondary: #c4bca9;
+  --text-muted: #7f7666;
+  --brand: #5fc1e8;
+  --brand-strong: #8ad4f2;
+  --positive: #3fd9be;
+  --attention: #f0a94b;
+  --danger: #f1815c;
+  --focus-ring: rgba(95, 193, 232, 0.55);
+  --on-accent: #17140f;
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-border: var(--border);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-positive: var(--positive);
+  --color-attention: var(--attention);
+  --color-danger: var(--danger);
+  --color-on-accent: var(--on-accent);
+
+  --font-sans: var(--font-atkinson);
+
+  /* BRAND.md §4 type scale */
+  --text-display: 2.25rem;
+  --text-display--line-height: 1.15;
+  --text-h1: 1.75rem;
+  --text-h1--line-height: 1.25;
+  --text-h2: 1.375rem;
+  --text-h2--line-height: 1.3;
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.6;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-meta: 0.875rem;
+  --text-meta--line-height: 1.5;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.4;
+
+  /* BRAND.md §5's 8px spacing scale (4/8/12/16/24/32/48/64) is exactly
+     Tailwind's default --spacing multiplier at steps 1/2/3/4/6/8/12/16 —
+     no custom spacing tokens needed, just use p-1/p-2/p-3/p-4/p-6/p-8/p-12/p-16. */
+
+  --radius-card: 16px;
+  --radius-pill: 999px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* BRAND.md §9 — never below 14px anywhere in the product */
+* {
+  min-height: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* BRAND.md §7 — gentle, natural easing; the waveform is the one exception allowed to feel continuous/alive. */
+@keyframes waveform {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+@keyframes bounce-dot {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* No overshoot — BRAND.md §7 bans bounce on entrances outside the waveform. */
+@keyframes scale-pop {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
