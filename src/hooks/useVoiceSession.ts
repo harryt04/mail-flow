@@ -139,7 +139,7 @@ export function useVoiceSession() {
         source?.disconnect()
         workletNode?.disconnect()
         stream?.getTracks().forEach((t) => t.stop())
-        audioContext?.close().catch(() => {})
+        // Don't close the audioContext here — it's cached and reused across sessions
       }
 
       function fail(err: Error) {
