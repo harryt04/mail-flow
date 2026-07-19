@@ -37,6 +37,10 @@ the tree in a `NextIntlClientProvider` seeded with the real `en-US` catalog.
 - `src/hooks/useTheme.test.ts` — theme preference persistence
 - `src/hooks/useAudioPlayback.test.ts` — playback status state
 - `src/hooks/use-mobile.test.ts` — media query for mobile breakpoint
+- `src/hooks/useVoiceSession.test.ts` — mic-capture lifecycle (connecting → listening →
+  transcribing), silence/max-duration timeouts, cancel-while-listening, and the
+  `/api/stt/transcribe` success/failure paths, with `getUserMedia`/`AudioContext`/
+  `AudioWorkletNode` stubbed on `globalThis` since jsdom has no Web Audio implementation
 
 **Mocked external calls** (vi.mock):
 - `src/lib/voice/stt.test.ts` — OpenAI transcription (mocked)
@@ -45,7 +49,7 @@ the tree in a `NextIntlClientProvider` seeded with the real `en-US` catalog.
 
 ### Known gaps
 
-Not yet covered, flagged as follow-up work: `src/hooks/useVoiceSession.ts` (needs `MediaRecorder`/`getUserMedia` mocking), the 16 `src/app/api/**/route.ts` handlers (need Next.js request/response fixtures), and the `(authenticated)` page-level client components (`ListenClient.tsx`, `InboxClient.tsx`, `SettingsClient.tsx`, `OnboardingClient.tsx`).
+Not yet covered, flagged as follow-up work: the 16 `src/app/api/**/route.ts` handlers (need Next.js request/response fixtures), and the `(authenticated)` page-level client components (`ListenClient.tsx`, `InboxClient.tsx`, `SettingsClient.tsx`, `OnboardingClient.tsx`).
 
 ## E2E tests
 
