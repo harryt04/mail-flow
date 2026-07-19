@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { IconButton } from '@/components/ui/IconButton'
-import { IconPlay } from '@/components/ui/icons'
+import { IconPlay, IconPause } from '@/components/ui/icons'
 import { ManualControls } from '@/components/listening/ManualControls'
 import {
   StatusIndicator,
@@ -27,6 +27,21 @@ type Phase = 'loading' | 'ready' | 'error' | 'done'
 
 const MAX_RETRIES = 3
 const RETRY_PROMPT = "Didn't catch that. Say Skip, Archive, Reply, or Move."
+
+// How much to read before pausing to check in — short paragraphs (a signature
+// line, a lone "a link to example.com") get merged with their neighbors so
+// the agent doesn't stop after a single word or link.
+const MIN_CHUNK_SENTENCES = 3
+const MIN_CHUNK_WORDS = 50
+
+function countSentences(text: string): number {
+  return (text.match(/[.!?]+(\s|$)/g) ?? []).length
+}
+
+function countWords(text: string): number {
+  const trimmed = text.trim()
+  return trimmed ? trimmed.split(/\s+/).length : 0
+}
 
 class CancelledError extends Error {}
 
@@ -56,6 +71,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     useState<PlaybackSpeed>(initialPlaybackSpeed)
   const [checkpoint, setCheckpoint] = useState<CheckpointPayload | null>(null)
   const [started, setStarted] = useState(false)
+  const [paused, setPaused] = useState(false)
   const [uiState, setUiState] = useState<ListeningState>('idle')
   const [uiLabel, setUiLabel] = useState('Ready')
   const [promptText, setPromptText] = useState<string | null>(null)
@@ -591,6 +607,32 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     }
   }
 
+  function handlePause() {
+    generationRef.current += 1
+    voice.cancel()
+    audio.stop()
+    setPaused(true)
+    setUiState('paused')
+    setUiLabel('Paused')
+    setPromptText('Paused. Tap play to resume.')
+  }
+
+  function handleResume() {
+    if (!checkpoint?.email) return
+    generationRef.current += 1
+    const gen = generationRef.current
+    setPaused(false)
+    setError(null)
+    setPromptText(null)
+    // Resume on the same chunk it paused on — pausing didn't confirm "continue".
+    void runParagraphsFrom(
+      checkpoint.email,
+      checkpoint.sessionId,
+      paragraphIndex ?? 0,
+      gen,
+    )
+  }
+
   function handleContinueButton() {
     if (!checkpoint?.email) return
     generationRef.current += 1
@@ -618,8 +660,25 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       let i = startIndex
       while (i < email.paragraphs.length) {
         if (!isCurrent(gen)) return
+
+        // Merge consecutive paragraphs into one spoken chunk until we've
+        // read a meaningful amount, instead of stopping after every paragraph.
+        let chunk = email.paragraphs[i]
+        let sentenceCount = countSentences(chunk)
+        let wordCount = countWords(chunk)
+        while (
+          i + 1 < email.paragraphs.length &&
+          sentenceCount < MIN_CHUNK_SENTENCES &&
+          wordCount < MIN_CHUNK_WORDS
+        ) {
+          i += 1
+          chunk += ' ' + email.paragraphs[i]
+          sentenceCount += countSentences(email.paragraphs[i])
+          wordCount += countWords(email.paragraphs[i])
+        }
+
         setParagraphIndex(i)
-        await speakAndShow(email.paragraphs[i], gen)
+        await speakAndShow(chunk, gen)
 
         const hasMore = i < email.paragraphs.length - 1
         setShowContinue(hasMore)
@@ -639,6 +698,10 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
             i += 1
             advancedParagraph = true
             break
+          }
+          if (match?.command === 'pause') {
+            handlePause()
+            return
           }
           if (match?.command === 'skip') {
             await runAction(
@@ -772,6 +835,15 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         >
           {playbackSpeed}x
         </Button>
+        {started && !paused && (
+          <IconButton
+            icon={<IconPause className="h-5 w-5" />}
+            label="Pause session"
+            variant="default"
+            size="md"
+            onClick={handlePause}
+          />
+        )}
       </div>
 
       {!started ? (
@@ -788,6 +860,25 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           />
           <span className="text-label text-text-secondary uppercase">
             Start listening
+          </span>
+        </div>
+      ) : paused ? (
+        <div className="flex flex-col items-center gap-4">
+          <StatusIndicator state={uiState} label={uiLabel} />
+          {promptText && (
+            <p className="text-body text-text-secondary max-w-md text-center">
+              {promptText}
+            </p>
+          )}
+          <IconButton
+            icon={<IconPlay className="h-7 w-7" />}
+            label="Resume listening"
+            variant="primary"
+            size="lg"
+            onClick={handleResume}
+          />
+          <span className="text-label text-text-secondary uppercase">
+            Resume
           </span>
         </div>
       ) : (
@@ -967,7 +1058,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           onMove={enterMoveMode}
           onContinue={handleContinueButton}
           showContinue={showContinue}
-          disabled={busy}
+          disabled={busy || paused}
         />
       )}
     </div>

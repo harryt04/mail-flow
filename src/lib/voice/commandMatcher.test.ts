@@ -26,6 +26,18 @@ describe('matchCommand', () => {
     expect(matchCommand('try again')).toMatchObject({ command: 'redo' })
   })
 
+  it('matches "stop" and "pause" to the pause command', () => {
+    expect(matchCommand('stop')).toMatchObject({ command: 'pause' })
+    expect(matchCommand('pause')).toMatchObject({ command: 'pause' })
+  })
+
+  it('matches "delete" to the archive command', () => {
+    expect(matchCommand('delete')).toMatchObject({
+      command: 'archive',
+      phrase: 'delete',
+    })
+  })
+
   it('does not match a phrase as a substring of another word', () => {
     // "redo" should not match inside "redouble", etc. — word-boundary check
     expect(matchCommand('redouble')).toBeNull()

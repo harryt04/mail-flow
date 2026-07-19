@@ -1,9 +1,20 @@
-import { IconCheck, IconAlert, IconDots } from '@/components/ui/icons'
+import {
+  IconCheck,
+  IconAlert,
+  IconDots,
+  IconPause,
+} from '@/components/ui/icons'
 import { Waveform } from '@/components/listening/Waveform'
 import { ListeningRing } from '@/components/listening/ListeningRing'
 
 export type ListeningState =
-  'speaking' | 'listening' | 'thinking' | 'confirmed' | 'error' | 'idle'
+  | 'speaking'
+  | 'listening'
+  | 'thinking'
+  | 'confirmed'
+  | 'error'
+  | 'idle'
+  | 'paused'
 
 interface StatusIndicatorProps {
   state: ListeningState
@@ -17,6 +28,9 @@ const STATE_COLOR: Record<ListeningState, string> = {
   confirmed: 'text-positive',
   error: 'text-danger',
   idle: 'text-text-secondary',
+  // Neutral, deliberately not a semantic color (BRAND.md §6) — pausing is
+  // neither an error nor an attention-needed state.
+  paused: 'text-text-secondary',
 }
 
 /**
@@ -55,6 +69,8 @@ export function StatusIndicator({ state, label }: StatusIndicatorProps) {
         )}
 
         {state === 'idle' && <IconDots className="h-6 w-6 opacity-40" />}
+
+        {state === 'paused' && <IconPause className="h-8 w-8" />}
       </div>
       <p className={`text-label uppercase ${STATE_COLOR[state]}`}>{label}</p>
     </div>

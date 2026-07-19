@@ -1,5 +1,12 @@
 export type Command =
-  'continue' | 'skip' | 'archive' | 'reply' | 'confirm' | 'redo' | 'move'
+  | 'continue'
+  | 'skip'
+  | 'archive'
+  | 'reply'
+  | 'confirm'
+  | 'redo'
+  | 'move'
+  | 'pause'
 
 // PRD §5.4: "no fuzzy NLU needed beyond basic synonym handling" — plain
 // keyword/synonym matching against the STT transcript.
@@ -10,6 +17,7 @@ const COMMAND_PHRASES: Record<Exclude<Command, 'move'>, string[]> = {
   reply: ['reply', 'respond'],
   confirm: ['send', 'yes', 'confirm', 'send it'],
   redo: ['redo', 'try again', 'no'],
+  pause: ['stop', 'pause'],
 }
 
 // "move" is open-vocabulary (a Gmail label name, not a fixed word) — matched via a capturing
