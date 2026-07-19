@@ -27,7 +27,7 @@ type Phase = 'loading' | 'ready' | 'error' | 'done'
 
 const MAX_RETRIES = 3
 const RETRY_PROMPT =
-  'Didn\'t catch that. Say "Skip", "Archive", "Reply", or "Move".'
+  'Didn\'t catch that. Say "Continue", "Skip", "Archive", "Reply", or "Move".'
 
 // How much to read before pausing to check in — short paragraphs (a signature
 // line, a lone "a link to example.com") get merged with their neighbors so
