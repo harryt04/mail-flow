@@ -26,7 +26,8 @@ import type { GmailLabel } from '@/lib/gmail/labels'
 type Phase = 'loading' | 'ready' | 'error' | 'done'
 
 const MAX_RETRIES = 3
-const RETRY_PROMPT = "Didn't catch that. Say Skip, Archive, Reply, or Move."
+const RETRY_PROMPT =
+  'Didn\'t catch that. Say "Skip", "Archive", "Reply", or "Move".'
 
 // How much to read before pausing to check in — short paragraphs (a signature
 // line, a lone "a link to example.com") get merged with their neighbors so
@@ -159,12 +160,23 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     if (!isCurrent(gen)) throw new CancelledError()
   }
 
-  async function listenAndShow(gen: number): Promise<string> {
+  async function listenAndShow(
+    gen: number,
+    opts?: Parameters<typeof voice.listen>[0],
+  ): Promise<string> {
     setUiState('listening')
     setUiLabel('Listening')
-    const transcript = await voice.listen()
-    if (!isCurrent(gen)) throw new CancelledError()
-    return transcript
+    try {
+      const transcript = await voice.listen(opts)
+      if (!isCurrent(gen)) throw new CancelledError()
+      return transcript
+    } catch (err) {
+      // A stale generation means some other handler (Pause, Continue, Skip, …)
+      // already called voice.cancel() out from under us — that's an expected
+      // cancellation, not a real failure, so it shouldn't surface as an error.
+      if (!isCurrent(gen)) throw new CancelledError()
+      throw err
+    }
   }
 
   /** Surfaces a fatal loop error and makes sure the UI stops implying we're still listening/speaking. */
@@ -251,7 +263,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
 
     const label = matches[0]
     await speakAndShow(
-      `Move to ${label.name}? Say yes to confirm, or redo to cancel.`,
+      `Move to ${label.name}? Say "yes" to confirm, or "redo" to cancel.`,
       gen,
       `Move to ${label.name}?`,
     )
@@ -291,7 +303,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       setUiState('error')
       setUiLabel("Didn't catch that")
       await speakAndShow(
-        'Say yes to confirm the move, or redo to cancel.',
+        'Say "yes" to confirm the move, or "redo" to cancel.',
         gen,
         "Didn't catch that",
       )
@@ -340,13 +352,10 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       if (!isCurrent(gen)) return
 
       setReplyStage('dictating')
-      setUiState('listening')
-      setUiLabel('Listening')
-      const transcript = await voice.listen({
+      const transcript = await listenAndShow(gen, {
         silenceTimeoutMs: 1500,
         maxDurationMs: 60000,
       })
-      if (!isCurrent(gen)) return
 
       if (!transcript.trim()) {
         setReplyStage('idle')
@@ -379,10 +388,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       let retries = 0
       for (;;) {
         if (!isCurrent(gen)) return
-        setUiState('listening')
-        setUiLabel('Listening')
-        const confirmTranscript = await voice.listen()
-        if (!isCurrent(gen)) return
+        const confirmTranscript = await listenAndShow(gen)
         const match = matchCommand(confirmTranscript)
 
         if (match?.command === 'confirm') {
@@ -408,7 +414,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         setUiState('error')
         setUiLabel("Didn't catch that")
         await speakAndShow(
-          "Didn't catch that. Say Send, or Redo.",
+          'Didn\'t catch that. Say "Send", or "Redo".',
           gen,
           "Didn't catch that",
         )
@@ -549,7 +555,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     }
   }
 
-  /** Speaks the intro line, then hands off to the paragraph-checkpoint loop starting at paragraph 0. */
+  /** Speaks the intro line, checks in before reading any of the body, then hands off to the paragraph-checkpoint loop starting at paragraph 0. */
   async function runEmailLoop(
     email: ParsedEmail,
     sessionId: string,
@@ -557,12 +563,23 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   ) {
     try {
       setParagraphIndex(null)
-      setShowContinue(false)
+      setShowContinue(true)
       await speakAndShow(
         `From ${email.sender}. Subject: ${email.subject}.`,
         gen,
       )
       if (!isCurrent(gen)) return
+
+      await speakAndShow(
+        'Say "continue" to hear the message, or tell me what to do.',
+        gen,
+      )
+      if (!isCurrent(gen)) return
+      const result = await listenForCheckpointCommand(email, sessionId, gen, {
+        allowContinue: true,
+      })
+      if (!isCurrent(gen) || result === 'handled') return
+
       await runParagraphsFrom(email, sessionId, 0, gen)
     } catch (err) {
       if (err instanceof CancelledError) return
@@ -650,6 +667,87 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     )
   }
 
+  /**
+   * Shared "what do you want to do" checkpoint listener — used both right after the
+   * subject line (before any body is read) and after each body chunk. Handles the
+   * fixed command set plus two escape hatches: two consecutive silent/no-speech
+   * attempts auto-pauses the session instead of continuing to ask, and MAX_RETRIES
+   * unrecognized-but-non-silent attempts falls back to the on-screen buttons.
+   */
+  async function listenForCheckpointCommand(
+    email: ParsedEmail,
+    sessionId: string,
+    gen: number,
+    options: { allowContinue: boolean },
+  ): Promise<'continue' | 'handled'> {
+    let retries = 0
+    let noAnswerStreak = 0
+    for (;;) {
+      if (!isCurrent(gen)) throw new CancelledError()
+      const transcript = await listenAndShow(gen)
+      const match = matchCommand(transcript)
+
+      if (transcript.trim()) {
+        noAnswerStreak = 0
+      } else {
+        noAnswerStreak += 1
+        if (noAnswerStreak >= 2) {
+          handlePause()
+          return 'handled'
+        }
+      }
+
+      if (match?.command === 'continue' && options.allowContinue) {
+        return 'continue'
+      }
+      if (match?.command === 'pause') {
+        handlePause()
+        return 'handled'
+      }
+      if (match?.command === 'skip') {
+        await runAction('/api/session/next', email, sessionId, gen, 'Skipped.')
+        return 'handled'
+      }
+      if (match?.command === 'archive') {
+        const isDelete = match.phrase === 'delete'
+        await runAction(
+          '/api/actions/archive',
+          email,
+          sessionId,
+          gen,
+          isDelete ? 'Deleted.' : 'Archived.',
+          { delete: isDelete },
+        )
+        return 'handled'
+      }
+      if (match?.command === 'reply') {
+        enterReplyMode()
+        return 'handled'
+      }
+      if (match?.command === 'move' && match.argument) {
+        const handled = await runMoveVoiceFlow(
+          match.argument,
+          email,
+          sessionId,
+          gen,
+        )
+        if (handled) return 'handled'
+        continue
+      }
+
+      retries += 1
+      if (retries > MAX_RETRIES) {
+        setUiState('error')
+        setUiLabel('Use the buttons below')
+        setPromptText('Having trouble hearing you — use the buttons below.')
+        return 'handled'
+      }
+      setUiState('error')
+      setUiLabel("Didn't catch that")
+      await speakAndShow(RETRY_PROMPT, gen, "Didn't catch that")
+    }
+  }
+
   async function runParagraphsFrom(
     email: ParsedEmail,
     sessionId: string,
@@ -683,74 +781,16 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         const hasMore = i < email.paragraphs.length - 1
         setShowContinue(hasMore)
         const prompt = hasMore
-          ? "There's more. Say continue, or tell me what to do."
+          ? 'There\'s more. Say "continue", or tell me what to do.'
           : "That's the whole message. What next?"
         await speakAndShow(prompt, gen)
 
-        let retries = 0
-        let advancedParagraph = false
-        while (!advancedParagraph) {
-          if (!isCurrent(gen)) return
-          const transcript = await listenAndShow(gen)
-          const match = matchCommand(transcript)
-
-          if (match?.command === 'continue' && hasMore) {
-            i += 1
-            advancedParagraph = true
-            break
-          }
-          if (match?.command === 'pause') {
-            handlePause()
-            return
-          }
-          if (match?.command === 'skip') {
-            await runAction(
-              '/api/session/next',
-              email,
-              sessionId,
-              gen,
-              'Skipped.',
-            )
-            return
-          }
-          if (match?.command === 'archive') {
-            const isDelete = match.phrase === 'delete'
-            await runAction(
-              '/api/actions/archive',
-              email,
-              sessionId,
-              gen,
-              isDelete ? 'Deleted.' : 'Archived.',
-              { delete: isDelete },
-            )
-            return
-          }
-          if (match?.command === 'reply') {
-            enterReplyMode()
-            return
-          }
-          if (match?.command === 'move' && match.argument) {
-            const handled = await runMoveVoiceFlow(
-              match.argument,
-              email,
-              sessionId,
-              gen,
-            )
-            if (handled) return
-            continue
-          }
-
-          retries += 1
-          if (retries > MAX_RETRIES) {
-            setUiState('error')
-            setUiLabel('Use the buttons below')
-            setPromptText('Having trouble hearing you — use the buttons below.')
-            return
-          }
-          setUiState('error')
-          setUiLabel("Didn't catch that")
-          await speakAndShow(RETRY_PROMPT, gen, "Didn't catch that")
-        }
+        const result = await listenForCheckpointCommand(email, sessionId, gen, {
+          allowContinue: hasMore,
+        })
+        if (!isCurrent(gen)) return
+        if (result === 'handled') return
+        i += 1
       }
     } catch (err) {
       if (err instanceof CancelledError) return
