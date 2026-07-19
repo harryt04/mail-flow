@@ -9,6 +9,8 @@ const atkinson = Atkinson_Hyperlegible_Next({
   variable: '--font-atkinson',
   subsets: ['latin'],
   weight: ['400', '600', '700'],
+  adjustFontFallback: false,
+  fallback: ['system-ui', 'arial'],
 })
 
 // BRAND.md §4: Fraunces is sanctioned only for large display headlines on the
