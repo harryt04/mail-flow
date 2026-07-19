@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireUser } from '@/lib/auth/requireUser'
 import { getGmailClientForUser } from '@/lib/gmail/client'
-import { fetchMessageSummaries } from '@/lib/gmail/list'
+import { fetchMessageSummaries, searchMessages } from '@/lib/gmail/list'
 import { getActiveSessionProgress } from '@/lib/bookmark/session'
 
 const DEFAULT_PAGE_SIZE = 25
@@ -13,12 +13,33 @@ export async function GET(request: Request) {
   if (!auth)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const url = new URL(request.url)
+  const search = url.searchParams.get('search')?.trim()
+
   const progress = await getActiveSessionProgress(auth.userId)
   if (!progress) {
     return NextResponse.json({ active: false })
   }
 
-  const url = new URL(request.url)
+  if (search) {
+    const pageToken = url.searchParams.get('pageToken') ?? undefined
+    const { gmail } = await getGmailClientForUser(auth.userId.toString())
+    const category = progress.session.category ?? 'primary'
+    const { items, nextPageToken } = await searchMessages(
+      gmail,
+      search,
+      category,
+      pageToken,
+    )
+    return NextResponse.json({
+      active: true,
+      sessionId: progress.session._id.toString(),
+      items,
+      nextPageToken,
+      cursorIndex: progress.session.cursorIndex,
+    })
+  }
+
   const page = Math.max(0, Number(url.searchParams.get('page') ?? '0') || 0)
   const pageSize = Math.min(
     MAX_PAGE_SIZE,

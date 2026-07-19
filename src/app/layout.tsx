@@ -3,6 +3,7 @@ import { Atkinson_Hyperlegible_Next, Fraunces } from 'next/font/google'
 import './globals.css'
 import { ThemeScript } from '@/components/ui/ThemeScript'
 import { ServiceWorkerRegister } from '@/components/ui/ServiceWorkerRegister'
+import { SessionProviderClient } from '@/components/providers/SessionProviderClient'
 
 const atkinson = Atkinson_Hyperlegible_Next({
   variable: '--font-atkinson',
@@ -53,7 +54,7 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="bg-bg text-text-primary flex min-h-full flex-col">
-        {children}
+        <SessionProviderClient>{children}</SessionProviderClient>
         <ServiceWorkerRegister />
       </body>
     </html>

@@ -13,9 +13,10 @@
 | Add/change listening-screen visual state | [components/listening.md](./components/listening.md) | `src/components/listening/StatusIndicator.tsx` (the `ListeningState` union + its rendering) |
 | Add a landing-page section | [components/landing.md](./components/landing.md) | `src/components/landing/`, wire into `src/app/page.tsx` |
 | Touch auth, sessions, or Google OAuth scopes | [lib/auth.md](./lib/auth.md), [proxy-and-routing.md](./proxy-and-routing.md) | `src/lib/auth/options.ts`, `proxy.ts` |
+| Manage the user's OpenAI key / free trial | [lib/auth.md](./lib/auth.md), [app/api/settings.md](./app/api/settings.md) | `src/lib/auth/openaiKey.ts`, `src/app/api/settings/openai-key/route.ts`, `src/app/onboarding/` (deferred gate), `src/app/(authenticated)/layout.tsx` (gate check) |
 | Add a new MongoDB collection | [lib/db.md](./lib/db.md) | `src/lib/types.ts` (document type), `src/lib/db/collections.ts` (accessor) |
 | Change PWA/offline/installability behavior | [public-assets.md](./public-assets.md) | `public/sw.js`, `src/app/manifest.ts` |
-| Change mic capture / audio streaming to Deepgram | [public-assets.md](./public-assets.md), [hooks.md](./hooks.md) | `public/audio/pcm-worklet.js`, `src/hooks/useVoiceSession.ts` |
+| Change mic capture / STT recording behavior | [public-assets.md](./public-assets.md), [hooks.md](./hooks.md) | `public/audio/pcm-worklet.js`, `src/hooks/useVoiceSession.ts` |
 | Change TTS voice/provider | [lib/voice.md](./lib/voice.md) | `src/lib/voice/tts.ts` (implements the swappable `TtsProvider` interface) |
 | Change reply-cleanup (Claude) behavior | [lib/voice.md](./lib/voice.md), [app/api/reply-cleanup.md](./app/api/reply-cleanup.md) | `src/lib/voice/replyCleanup.ts` |
 | Add a test for a module/component | [testing.md](./testing.md) | Colocate as `<source>.test.ts(x)` next to `<source>.ts(x)`, or add to `e2e/` for user-facing flows |

@@ -1,46 +1,24 @@
-import { DeepgramClient } from '@deepgram/sdk'
-
-let managementClient: DeepgramClient | null = null
-
-function getManagementClient(): DeepgramClient {
-  if (!managementClient) {
-    managementClient = new DeepgramClient({
-      apiKey: process.env.DEEPGRAM_API_KEY,
-    })
-  }
-  return managementClient
-}
-
-const TOKEN_TTL_SECONDS = 60
-
-export interface SttToken {
-  key: string
-  expiresInSeconds: number
-}
+import OpenAI from 'openai'
+import { toFile } from 'openai/uploads'
 
 /**
- * Mints a short-lived, scoped Deepgram key via the Management API so the
- * long-lived project key never reaches the client. One key per checkpoint's
- * listening window — cheap at MVP scale (TTS-STT-ANALYSIS.md §3).
+ * Transcribes one recorded utterance clip via OpenAI's transcription API.
+ * The client records locally (with its own silence detection) and sends one
+ * clip per checkpoint listening window — see IMPLEMENTATION-PLAN.md §7 and
+ * TTS-STT-ANALYSIS.md §3 for why batch transcription is sufficient here (the
+ * UI never shows live partial captions, only a "done talking" signal).
  */
-export async function mintSttToken(): Promise<SttToken> {
-  const projectId = process.env.DEEPGRAM_PROJECT_ID
-  if (!projectId) {
-    throw new Error('Missing DEEPGRAM_PROJECT_ID environment variable')
-  }
+export async function transcribe(
+  audioBlob: Blob,
+  apiKey: string,
+): Promise<string> {
+  const client = new OpenAI({ apiKey })
+  const file = await toFile(audioBlob, 'utterance.wav', { type: 'audio/wav' })
 
-  const response = await getManagementClient().manage.v1.projects.keys.create(
-    projectId,
-    {
-      comment: 'mailflow-client-checkpoint-token',
-      scopes: ['usage:write'],
-      time_to_live_in_seconds: TOKEN_TTL_SECONDS,
-    },
-  )
+  const response = await client.audio.transcriptions.create({
+    model: 'gpt-4o-mini-transcribe',
+    file,
+  })
 
-  if (!response.key) {
-    throw new Error('Deepgram did not return a key')
-  }
-
-  return { key: response.key, expiresInSeconds: TOKEN_TTL_SECONDS }
+  return response.text ?? ''
 }

@@ -4,14 +4,16 @@ import {
   sessionsCollection,
   bookmarksCollection,
   emailActionLogsCollection,
+  usersCollection,
 } from '@/lib/db/collections'
 import { buildInboxSnapshot } from '@/lib/gmail/list'
-import { fetchMessage } from '@/lib/gmail/client'
+import { fetchMessage, fetchMessageLabelIds } from '@/lib/gmail/client'
 import { parseGmailMessage } from '@/lib/gmail/parse'
 import type {
   ListeningSessionDoc,
   InboxScope,
   InboxOrder,
+  InboxCategory,
   EmailAction,
   CheckpointPayload,
 } from '@/lib/types'
@@ -36,22 +38,30 @@ function toProgress(session: ListeningSessionDoc): SessionWithProgress {
 
 /**
  * Get-or-create the user's active listening session. If an active session
- * exists and matches the user's current scope/order settings, it's resumed
- * as-is. Otherwise (no session, or settings changed mid-flight) a fresh
- * snapshot is built and any existing active session is marked exhausted —
- * snapshots are immutable once created (IMPLEMENTATION-PLAN.md §3).
+ * exists and matches the user's current scope/order/category/label settings,
+ * it's resumed as-is. Otherwise (no session, or settings changed mid-flight)
+ * a fresh snapshot is built and any existing active session is marked
+ * exhausted — snapshots are immutable once created (IMPLEMENTATION-PLAN.md §3).
  */
 export async function getOrCreateActiveSession(
   gmail: gmail_v1.Gmail,
   userId: ObjectId,
   scope: InboxScope,
   order: InboxOrder,
+  category: InboxCategory,
+  labelId?: string,
 ): Promise<SessionWithProgress> {
   const sessions = await sessionsCollection()
   const bookmarks = await bookmarksCollection()
 
   const existing = await sessions.findOne({ userId, status: 'active' })
-  if (existing && existing.scope === scope && existing.order === order) {
+  if (
+    existing &&
+    existing.scope === scope &&
+    existing.order === order &&
+    existing.category === category &&
+    existing.labelId === labelId
+  ) {
     return toProgress(existing)
   }
 
@@ -66,6 +76,8 @@ export async function getOrCreateActiveSession(
     gmail,
     scope,
     order,
+    category,
+    labelId,
   )
   const now = new Date()
   const newSession: ListeningSessionDoc = {
@@ -79,6 +91,8 @@ export async function getOrCreateActiveSession(
     totalEstimate,
     createdAt: now,
     updatedAt: now,
+    category,
+    ...(labelId ? { labelId } : {}),
   }
   await sessions.insertOne(newSession)
 
@@ -200,32 +214,74 @@ export async function jumpToMessage(
   return toProgress(updated)
 }
 
-/** Shared by every action route: fetches + parses whatever email the session now points at. */
+/**
+ * Shared by every action route: resolves auto-skip (silently advancing past
+ * messages matching the user's `autoSkipCategories`, bounded by remaining
+ * snapshot size so an all-promotional inbox can't loop forever) then fetches
+ * + parses whatever email the session now points at.
+ */
 export async function buildCheckpointResponse(
   gmail: gmail_v1.Gmail,
+  userId: ObjectId,
   progress: SessionWithProgress,
 ): Promise<CheckpointPayload> {
-  const totalEstimate =
-    progress.session.totalEstimate ?? progress.session.messageIds.length
-  const snapshotSize = progress.session.messageIds.length
+  const users = await usersCollection()
+  const user = await users.findOne({ _id: userId })
+  const autoSkipCategories = user?.settings.autoSkipCategories ?? []
 
-  if (!progress.currentMessageId) {
+  let current = progress
+  if (autoSkipCategories.length > 0) {
+    let iterations = 0
+    const maxIterations = current.session.messageIds.length
+    while (current.currentMessageId && iterations < maxIterations) {
+      const labelIds = await fetchMessageLabelIds(
+        gmail,
+        current.currentMessageId,
+      )
+      const categoryLabelMap: Record<string, string> = {
+        CATEGORY_PROMOTIONS: 'promotions',
+        CATEGORY_SOCIAL: 'social',
+        CATEGORY_UPDATES: 'updates',
+        CATEGORY_FORUMS: 'forums',
+      }
+      const messageCategories = labelIds
+        .map((id) => categoryLabelMap[id])
+        .filter((c): c is string => Boolean(c))
+      const shouldSkip = messageCategories.some((c) =>
+        autoSkipCategories.includes(c as InboxCategory),
+      )
+      if (!shouldSkip) break
+      current = await advanceSession(
+        userId,
+        current.session._id,
+        current.currentMessageId,
+        'skip',
+      )
+      iterations++
+    }
+  }
+
+  const totalEstimate =
+    current.session.totalEstimate ?? current.session.messageIds.length
+  const snapshotSize = current.session.messageIds.length
+
+  if (!current.currentMessageId) {
     return {
-      sessionId: progress.session._id.toString(),
+      sessionId: current.session._id.toString(),
       remaining: 0,
       email: null,
-      sessionExhausted: progress.session.status === 'exhausted',
+      sessionExhausted: current.session.status === 'exhausted',
       totalEstimate,
       snapshotSize,
     }
   }
 
-  const message = await fetchMessage(gmail, progress.currentMessageId)
+  const message = await fetchMessage(gmail, current.currentMessageId)
   const email = parseGmailMessage(message)
 
   return {
-    sessionId: progress.session._id.toString(),
-    remaining: progress.remaining,
+    sessionId: current.session._id.toString(),
+    remaining: current.remaining,
     email,
     sessionExhausted: false,
     totalEstimate,

@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/options'
 
-const PROTECTED_PREFIXES = ['/home', '/listen', '/settings', '/inbox', '/api/']
+const PROTECTED_PREFIXES = [
+  '/home',
+  '/listen',
+  '/settings',
+  '/inbox',
+  '/onboarding',
+  '/api/',
+]
 const PUBLIC_API_PREFIXES = ['/api/auth/']
 
 export default auth((req) => {
@@ -27,6 +34,7 @@ export const config = {
     '/listen/:path*',
     '/settings/:path*',
     '/inbox/:path*',
+    '/onboarding/:path*',
     '/api/:path*',
   ],
 }

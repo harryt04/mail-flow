@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth/requireUser'
 import { getGmailClientForUser } from '@/lib/gmail/client'
 import { archiveMessage } from '@/lib/gmail/actions'
 import { advanceSession, buildCheckpointResponse } from '@/lib/bookmark/session'
+import { incrementTrialActionUsage } from '@/lib/auth/openaiKey'
 
 /** "Archive" or "Delete" — both remove the message from INBOX (PRD §5.5: no permanent delete for MVP). */
 export async function POST(request: Request) {
@@ -25,12 +26,14 @@ export async function POST(request: Request) {
   const { gmail } = await getGmailClientForUser(auth.userId.toString())
   await archiveMessage(gmail, messageId)
 
+  await incrementTrialActionUsage(auth.userId)
+
   const progress = await advanceSession(
     auth.userId,
     new ObjectId(sessionId),
     messageId,
     isDelete ? 'delete' : 'archive',
   )
-  const payload = await buildCheckpointResponse(gmail, progress)
+  const payload = await buildCheckpointResponse(gmail, auth.userId, progress)
   return NextResponse.json(payload)
 }

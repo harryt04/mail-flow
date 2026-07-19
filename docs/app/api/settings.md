@@ -1,14 +1,15 @@
-# src/app/api/settings/ + src/app/api/settings/disconnect/
+# src/app/api/settings/ + src/app/api/settings/disconnect/ + src/app/api/settings/openai-key/
 
 ## Purpose
-Read/write user settings (inbox scope, inbox order, theme, voice tone), and disconnect
-(revoke Gmail access + clear related data).
+Read/write user settings (inbox scope, inbox order, theme, voice tone), manage OpenAI API
+keys, and disconnect (revoke Gmail access + clear related data).
 
 ## Key files
 | File | Role |
 |---|---|
-| `settings/route.ts` (66 lines) | GET — returns `UserSettings`. POST — validates and persists a partial `UserSettings` update. |
-| `settings/disconnect/route.ts` (31 lines) | POST — clears stored Gmail tokens and deletes the user's bookmarks/sessions, effectively resetting their listening state. |
+| `settings/route.ts` | GET — returns `UserSettings`. POST — validates and persists a partial `UserSettings` update. |
+| `settings/openai-key/route.ts` | GET — returns `{ hasKey, trialActionsUsed, trialActionsRemaining }`. POST — validates and stores an OpenAI API key. DELETE — removes a stored OpenAI API key. |
+| `settings/disconnect/route.ts` | POST — clears stored Gmail tokens and deletes the user's bookmarks/sessions, effectively resetting their listening state. |
 
 ## Depends on
 - `src/lib/auth/requireUser`
@@ -16,7 +17,7 @@ Read/write user settings (inbox scope, inbox order, theme, voice tone), and disc
 - `src/lib/auth/tokenCrypto` (disconnect only, to identify/clear stored tokens)
 
 ## Depended on by
-- `src/app/(authenticated)/settings/SettingsClient.tsx` — `GET/POST /api/settings` for reading/saving preferences, `POST /api/settings/disconnect` for the disconnect button. See [docs/app/settings.md](../settings.md).
+- `src/app/(authenticated)/settings/SettingsClient.tsx` — `GET/POST /api/settings` for reading/saving preferences, `GET/POST/DELETE /api/settings/openai-key` for API key management, `POST /api/settings/disconnect` for the disconnect button. See [docs/app/settings.md](../settings.md).
 
 ## Conventions
 `settings/route.ts` validates against a `VALID_THEME`-style allowlist array (mirroring the

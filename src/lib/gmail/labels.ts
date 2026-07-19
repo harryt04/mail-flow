@@ -6,10 +6,9 @@ export interface GmailLabel {
 }
 
 /**
- * The user's real Gmail labels (folders), for the "Move to" action — MVP deliberately doesn't
- * create labels on the user's behalf; if they want a new one, they add it in Gmail and it
- * shows up here next time. `type: "system"` labels (INBOX, SPAM, CATEGORY_*, etc.) are
- * excluded — only labels the user created themselves are valid move targets.
+ * The user's real Gmail labels (folders), for the "Move to" action. `type: "system"` labels
+ * (INBOX, SPAM, CATEGORY_*, etc.) are excluded — only labels the user created themselves
+ * (or created via `createLabel` below) are valid move targets.
  */
 export async function listUserLabels(
   gmail: gmail_v1.Gmail,
@@ -24,4 +23,27 @@ export async function listUserLabels(
     )
     .map((label) => ({ id: label.id, name: label.name }))
     .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/**
+ * Creates a new user label (e.g. from the "New Folder" chip in the move-to picker).
+ * Gmail itself rejects a duplicate name with a 409 — let that surface as a normal
+ * thrown error; the caller (the API route) maps it to a 400.
+ */
+export async function createLabel(
+  gmail: gmail_v1.Gmail,
+  name: string,
+): Promise<GmailLabel> {
+  const res = await gmail.users.labels.create({
+    userId: 'me',
+    requestBody: {
+      name,
+      labelListVisibility: 'labelShow',
+      messageListVisibility: 'show',
+    },
+  })
+  if (!res.data.id || !res.data.name) {
+    throw new Error('Gmail did not return a valid label')
+  }
+  return { id: res.data.id, name: res.data.name }
 }

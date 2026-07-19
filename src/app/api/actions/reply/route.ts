@@ -5,6 +5,7 @@ import { getGmailClientForUser, fetchMessage } from '@/lib/gmail/client'
 import { parseGmailMessage } from '@/lib/gmail/parse'
 import { sendReply } from '@/lib/gmail/actions'
 import { advanceSession, buildCheckpointResponse } from '@/lib/bookmark/session'
+import { incrementTrialActionUsage } from '@/lib/auth/openaiKey'
 
 /** Sends the already-cleaned reply text (see /api/reply/cleanup) as a threaded Gmail reply. */
 export async function POST(request: Request) {
@@ -42,6 +43,8 @@ export async function POST(request: Request) {
     bodyText: replyText,
   })
 
+  await incrementTrialActionUsage(auth.userId)
+
   const progress = await advanceSession(
     auth.userId,
     new ObjectId(sessionId),
@@ -49,6 +52,6 @@ export async function POST(request: Request) {
     'reply',
     replyText,
   )
-  const payload = await buildCheckpointResponse(gmail, progress)
+  const payload = await buildCheckpointResponse(gmail, auth.userId, progress)
   return NextResponse.json(payload)
 }

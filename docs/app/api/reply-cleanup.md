@@ -1,17 +1,19 @@
 # src/app/api/reply/cleanup/
 
 ## Purpose
-Takes a raw dictated (STT) transcript and returns Claude-cleaned reply text, as a step
-before the user confirms and sends via `/api/actions/reply`.
+Takes a raw dictated (STT) transcript and returns OpenAI-cleaned reply text, as a step
+before the user confirms and sends via `/api/actions/reply`. Requires a resolved OpenAI API key
+(trial or user-supplied via `resolveOpenAiCredential`).
 
 ## Key files
 | File | Role |
 |---|---|
-| `route.ts` (16 lines) | POST `{ rawTranscript }` → `cleanupReply(rawTranscript)` → `{ cleanedText }`. |
+| `route.ts` | POST `{ rawTranscript }` → resolves credential → `cleanupReply(rawTranscript, apiKey)` → `{ cleanedText }`. Returns 400 if no OpenAI key is available. |
 
 ## Depends on
 - `src/lib/auth/requireUser`
-- `src/lib/voice/replyCleanup` (`cleanupReply`, Claude via `@anthropic-ai/sdk`) — see [docs/lib/voice.md](../../lib/voice.md)
+- `src/lib/auth/openaiKey` (`resolveOpenAiCredential`)
+- `src/lib/voice/replyCleanup` (`cleanupReply`, OpenAI via `openai` package) — see [docs/lib/voice.md](../../lib/voice.md)
 
 ## Depended on by
 - `src/app/(authenticated)/listen/ListenClient.tsx`'s `runDictationFlow` — the reply sub-flow is

@@ -2,7 +2,7 @@ export type Command =
   'continue' | 'skip' | 'archive' | 'reply' | 'confirm' | 'redo' | 'move'
 
 // PRD §5.4: "no fuzzy NLU needed beyond basic synonym handling" — plain
-// keyword/synonym matching against the Deepgram transcript.
+// keyword/synonym matching against the STT transcript.
 const COMMAND_PHRASES: Record<Exclude<Command, 'move'>, string[]> = {
   continue: ['continue', 'read on', 'keep going', 'keep reading', 'more'],
   skip: ['skip', 'next'],

@@ -8,14 +8,17 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { IconAlert, IconCheck } from '@/components/ui/icons'
 import { ToggleGroup } from '@/components/settings/ToggleGroup'
+import { CategoryChecklist } from '@/components/settings/CategoryChecklist'
 import { useTheme, type ThemePreference } from '@/hooks/useTheme'
 import {
   PLAYBACK_SPEEDS,
   type InboxScope,
   type InboxOrder,
+  type InboxCategory,
   type PlaybackSpeed,
   type UserSettings,
 } from '@/lib/types'
+import type { GmailLabel } from '@/lib/gmail/labels'
 
 const SPEED_LABELS: Record<PlaybackSpeed, string> = {
   1: '1x',
@@ -26,6 +29,11 @@ const SPEED_LABELS: Record<PlaybackSpeed, string> = {
 }
 
 type LoadState = 'loading' | 'ready' | 'error'
+type OpenAIKeyState = {
+  hasKey: boolean
+  trialActionsUsed: number
+  trialActionsRemaining: number
+} | null
 
 async function fetchSettings(): Promise<UserSettings> {
   const res = await fetch('/api/settings')
@@ -47,6 +55,32 @@ async function saveSettings(
   return settings
 }
 
+async function fetchOpenAIKeyState(): Promise<OpenAIKeyState> {
+  const res = await fetch('/api/settings/openai-key')
+  if (!res.ok) throw new Error('Could not load API key state')
+  return res.json()
+}
+
+async function saveOpenAIKey(apiKey: string): Promise<OpenAIKeyState> {
+  const res = await fetch('/api/settings/openai-key', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apiKey }),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.error || 'Could not save API key')
+  }
+  return res.json()
+}
+
+async function deleteOpenAIKey(): Promise<void> {
+  const res = await fetch('/api/settings/openai-key', {
+    method: 'DELETE',
+  })
+  if (!res.ok) throw new Error('Could not remove API key')
+}
+
 export function SettingsClient() {
   const router = useRouter()
   const { preference: themePreference, setTheme } = useTheme()
@@ -60,6 +94,11 @@ export function SettingsClient() {
   const [disconnectStep, setDisconnectStep] = useState<
     'idle' | 'confirm' | 'working'
   >('idle')
+  const [availableLabels, setAvailableLabels] = useState<GmailLabel[]>([])
+  const [openAIKeyState, setOpenAIKeyState] = useState<OpenAIKeyState>(null)
+  const [openAIKeyDraft, setOpenAIKeyDraft] = useState('')
+  const [savingOpenAIKey, setSavingOpenAIKey] = useState(false)
+  const [openAIKeyError, setOpenAIKeyError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchSettings()
@@ -72,6 +111,21 @@ export function SettingsClient() {
         setError(err.message)
         setLoadState('error')
       })
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/labels')
+      .then((res) => (res.ok ? res.json() : { labels: [] }))
+      .then((data: { labels?: GmailLabel[] }) =>
+        setAvailableLabels(data.labels ?? []),
+      )
+      .catch(() => setAvailableLabels([]))
+  }, [])
+
+  useEffect(() => {
+    fetchOpenAIKeyState()
+      .then((state) => setOpenAIKeyState(state))
+      .catch((err) => setOpenAIKeyError(err.message))
   }, [])
 
   function flashSaved() {
@@ -119,6 +173,43 @@ export function SettingsClient() {
     }
   }
 
+  async function handleSaveOpenAIKey() {
+    setSavingOpenAIKey(true)
+    setOpenAIKeyError(null)
+    try {
+      const state = await saveOpenAIKey(openAIKeyDraft.trim())
+      setOpenAIKeyState(state)
+      setOpenAIKeyDraft('')
+      flashSaved()
+    } catch (err) {
+      setOpenAIKeyError(
+        err instanceof Error ? err.message : 'Could not save API key',
+      )
+    } finally {
+      setSavingOpenAIKey(false)
+    }
+  }
+
+  async function handleRemoveOpenAIKey() {
+    setSavingOpenAIKey(true)
+    setOpenAIKeyError(null)
+    try {
+      await deleteOpenAIKey()
+      setOpenAIKeyState({
+        hasKey: false,
+        trialActionsUsed: 0,
+        trialActionsRemaining: 100,
+      })
+      flashSaved()
+    } catch (err) {
+      setOpenAIKeyError(
+        err instanceof Error ? err.message : 'Could not remove API key',
+      )
+    } finally {
+      setSavingOpenAIKey(false)
+    }
+  }
+
   if (loadState === 'loading') {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -151,6 +242,70 @@ export function SettingsClient() {
 
       {error && <p className="text-body text-danger w-full">{error}</p>}
 
+      {openAIKeyState && (
+        <Card className="flex w-full flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-h2 text-text-primary font-semibold">
+              OpenAI API key
+            </h2>
+            {openAIKeyState.hasKey && <Badge tone="positive">Connected</Badge>}
+            {!openAIKeyState.hasKey && (
+              <Badge>
+                Free trial — {openAIKeyState.trialActionsRemaining}/100 free
+                actions left
+              </Badge>
+            )}
+          </div>
+
+          <p className="text-body text-text-secondary">
+            MailFlow uses its own OpenAI key for your first 100 actions for
+            free. Once you&apos;ve used your free allocation (or any time, if
+            you&apos;d prefer), you can add your own key. You&apos;d only be
+            covering your own OpenAI API usage costs — MailFlow isn&apos;t a
+            paid plan.
+          </p>
+
+          {!openAIKeyState.hasKey && (
+            <>
+              <div className="flex flex-col gap-3">
+                <input
+                  type="password"
+                  className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
+                  placeholder="sk-..."
+                  value={openAIKeyDraft}
+                  onChange={(e) => setOpenAIKeyDraft(e.target.value)}
+                  disabled={savingOpenAIKey}
+                />
+                <div>
+                  <Button
+                    variant="secondary"
+                    onClick={handleSaveOpenAIKey}
+                    disabled={savingOpenAIKey || !openAIKeyDraft.trim()}
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+              {openAIKeyError && (
+                <p className="text-body text-danger">{openAIKeyError}</p>
+              )}
+            </>
+          )}
+
+          {openAIKeyState.hasKey && (
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={handleRemoveOpenAIKey}
+                disabled={savingOpenAIKey}
+              >
+                Remove key
+              </Button>
+            </div>
+          )}
+        </Card>
+      )}
+
       <Card className="flex w-full flex-col gap-6">
         <h2 className="text-h2 text-text-primary font-semibold">Inbox</h2>
 
@@ -182,10 +337,71 @@ export function SettingsClient() {
           />
         </div>
 
+        <div className="flex flex-col gap-2">
+          <p className="text-label text-text-secondary uppercase">Category</p>
+          <ToggleGroup<InboxCategory>
+            value={settings.inboxCategory ?? 'primary'}
+            options={[
+              { value: 'primary', label: 'Primary' },
+              { value: 'promotions', label: 'Promotions' },
+              { value: 'social', label: 'Social' },
+              { value: 'updates', label: 'Updates' },
+              { value: 'forums', label: 'Forums' },
+              { value: 'all', label: 'All' },
+            ]}
+            onChange={(value) => updateSetting({ inboxCategory: value })}
+            disabled={saving}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-label text-text-secondary uppercase">
+            Focus on a label
+          </p>
+          <select
+            className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
+            value={settings.inboxLabelId ?? ''}
+            onChange={(e) =>
+              updateSetting({
+                inboxLabelId: (e.target.value || null) as string | undefined,
+              })
+            }
+            disabled={saving}
+          >
+            <option value="">None (use category above)</option>
+            {availableLabels.map((label) => (
+              <option key={label.id} value={label.id}>
+                {label.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <p className="text-meta text-text-muted">
           Changing scope or order starts a fresh session the next time you
           listen.
         </p>
+      </Card>
+
+      <Card className="flex w-full flex-col gap-4">
+        <h2 className="text-h2 text-text-primary font-semibold">
+          Auto-skip while listening
+        </h2>
+        <p className="text-body text-text-secondary">
+          Silently skip past emails in these categories instead of reading them
+          aloud.
+        </p>
+        <CategoryChecklist<InboxCategory>
+          values={settings.autoSkipCategories ?? []}
+          options={[
+            { value: 'promotions', label: 'Promotions' },
+            { value: 'social', label: 'Social' },
+            { value: 'updates', label: 'Updates' },
+            { value: 'forums', label: 'Forums' },
+          ]}
+          onChange={(values) => updateSetting({ autoSkipCategories: values })}
+          disabled={saving}
+        />
       </Card>
 
       <Card className="flex w-full flex-col gap-4">

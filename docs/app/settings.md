@@ -1,21 +1,21 @@
 # src/app/(authenticated)/settings/
 
 ## Purpose
-User preferences UI (served at `/settings`): inbox scope/order, playback speed, theme, voice
-tone, and account disconnect.
+User preferences UI (served at `/settings`): OpenAI API key management, inbox scope/order,
+playback speed, theme, voice tone, and account disconnect.
 
 ## Key files
 | File | Role |
 |---|---|
 | `page.tsx` | Server component wrapper — thin wrapper rendering `SettingsClient`. Auth gating and the sidebar both come from `(authenticated)/layout.tsx`, not this file. |
-| `SettingsClient.tsx` (238 lines) | Client component. Fetches/saves settings via `/api/settings`, drives theme via `useTheme`, and handles the disconnect flow via `/api/settings/disconnect`. |
+| `SettingsClient.tsx` | Client component. Fetches/saves settings via `/api/settings`, drives theme via `useTheme`, handles OpenAI key management via `/api/settings/openai-key`, and handles the disconnect flow via `/api/settings/disconnect`. |
 
 ## Depends on
-- `src/components/ui/{Card,Button,Badge,icons}`, `src/components/settings/ToggleGroup` — `SettingsClient.tsx`.
+- `src/components/ui/{Card,Button,Badge,icons}`, `src/components/settings/ToggleGroup`, `src/components/settings/CategoryChecklist` — `SettingsClient.tsx`.
 - `src/hooks/useTheme` — `SettingsClient.tsx`.
 - `src/lib/types` (`InboxScope`, `InboxOrder`, `UserSettings`, `PlaybackSpeed`, `PLAYBACK_SPEEDS`) — shared shape with the API route.
 - `next-auth/react` (`signOut`) for the disconnect flow's client-side sign-out.
-- Calls `GET/POST /api/settings` and `POST /api/settings/disconnect` — see [docs/app/api/settings.md](./api/settings.md).
+- Calls `GET/POST/DELETE /api/settings` and `GET/POST/DELETE /api/settings/openai-key` and `POST /api/settings/disconnect` — see [docs/app/api/settings.md](./api/settings.md).
 
 ## Depended on by
 Reached via the sidebar (`AppSidebar.tsx`) from any authenticated page; gated by both

@@ -2,7 +2,8 @@
 
 import { useCallback, useRef, useState } from 'react'
 
-export type VoiceSessionState = 'idle' | 'connecting' | 'listening' | 'error'
+export type VoiceSessionState =
+  'idle' | 'connecting' | 'listening' | 'transcribing' | 'error'
 
 interface ListenOptions {
   /** How long to wait after the last detected speech before treating the utterance as done. */
@@ -11,29 +12,72 @@ interface ListenOptions {
   maxDurationMs?: number
 }
 
-interface DeepgramResultsMessage {
-  type: 'Results'
-  is_final?: boolean
-  speech_final?: boolean
-  channel?: {
-    alternatives?: { transcript?: string }[]
+/** RMS (0..1) a PCM frame must reach to count as speech and reset the silence timer. */
+const VOICE_RMS_THRESHOLD = 0.02
+
+function frameRms(frame: Int16Array): number {
+  let sumSquares = 0
+  for (let i = 0; i < frame.length; i++) {
+    const normalized = frame[i] / 0x8000
+    sumSquares += normalized * normalized
   }
+  return Math.sqrt(sumSquares / frame.length)
 }
 
-function isResultsMessage(value: unknown): value is DeepgramResultsMessage {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    (value as { type?: unknown }).type === 'Results'
-  )
+function concatPcmFrames(frames: Int16Array[]): Int16Array {
+  const total = frames.reduce((sum, frame) => sum + frame.length, 0)
+  const result = new Int16Array(total)
+  let offset = 0
+  for (const frame of frames) {
+    result.set(frame, offset)
+    offset += frame.length
+  }
+  return result
+}
+
+/** Wraps raw 16-bit mono PCM samples in a minimal WAV header — no encoding dependency needed. */
+function encodeWav(samples: Int16Array, sampleRate: number): Blob {
+  const blockAlign = 2
+  const byteRate = sampleRate * blockAlign
+  const dataSize = samples.length * 2
+  const buffer = new ArrayBuffer(44 + dataSize)
+  const view = new DataView(buffer)
+
+  function writeString(offset: number, value: string) {
+    for (let i = 0; i < value.length; i++) {
+      view.setUint8(offset + i, value.charCodeAt(i))
+    }
+  }
+
+  writeString(0, 'RIFF')
+  view.setUint32(4, 36 + dataSize, true)
+  writeString(8, 'WAVE')
+  writeString(12, 'fmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, 1, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, byteRate, true)
+  view.setUint16(32, blockAlign, true)
+  view.setUint16(34, 16, true)
+  writeString(36, 'data')
+  view.setUint32(40, dataSize, true)
+
+  let offset = 44
+  for (let i = 0; i < samples.length; i++, offset += 2) {
+    view.setInt16(offset, samples[i], true)
+  }
+
+  return new Blob([buffer], { type: 'audio/wav' })
 }
 
 /**
- * Opens the mic for a single checkpoint listening window: mints a
- * short-lived Deepgram token, streams raw PCM over a WebSocket, and
- * resolves with the transcript once speech pauses (or the silence/max
- * timeout fires). Playback is never running while this is active
- * (IMPLEMENTATION-PLAN.md §7.2) — capture and playback are sequential.
+ * Opens the mic for a single checkpoint listening window, buffers raw PCM
+ * locally with a local silence detector (RMS threshold), then sends the one
+ * recorded clip to /api/stt/transcribe once the user stops talking (or the
+ * silence/max timeout fires) and resolves with the returned transcript.
+ * Playback is never running while this is active (IMPLEMENTATION-PLAN.md
+ * §7.2) — capture and playback are sequential.
  */
 export function useVoiceSession() {
   const [state, setState] = useState<VoiceSessionState>('idle')
@@ -47,15 +91,21 @@ export function useVoiceSession() {
       let settled = false
       let silenceTimer: ReturnType<typeof setTimeout> | null = null
       let maxTimer: ReturnType<typeof setTimeout> | null = null
-      let finalTranscript = ''
+      let abortController: AbortController | null = null
+      const pcmFrames: Int16Array[] = []
 
       let stream: MediaStream | null = null
       let audioContext: AudioContext | null = null
       let source: MediaStreamAudioSourceNode | null = null
       let workletNode: AudioWorkletNode | null = null
-      let socket: WebSocket | null = null
 
-      function cleanup() {
+      function markSettled() {
+        settled = true
+        cancelRef.current = null
+      }
+
+      /** Tears down mic capture. Idempotent — safe to call more than once and safe before capture ever started. */
+      function stopCapture() {
         if (silenceTimer) clearTimeout(silenceTimer)
         if (maxTimer) clearTimeout(maxTimer)
         if (workletNode) workletNode.port.onmessage = null
@@ -63,42 +113,100 @@ export function useVoiceSession() {
         workletNode?.disconnect()
         stream?.getTracks().forEach((t) => t.stop())
         audioContext?.close().catch(() => {})
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.close()
-        }
-        cancelRef.current = null
-      }
-
-      function finish() {
-        if (settled) return
-        settled = true
-        cleanup()
-        setState('idle')
-        resolve(finalTranscript.trim())
       }
 
       function fail(err: Error) {
         if (settled) return
-        settled = true
-        cleanup()
+        markSettled()
+        stopCapture()
         setState('error')
         reject(err)
       }
 
       function resetSilenceTimer() {
         if (silenceTimer) clearTimeout(silenceTimer)
-        silenceTimer = setTimeout(finish, silenceTimeoutMs)
+        silenceTimer = setTimeout(beginTranscription, silenceTimeoutMs)
       }
 
-      cancelRef.current = () => fail(new Error('Listening cancelled'))
+      /** Stops capture and sends the recorded clip for transcription. Safe to call more than once. */
+      function beginTranscription() {
+        if (settled) return
+        stopCapture()
+        setState('transcribing')
+
+        if (pcmFrames.length === 0 || !audioContext) {
+          markSettled()
+          setState('idle')
+          resolve('')
+          return
+        }
+
+        abortController = new AbortController()
+        const wavBlob = encodeWav(
+          concatPcmFrames(pcmFrames),
+          audioContext.sampleRate,
+        )
+        const formData = new FormData()
+        formData.append('audio', wavBlob, 'utterance.wav')
+
+        fetch('/api/stt/transcribe', {
+          method: 'POST',
+          body: formData,
+          signal: abortController.signal,
+        })
+          .then(async (res) => {
+            if (settled) return
+            if (!res.ok) {
+              const rawText = await res.text().catch(() => '')
+              console.error(
+                'STT transcribe request failed:',
+                res.status,
+                res.statusText,
+                rawText,
+              )
+              markSettled()
+              setState('error')
+              reject(
+                new Error(
+                  "Couldn't reach the voice service — use the buttons below.",
+                ),
+              )
+              return
+            }
+            const { transcript } = (await res.json()) as {
+              transcript: string
+            }
+            markSettled()
+            setState('idle')
+            resolve((transcript ?? '').trim())
+          })
+          .catch((err) => {
+            if (settled) return
+            markSettled()
+            if (err instanceof DOMException && err.name === 'AbortError') {
+              setState('error')
+              reject(new Error('Listening cancelled'))
+              return
+            }
+            console.error('STT transcribe failed:', err)
+            setState('error')
+            reject(
+              new Error(
+                "Couldn't reach the voice service — use the buttons below.",
+              ),
+            )
+          })
+      }
+
+      cancelRef.current = () => {
+        if (settled) return
+        abortController?.abort()
+        fail(new Error('Listening cancelled'))
+      }
 
       ;(async () => {
         setState('connecting')
 
-        // Mic permission is requested first, independent of the STT token mint — a
-        // token-mint failure (misconfig, Deepgram outage) must never suppress the
-        // browser's permission prompt or mask a permission failure behind a generic
-        // "voice service" error.
         try {
           stream = await navigator.mediaDevices.getUserMedia({ audio: true })
         } catch (err) {
@@ -107,28 +215,6 @@ export function useVoiceSession() {
             'Microphone access is blocked — check your browser permissions.',
           )
         }
-
-        const tokenRes = await fetch('/api/stt/token', { method: 'POST' })
-        if (!tokenRes.ok) {
-          const rawText = await tokenRes.text().catch(() => '')
-          const payload = ((): unknown => {
-            try {
-              return JSON.parse(rawText)
-            } catch {
-              return rawText
-            }
-          })()
-          console.error(
-            'STT token request failed:',
-            tokenRes.status,
-            tokenRes.statusText,
-            payload,
-          )
-          throw new Error(
-            "Couldn't reach the voice service — use the buttons below.",
-          )
-        }
-        const { key } = (await tokenRes.json()) as { key: string }
 
         audioContext = new AudioContext()
         try {
@@ -146,62 +232,16 @@ export function useVoiceSession() {
         )
         source.connect(workletNode)
 
-        const params = new URLSearchParams({
-          model: 'nova-3',
-          language: 'en',
-          smart_format: 'true',
-          interim_results: 'true',
-          endpointing: '300',
-          encoding: 'linear16',
-          sample_rate: String(audioContext.sampleRate),
-          channels: '1',
-        })
-        socket = new WebSocket(
-          `wss://api.deepgram.com/v1/listen?${params.toString()}`,
-          ['token', key],
-        )
-
-        socket.addEventListener('open', () => {
-          setState('listening')
-          resetSilenceTimer()
-          maxTimer = setTimeout(finish, maxDurationMs)
-          if (workletNode) {
-            workletNode.port.onmessage = (event) => {
-              if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(event.data as ArrayBuffer)
-              }
-            }
-          }
-        })
-
-        socket.addEventListener('message', (event) => {
-          let parsed: unknown
-          try {
-            parsed = JSON.parse(event.data as string)
-          } catch {
-            return
-          }
-          if (!isResultsMessage(parsed)) return
-
-          const transcript = parsed.channel?.alternatives?.[0]?.transcript ?? ''
-          if (transcript) {
+        setState('listening')
+        resetSilenceTimer()
+        maxTimer = setTimeout(beginTranscription, maxDurationMs)
+        workletNode.port.onmessage = (event) => {
+          const frame = new Int16Array(event.data as ArrayBuffer)
+          pcmFrames.push(frame)
+          if (frameRms(frame) >= VOICE_RMS_THRESHOLD) {
             resetSilenceTimer()
-            if (parsed.is_final) {
-              finalTranscript = `${finalTranscript} ${transcript}`.trim()
-            }
           }
-          if (parsed.speech_final) {
-            finish()
-          }
-        })
-
-        socket.addEventListener('error', () => {
-          fail(
-            new Error(
-              'Lost connection to the voice service — use the buttons below.',
-            ),
-          )
-        })
+        }
       })().catch((err) => {
         console.error('Voice session failed to start:', err)
         fail(

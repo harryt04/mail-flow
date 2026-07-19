@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 
 export interface TtsSynthesizeOptions {
   voiceTone?: string
+  apiKey: string
 }
 
 export interface TtsProvider {
@@ -21,21 +22,19 @@ function buildInstructions(voiceTone?: string): string {
 }
 
 class OpenAiTtsProvider implements TtsProvider {
-  private client: OpenAI
-
-  constructor() {
-    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  }
-
   async synthesize(
     text: string,
     opts?: TtsSynthesizeOptions,
   ): Promise<ReadableStream<Uint8Array>> {
-    const response = await this.client.audio.speech.create({
+    if (!opts?.apiKey) {
+      throw new Error('apiKey is required in TtsSynthesizeOptions')
+    }
+    const client = new OpenAI({ apiKey: opts.apiKey })
+    const response = await client.audio.speech.create({
       model: 'gpt-4o-mini-tts',
       voice: 'alloy',
       input: text,
-      instructions: buildInstructions(opts?.voiceTone),
+      instructions: buildInstructions(opts.voiceTone),
       response_format: 'mp3',
     })
 

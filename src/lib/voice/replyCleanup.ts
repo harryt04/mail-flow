@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 
 const SYSTEM_PROMPT = `You clean up a dictated email reply. The input is a raw speech-to-text transcript — it may contain filler words, false starts, or run-on sentences. Rewrite it as a short, plausible email reply:
 - Fix grammar and punctuation.
@@ -7,26 +7,23 @@ const SYSTEM_PROMPT = `You clean up a dictated email reply. The input is a raw s
 - Keep it concise; don't pad it out or add pleasantries the speaker didn't say.
 - Output only the cleaned reply text, nothing else — no preamble, no quotes, no explanation.`
 
-let client: Anthropic | null = null
-
-function getClient(): Anthropic {
-  if (!client) {
-    client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  }
-  return client
-}
-
-export async function cleanupReply(rawTranscript: string): Promise<string> {
-  const response = await getClient().messages.create({
-    model: 'claude-haiku-4-5',
+export async function cleanupReply(
+  rawTranscript: string,
+  apiKey: string,
+): Promise<string> {
+  const client = new OpenAI({ apiKey })
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: rawTranscript },
+    ],
     max_tokens: 512,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: rawTranscript }],
   })
 
-  const textBlock = response.content.find((block) => block.type === 'text')
-  if (!textBlock || textBlock.type !== 'text') {
-    throw new Error('Claude did not return a text response')
+  const textContent = response.choices[0]?.message?.content
+  if (!textContent) {
+    throw new Error('OpenAI did not return a text response')
   }
-  return textBlock.text.trim()
+  return textContent.trim()
 }

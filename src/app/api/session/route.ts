@@ -48,8 +48,10 @@ export async function POST() {
     auth.userId,
     user.settings.inboxScope,
     user.settings.inboxOrder,
+    user.settings.inboxCategory ?? 'primary',
+    user.settings.inboxLabelId,
   )
 
-  const payload = await buildCheckpointResponse(gmail, progress)
+  const payload = await buildCheckpointResponse(gmail, auth.userId, progress)
   return NextResponse.json(payload)
 }

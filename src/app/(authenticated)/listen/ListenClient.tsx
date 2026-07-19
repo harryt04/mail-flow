@@ -73,6 +73,10 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   const [moveConfirmLabel, setMoveConfirmLabel] = useState<GmailLabel | null>(
     null,
   )
+  const [newFolderMode, setNewFolderMode] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [creatingLabel, setCreatingLabel] = useState(false)
+  const [newFolderError, setNewFolderError] = useState<string | null>(null)
 
   const audio = useAudioPlayback()
   const voice = useVoiceSession()
@@ -440,6 +444,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     audio.stop()
     setShowContinue(false)
     setMoveConfirmLabel(null)
+    setNewFolderMode(false)
+    setNewFolderName('')
+    setNewFolderError(null)
     setUiState('idle')
     setUiLabel('Ready')
     setPromptText(null)
@@ -453,6 +460,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     audio.stop()
     setMoveOpen(false)
     setMoveConfirmLabel(null)
+    setNewFolderMode(false)
+    setNewFolderName('')
+    setNewFolderError(null)
     setError(null)
     if (checkpoint?.email) {
       void runParagraphsFrom(
@@ -491,6 +501,35 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function handleCreateLabel() {
+    const name = newFolderName.trim()
+    if (!name || creatingLabel) return
+    setCreatingLabel(true)
+    setNewFolderError(null)
+    try {
+      const res = await fetch('/api/labels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.error ?? 'Could not create folder')
+      }
+      const label: GmailLabel = data.label
+      setLabels((prev) => [...prev, label])
+      setNewFolderMode(false)
+      setNewFolderName('')
+      setMoveConfirmLabel(label)
+    } catch (err) {
+      setNewFolderError(
+        err instanceof Error ? err.message : 'Could not create folder',
+      )
+    } finally {
+      setCreatingLabel(false)
     }
   }
 
@@ -827,29 +866,76 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
               <p className="text-body text-text-secondary text-center">
                 Move this email to which folder?
               </p>
-              {labels.length === 0 ? (
-                <p className="text-meta text-text-muted text-center">
-                  No Gmail labels found yet — add one in Gmail, then come back
-                  here.
-                </p>
-              ) : (
-                <div className="flex flex-wrap justify-center gap-2">
-                  {labels.map((label) => (
+              {newFolderMode ? (
+                <div className="flex flex-col items-center gap-2">
+                  <input
+                    type="text"
+                    autoFocus
+                    className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full max-w-xs border p-3"
+                    placeholder="New folder name"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    disabled={creatingLabel}
+                  />
+                  {newFolderError && (
+                    <p className="text-meta text-danger">{newFolderError}</p>
+                  )}
+                  <div className="flex justify-center gap-3">
                     <Button
-                      key={label.id}
                       variant="secondary"
-                      onClick={() => setMoveConfirmLabel(label)}
+                      onClick={() => {
+                        setNewFolderMode(false)
+                        setNewFolderError(null)
+                      }}
+                      disabled={creatingLabel}
                     >
-                      {label.name}
+                      Cancel
                     </Button>
-                  ))}
+                    <Button
+                      onClick={handleCreateLabel}
+                      disabled={
+                        creatingLabel || newFolderName.trim().length === 0
+                      }
+                    >
+                      {creatingLabel ? 'Creating…' : 'Create'}
+                    </Button>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  {labels.length === 0 ? (
+                    <p className="text-meta text-text-muted text-center">
+                      No Gmail labels found yet — create one below, or add one
+                      in Gmail and come back here.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {labels.map((label) => (
+                        <Button
+                          key={label.id}
+                          variant="secondary"
+                          onClick={() => setMoveConfirmLabel(label)}
+                        >
+                          {label.name}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => setNewFolderMode(true)}
+                    >
+                      New Folder
+                    </Button>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button variant="secondary" onClick={handleCancelMove}>
+                      Cancel
+                    </Button>
+                  </div>
+                </>
               )}
-              <div className="flex justify-center">
-                <Button variant="secondary" onClick={handleCancelMove}>
-                  Cancel
-                </Button>
-              </div>
             </>
           ) : (
             <>

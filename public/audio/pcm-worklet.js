@@ -1,5 +1,6 @@
 // Converts the mic's Float32 samples to 16-bit linear PCM and posts each
-// render quantum back to the main thread for streaming to Deepgram.
+// render quantum back to the main thread, which buffers frames locally and
+// sends the recorded clip to /api/stt/transcribe once the user stops talking.
 class PCMWorkletProcessor extends AudioWorkletProcessor {
   process(inputs) {
     const input = inputs[0]

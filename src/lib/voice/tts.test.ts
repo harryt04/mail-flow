@@ -21,7 +21,9 @@ describe('TTS', () => {
 
   it('synthesizes text via OpenAI', async () => {
     const provider = getTtsProvider()
-    const result = await provider.synthesize('Hello world')
+    const result = await provider.synthesize('Hello world', {
+      apiKey: 'test-key',
+    })
     expect(result).toBeInstanceOf(ReadableStream)
     expect(mockSpeechCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -33,7 +35,10 @@ describe('TTS', () => {
 
   it('includes voiceTone in instructions if provided', async () => {
     const provider = getTtsProvider()
-    await provider.synthesize('Test', { voiceTone: 'energetic' })
+    await provider.synthesize('Test', {
+      voiceTone: 'energetic',
+      apiKey: 'test-key',
+    })
     expect(mockSpeechCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         instructions: expect.stringContaining('energetic'),

@@ -5,6 +5,7 @@ import {
   type InboxScope,
   type InboxOrder,
   type ThemePreference,
+  type InboxCategory,
 } from '@/lib/types'
 
 export async function GET() {
@@ -21,6 +22,14 @@ export async function GET() {
 const VALID_SCOPE: InboxScope[] = ['unread', 'all']
 const VALID_ORDER: InboxOrder[] = ['oldest', 'newest']
 const VALID_THEME: ThemePreference[] = ['system', 'light', 'dark']
+const VALID_CATEGORY: InboxCategory[] = [
+  'primary',
+  'promotions',
+  'social',
+  'updates',
+  'forums',
+  'all',
+]
 
 export async function POST(request: Request) {
   const auth = await requireUser()
@@ -40,6 +49,32 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Invalid inboxOrder' }, { status: 400 })
     }
     update['settings.inboxOrder'] = body.inboxOrder
+  }
+  if (body?.inboxCategory !== undefined) {
+    if (!VALID_CATEGORY.includes(body.inboxCategory)) {
+      return Response.json({ error: 'Invalid inboxCategory' }, { status: 400 })
+    }
+    update['settings.inboxCategory'] = body.inboxCategory
+  }
+  if (body?.inboxLabelId !== undefined) {
+    if (body.inboxLabelId !== null && typeof body.inboxLabelId !== 'string') {
+      return Response.json({ error: 'Invalid inboxLabelId' }, { status: 400 })
+    }
+    update['settings.inboxLabelId'] = body.inboxLabelId
+  }
+  if (body?.autoSkipCategories !== undefined) {
+    if (
+      !Array.isArray(body.autoSkipCategories) ||
+      !body.autoSkipCategories.every((c: unknown) =>
+        VALID_CATEGORY.includes(c as InboxCategory),
+      )
+    ) {
+      return Response.json(
+        { error: 'Invalid autoSkipCategories' },
+        { status: 400 },
+      )
+    }
+    update['settings.autoSkipCategories'] = body.autoSkipCategories
   }
   if (body?.theme !== undefined) {
     if (!VALID_THEME.includes(body.theme)) {

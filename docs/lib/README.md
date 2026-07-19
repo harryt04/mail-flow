@@ -5,7 +5,7 @@ component lives here, organized by concern. Modules are intentionally layered �
 module's "Depends on" section for the exact direction:
 
 ```
-lib/voice   — leaf, no internal deps (Claude/Deepgram/OpenAI wrappers)
+lib/voice   — leaf, no internal deps (OpenAI wrappers; caller passes in the resolved API key)
 lib/db      — leaf, no internal deps except lib/types (Mongo access)
 lib/auth    — depends on lib/db, lib/types (NextAuth config, token crypto, session guard)
 lib/gmail   — depends on lib/auth (tokenCrypto), lib/db, lib/types (Gmail API integration)
@@ -20,7 +20,7 @@ API routes (`src/app/api/**`) sit above all of these and compose them; see
 - [db.md](./db.md) — MongoDB client + typed collection accessors
 - [gmail.md](./gmail.md) — Gmail API client, list/parse/actions
 - [bookmark.md](./bookmark.md) — listening session + bookmark progress tracking
-- [voice.md](./voice.md) — command matching, reply cleanup (Claude), STT (Deepgram), TTS (OpenAI)
+- [voice.md](./voice.md) — command matching, reply cleanup, STT, TTS (all OpenAI)
 
 ## src/lib/types.ts
 A single root file (90 lines) with every shared type: DB document shapes (`UserDoc`,

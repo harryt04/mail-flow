@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
@@ -18,7 +18,7 @@ interface EmailSummaryItem {
   unread: boolean
 }
 
-interface InboxPage {
+interface InboxPageResponse {
   active: boolean
   sessionId?: string
   items?: EmailSummaryItem[]
@@ -27,6 +27,7 @@ interface InboxPage {
   total?: number
   totalEstimate?: number
   cursorIndex?: number
+  nextPageToken?: string
 }
 
 const PAGE_SIZE = 25
@@ -59,38 +60,185 @@ function formatRelativeTime(dateMs: number): string {
 
 export function InboxClient() {
   const router = useRouter()
-  const [page, setPage] = useState(0)
-  const [data, setData] = useState<InboxPage | null>(null)
+
+  // Accumulated items and session state
+  const [items, setItems] = useState<EmailSummaryItem[]>([])
+  const [sessionId, setSessionId] = useState<string | undefined>(undefined)
+  const [cursorIndex, setCursorIndex] = useState(-1)
+  const [total, setTotal] = useState(0)
+  const [totalEstimate, setTotalEstimate] = useState(0)
+  const [active, setActive] = useState<boolean | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+
+  // Infinite scroll state
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [nextPageToken, setNextPageToken] = useState<string | undefined>(
+    undefined,
+  )
+
+  // Search state
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const searchDebounceTimerRef = useRef<
+    ReturnType<typeof setTimeout> | undefined
+  >(undefined)
+
+  // Infinite scroll sentinel
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  // Debounce search input
+  useEffect(() => {
+    if (searchDebounceTimerRef.current)
+      clearTimeout(searchDebounceTimerRef.current)
+    const timer = setTimeout(() => setSearchTerm(searchInput), 400)
+    searchDebounceTimerRef.current = timer
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  // Reset and fetch on search term change
+  useEffect(() => {
+    const fetchData = async () => {
+      setItems([])
+      setNextPageToken(undefined)
+      setHasMore(true)
+      setLoadError(null)
+      setLoadingMore(true)
+      try {
+        const url = new URL('/api/inbox', window.location.origin)
+        if (searchTerm) {
+          url.searchParams.set('search', searchTerm)
+          // pageToken defaults to empty string on first load
+        } else {
+          url.searchParams.set('page', '0')
+          url.searchParams.set('pageSize', String(PAGE_SIZE))
+        }
+
+        const res = await fetch(url.toString())
+        if (!res.ok) throw new Error('Could not load your inbox')
+        const payload: InboxPageResponse = await res.json()
+
+        setItems(payload.items ?? [])
+        setSessionId(payload.sessionId)
+        setCursorIndex(payload.cursorIndex ?? -1)
+        setActive(payload.active ?? false)
+
+        if (searchTerm) {
+          // Search mode: no total, use nextPageToken
+          setTotal(0)
+          setTotalEstimate(0)
+          setNextPageToken(payload.nextPageToken)
+          setHasMore(Boolean(payload.nextPageToken))
+        } else {
+          // Snapshot mode: use total, no nextPageToken
+          const fetchedTotal = payload.total ?? 0
+          setTotal(fetchedTotal)
+          setTotalEstimate(payload.totalEstimate ?? fetchedTotal)
+          setNextPageToken(undefined)
+          const fetchedItems = payload.items ?? []
+          setHasMore(fetchedItems.length < fetchedTotal)
+        }
+
+        setLoadError(null)
+      } catch (err) {
+        setLoadError(
+          err instanceof Error ? err.message : 'Could not load your inbox',
+        )
+        setHasMore(false)
+      } finally {
+        setLoadingMore(false)
+      }
+    }
+
+    fetchData()
+  }, [searchTerm])
+
+  // Fetch more items on infinite scroll
+  const fetchMore = async () => {
+    if (loadingMore || !hasMore || !active) return
+
+    setLoadingMore(true)
+    try {
+      const url = new URL('/api/inbox', window.location.origin)
+
+      if (searchTerm) {
+        url.searchParams.set('search', searchTerm)
+        if (nextPageToken) {
+          url.searchParams.set('pageToken', nextPageToken)
+        }
+      } else {
+        // Snapshot mode: compute page from current items
+        const currentPage = Math.floor(items.length / PAGE_SIZE)
+        url.searchParams.set('page', String(currentPage))
+        url.searchParams.set('pageSize', String(PAGE_SIZE))
+      }
+
+      const res = await fetch(url.toString())
+      if (!res.ok) throw new Error('Could not load more emails')
+      const payload: InboxPageResponse = await res.json()
+
+      const newItems = payload.items ?? []
+      setItems((prev) => [...prev, ...newItems])
+      setSessionId(payload.sessionId)
+      setCursorIndex(payload.cursorIndex ?? -1)
+
+      if (searchTerm) {
+        // Search mode
+        setNextPageToken(payload.nextPageToken)
+        setHasMore(Boolean(payload.nextPageToken))
+      } else {
+        // Snapshot mode
+        const fetchedTotal = payload.total ?? 0
+        setTotal(fetchedTotal)
+        setTotalEstimate(payload.totalEstimate ?? fetchedTotal)
+        setHasMore(items.length + newItems.length < fetchedTotal)
+      }
+
+      setLoadError(null)
+    } catch (err) {
+      setLoadError(
+        err instanceof Error ? err.message : 'Could not load more emails',
+      )
+      setHasMore(false)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
+  // Infinite scroll observer — re-attaches whenever the sentinel's presence or
+  // the fetch-guard state changes, so it (a) picks up the sentinel once it
+  // actually mounts (it doesn't exist during the initial "active === null"
+  // loading state) and (b) never runs on stale hasMore/loadingMore closures.
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          fetchMore()
+        }
+      },
+      { threshold: 0.1 },
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, hasMore, loadingMore, searchTerm, items.length])
+
   const [jumpingId, setJumpingId] = useState<string | null>(null)
   const [jumpError, setJumpError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetch(`/api/inbox?page=${page}&pageSize=${PAGE_SIZE}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Could not load your inbox')
-        return res.json()
-      })
-      .then((payload: InboxPage) => {
-        setData(payload)
-        setLoadError(null)
-      })
-      .catch((err) =>
-        setLoadError(
-          err instanceof Error ? err.message : 'Could not load your inbox',
-        ),
-      )
-  }, [page])
-
   async function handleStartHere(messageId: string) {
-    if (!data?.sessionId || jumpingId) return
+    if (!sessionId || jumpingId) return
     setJumpingId(messageId)
     setJumpError(null)
     try {
       const res = await fetch('/api/inbox/jump', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: data.sessionId, messageId }),
+        body: JSON.stringify({ sessionId, messageId }),
       })
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}))
@@ -116,7 +264,7 @@ export function InboxClient() {
     )
   }
 
-  if (!data) {
+  if (active === null) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-body text-text-secondary">Loading your inbox…</p>
@@ -124,7 +272,7 @@ export function InboxClient() {
     )
   }
 
-  if (!data.active) {
+  if (!active) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-h1 text-text-primary font-semibold">
@@ -141,14 +289,6 @@ export function InboxClient() {
     )
   }
 
-  const {
-    items = [],
-    total = 0,
-    totalEstimate = total,
-    cursorIndex = -1,
-    pageSize = PAGE_SIZE,
-  } = data
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const capNote =
     totalEstimate > total
       ? ` (the oldest ${total.toLocaleString()} of ~${totalEstimate.toLocaleString()} unread)`
@@ -156,19 +296,28 @@ export function InboxClient() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-6 px-6 py-10">
-      <div className="flex w-full flex-col gap-1">
-        <h1 className="text-h1 text-text-primary font-bold">Inbox</h1>
-        <p className="text-body text-text-secondary">
-          {total.toLocaleString()} emails to listen to{capNote}. Pick one to
-          jump straight there.
-        </p>
+      <div className="flex w-full flex-col gap-4">
+        <div className="flex w-full flex-col gap-1">
+          <h1 className="text-h1 text-text-primary font-bold">Inbox</h1>
+          <p className="text-body text-text-secondary">
+            {total.toLocaleString()} emails to listen to{capNote}. Pick one to
+            jump straight there.
+          </p>
+        </div>
+        <input
+          type="text"
+          placeholder="Search your inbox…"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
+        />
       </div>
 
       {jumpError && <p className="text-body text-danger w-full">{jumpError}</p>}
 
       <div className="flex w-full flex-col gap-3">
         {items.map((item, i) => {
-          const isCurrent = page * pageSize + i === cursorIndex
+          const isCurrent = i === cursorIndex
           const relativeTime = formatRelativeTime(Number(item.receivedAt))
           return (
             <Card key={item.messageId} className="flex w-full flex-col gap-3">
@@ -213,25 +362,14 @@ export function InboxClient() {
         })}
       </div>
 
-      <div className="flex items-center gap-4">
-        <Button
-          variant="secondary"
-          onClick={() => setPage((p) => Math.max(0, p - 1))}
-          disabled={page === 0}
-        >
-          Previous
-        </Button>
-        <p className="text-meta text-text-muted whitespace-nowrap">
-          Page {page + 1} of {totalPages}
-        </p>
-        <Button
-          variant="secondary"
-          onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-          disabled={page >= totalPages - 1}
-        >
-          Next
-        </Button>
-      </div>
+      <div ref={sentinelRef} className="w-full" />
+
+      {loadingMore && (
+        <p className="text-body text-text-secondary">Loading more…</p>
+      )}
+      {!hasMore && items.length > 0 && (
+        <p className="text-body text-text-muted">That&apos;s everything</p>
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 # src/app/api/ — overview
 
-All 10 route groups (12 route files) live under `src/app/api/`. Every route (except NextAuth's
+All route groups live under `src/app/api/`. Every route (except NextAuth's
 own handler) starts with `const auth = await requireUser()` and returns 401 if `null` — see
 [docs/lib/auth.md](../../lib/auth.md). Routes are intentionally thin: they call into `src/lib/*`
 for all actual logic (Gmail calls, DB access, voice pipeline) rather than implementing it inline.
@@ -10,6 +10,7 @@ for all actual logic (Gmail calls, DB access, voice pipeline) rather than implem
 |---|---|---|---|
 | `/api/settings` | `settings/route.ts` | GET, POST | `lib/db` (`usersCollection`) |
 | `/api/settings/disconnect` | `settings/disconnect/route.ts` | POST | `lib/db`, `lib/auth/tokenCrypto` — see [settings.md](./settings.md) |
+| `/api/settings/openai-key` | `settings/openai-key/route.ts` | GET, POST, DELETE | `lib/db`, `lib/auth/tokenCrypto` — see [settings.md](./settings.md) |
 | `/api/auth/[...nextauth]` | `auth/[...nextauth]/route.ts` | GET, POST | delegates to `lib/auth/options` handlers — see [auth.md](./auth.md) |
 | `/api/emails/[id]` | `emails/[id]/route.ts` | GET | `lib/gmail/client`, `lib/gmail/parse` — see [emails.md](./emails.md) |
 | `/api/session` | `session/route.ts` | GET, POST | `lib/db`, `lib/gmail/client`, `lib/bookmark/session` — see [session.md](./session.md) |
@@ -21,7 +22,7 @@ for all actual logic (Gmail calls, DB access, voice pipeline) rather than implem
 | `/api/actions/reply` | `actions/reply/route.ts` | POST | `lib/gmail/{client,parse,actions}`, `lib/bookmark/session` — see [actions.md](./actions.md) |
 | `/api/actions/move` | `actions/move/route.ts` | POST | `lib/gmail/{client,actions}`, `lib/bookmark/session` — see [actions.md](./actions.md) |
 | `/api/labels` | `labels/route.ts` | GET | `lib/gmail/{client,labels}` — see [actions.md](./actions.md) |
-| `/api/stt/token` | `stt/token/route.ts` | POST | `lib/voice/stt` — see [stt-tts.md](./stt-tts.md) |
+| `/api/stt/transcribe` | `stt/transcribe/route.ts` | POST | `lib/voice/stt`, `lib/auth/openaiKey` — see [stt-tts.md](./stt-tts.md) |
 | `/api/tts` | `tts/route.ts` | POST | `lib/voice/tts` — see [stt-tts.md](./stt-tts.md) |
 
 ## Conventions

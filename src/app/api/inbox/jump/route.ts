@@ -39,6 +39,6 @@ export async function POST(request: Request) {
     )
   }
 
-  const payload = await buildCheckpointResponse(gmail, progress)
+  const payload = await buildCheckpointResponse(gmail, auth.userId, progress)
   return NextResponse.json(payload)
 }

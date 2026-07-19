@@ -3,6 +3,8 @@ import type { ObjectId } from 'mongodb'
 export type InboxScope = 'unread' | 'all'
 export type InboxOrder = 'oldest' | 'newest'
 export type ThemePreference = 'system' | 'light' | 'dark'
+export type InboxCategory =
+  'primary' | 'promotions' | 'social' | 'updates' | 'forums' | 'all'
 
 export interface EncryptedTokenPayload {
   ciphertext: string
@@ -20,6 +22,12 @@ export interface UserSettings {
   voiceTone?: string
   /** Multiplier applied to TTS playback via the client `<audio>` element's `playbackRate`. Optional so existing user docs default to 1x without a migration. */
   playbackSpeed?: PlaybackSpeed
+  /** Which Gmail category tab to build the inbox snapshot from. Defaults to 'primary' so Promotions/Social/etc. don't leak into the listening queue. Optional so existing user docs default without a migration. */
+  inboxCategory?: InboxCategory
+  /** Optional: focus the inbox snapshot on one custom Gmail label instead of a category. Takes precedence over inboxCategory when set. */
+  inboxLabelId?: string
+  /** Gmail categories to silently auto-skip while listening. Only 'promotions' | 'social' | 'updates' | 'forums' are meaningful choices here — 'primary' and 'all' are no-ops if included. Optional so existing user docs default to none without a migration. */
+  autoSkipCategories?: InboxCategory[]
 }
 
 export interface UserDoc {
@@ -34,6 +42,10 @@ export interface UserDoc {
     expiryDate: number
   }
   settings: UserSettings
+  /** User-supplied OpenAI API key, encrypted the same way as gmailTokens. Once set, it's used for TTS/STT/reply-cleanup instead of the app's trial key. */
+  openaiKey?: EncryptedTokenPayload
+  /** Count of archive/move/reply actions covered by the app's own OpenAI key. Missing/undefined is treated as 0. */
+  trialActionsUsed?: number
   createdAt: Date
   updatedAt: Date
 }
@@ -50,6 +62,8 @@ export interface ListeningSessionDoc {
   cursorIndex: number
   /** Gmail's `resultSizeEstimate` for the query behind this snapshot — optional so pre-existing session docs (created before this field existed) don't need a migration. */
   totalEstimate?: number
+  category?: InboxCategory
+  labelId?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -101,4 +115,6 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   inboxOrder: 'oldest',
   theme: 'system',
   playbackSpeed: 1,
+  inboxCategory: 'primary',
+  autoSkipCategories: [],
 }

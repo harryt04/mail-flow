@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth/requireUser'
 import { getGmailClientForUser } from '@/lib/gmail/client'
 import { moveMessageToLabel } from '@/lib/gmail/actions'
 import { advanceSession, buildCheckpointResponse } from '@/lib/bookmark/session'
+import { incrementTrialActionUsage } from '@/lib/auth/openaiKey'
 
 /** "Move to <folder>" — applies a user Gmail label and archives the message (drops it from the inbox queue but keeps it findable under that label). */
 export async function POST(request: Request) {
@@ -31,6 +32,8 @@ export async function POST(request: Request) {
   const { gmail } = await getGmailClientForUser(auth.userId.toString())
   await moveMessageToLabel(gmail, messageId, labelId)
 
+  await incrementTrialActionUsage(auth.userId)
+
   const progress = await advanceSession(
     auth.userId,
     new ObjectId(sessionId),
@@ -39,6 +42,6 @@ export async function POST(request: Request) {
     undefined,
     labelName,
   )
-  const payload = await buildCheckpointResponse(gmail, progress)
+  const payload = await buildCheckpointResponse(gmail, auth.userId, progress)
   return NextResponse.json(payload)
 }

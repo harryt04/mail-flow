@@ -31,7 +31,7 @@ Run via Vitest + React Testing Library (jsdom environment).
 - `src/hooks/use-mobile.test.ts` — media query for mobile breakpoint
 
 **Mocked external calls** (vi.mock):
-- `src/lib/voice/stt.test.ts` — Deepgram STT token minting (mocked)
+- `src/lib/voice/stt.test.ts` — OpenAI transcription (mocked)
 - `src/lib/voice/tts.test.ts` — OpenAI TTS synthesis (mocked)
 
 ## E2E tests

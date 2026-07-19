@@ -28,14 +28,14 @@ context on *why* early decisions were made, not kept current as ongoing referenc
 | Auth | NextAuth (Auth.js) v5, Google provider scoped to Gmail (single OAuth consent flow) |
 | Database | MongoDB, raw driver (no ODM) |
 | Gmail | `googleapis` |
-| TTS | OpenAI (`gpt-4o-mini-tts`) |
-| STT | Deepgram Nova-3, streaming |
-| Reply cleanup | Anthropic Claude (`@anthropic-ai/sdk`) — text cleanup only, no TTS/STT from Anthropic |
+| TTS | OpenAI (`gpt-4o-mini-tts`), server key funds a 100-action free trial, then BYOK |
+| STT | OpenAI (`gpt-4o-mini-transcribe`), batch — client records + silence-detects locally, server key funds a 100-action free trial, then BYOK |
+| Reply cleanup | OpenAI (`gpt-4o-mini`), server key funds a 100-action free trial, then BYOK |
 | Styling | Tailwind CSS v4 |
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for exact versions and
-`mvp-docs/TTS-STT-ANALYSIS.md` for why OpenAI/Deepgram were chosen (iOS Safari audio
-constraints were the deciding factor).
+`mvp-docs/TTS-STT-ANALYSIS.md` for the original provider evaluation (the app has since
+consolidated onto OpenAI only — see "Free trial & BYOK" below).
 
 ## Repository layout
 
@@ -61,10 +61,8 @@ Copy `.env.local.example` to `.env.local` and fill in:
 - `NEXTAUTH_URL` — `http://localhost:3000` for local dev
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — from the [Google Cloud Console](https://console.cloud.google.com/apis/credentials); enable the Gmail API and add the `gmail.modify` scope under OAuth consent screen > Scopes; authorized redirect URI is `http://localhost:3000/api/auth/callback/google`
 - `MONGODB_URI` / `MONGODB_DB` — a MongoDB Atlas connection string (`MONGODB_DB` defaults to `mailflow`)
-- `TOKEN_ENC_KEY` — AES-256-GCM key for encrypting stored Gmail OAuth tokens at rest; generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
-- `OPENAI_API_KEY` — for TTS
-- `DEEPGRAM_API_KEY` / `DEEPGRAM_PROJECT_ID` — a Member/Admin-scoped Deepgram Project API key, used to mint short-lived client tokens via `/api/stt/token`
-- `ANTHROPIC_API_KEY` — for reply-cleanup
+- `TOKEN_ENC_KEY` — AES-256-GCM key for encrypting stored Gmail OAuth tokens and user-supplied OpenAI keys at rest; generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+- `OPENAI_API_KEY` — funds a 100-action free trial (TTS + STT + reply-cleanup) per user; not needed by contributors beyond that trial, since BYOK only kicks in once a user's own trial is exhausted
 
 Then:
 
@@ -75,6 +73,18 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Other scripts: `npm run build`,
 `npm run start`, `npm run lint`.
+
+## Free trial & BYOK
+
+MailFlow is free, open-source software — anyone can run it themselves. The hosted version funds
+the first **100 actions** (archive/move/reply, roughly proportional to voice usage) per user from
+the maintainer's own OpenAI key. After that, MailFlow isn't being paid for continued usage — each
+user adds their own [OpenAI API key](https://platform.openai.com/api-keys) (in Settings, or on
+the onboarding page once their trial runs out) and covers their own OpenAI cost for TTS, STT, and
+reply-cleanup going forward. This isn't a paid tier; it's a cost pass-through so the app doesn't
+have to fund every user indefinitely.
+
+Contributing? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## For agents working in this repo
 

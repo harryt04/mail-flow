@@ -20,6 +20,7 @@ the move action.
 - `src/lib/gmail/actions` (`archiveMessage`, `sendReply`, `moveMessageToLabel`) — archive, reply, move respectively
 - `src/lib/gmail/labels` (`listUserLabels`) — the `/api/labels` route only
 - `src/lib/gmail/parse` (`parseGmailMessage`) — reply only, to include original message context
+- `src/lib/auth/openaiKey` (`incrementTrialActionUsage`) — archive, reply, move (called after Gmail action succeeds)
 - `src/lib/bookmark/session` (`advanceSession`, `buildCheckpointResponse`) — all four actions, called last
 
 ## Depended on by
@@ -28,11 +29,12 @@ the move action.
   once on mount for the move picker. See [docs/app/listen.md](../listen.md).
 
 ## Conventions
-Every action route here follows the same three-step body: (1) get an authenticated Gmail
-client, (2) perform the Gmail-side mutation, (3) `advanceSession` + `buildCheckpointResponse`
-and return the resulting `CheckpointPayload`. `move` is the first action to also pass an
-optional metadata value (`label`, the label name) through to `advanceSession`'s logging — see
-[docs/lib/bookmark.md](../../lib/bookmark.md).
+Every action route here follows the same four-step body: (1) get an authenticated Gmail
+client, (2) perform the Gmail-side mutation, (3) call `incrementTrialActionUsage` to record
+the action against the user's trial action count (archive, move, and reply routes only), and
+(4) `advanceSession` + `buildCheckpointResponse` and return the resulting `CheckpointPayload`.
+`move` is the first action to also pass an optional metadata value (`label`, the label name)
+through to `advanceSession`'s logging — see [docs/lib/bookmark.md](../../lib/bookmark.md).
 
 ## Where to add new code here
 A new Gmail-mutating user action (e.g. "mark as spam") → add the Gmail-side function to

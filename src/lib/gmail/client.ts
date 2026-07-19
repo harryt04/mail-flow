@@ -68,3 +68,21 @@ export async function fetchMessage(
   })
   return res.data
 }
+
+/**
+ * Cheapest possible per-message fetch — `format: "minimal"` returns only `id`/`threadId`/
+ * `labelIds` (no headers, no body). Used by the auto-skip-while-listening check, which only
+ * needs to know a message's Gmail category labels before deciding whether to fetch the full
+ * body via `fetchMessage`.
+ */
+export async function fetchMessageLabelIds(
+  gmail: gmail_v1.Gmail,
+  messageId: string,
+): Promise<string[]> {
+  const res = await gmail.users.messages.get({
+    userId: 'me',
+    id: messageId,
+    format: 'minimal',
+  })
+  return res.data.labelIds ?? []
+}
