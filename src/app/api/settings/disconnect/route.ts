@@ -9,11 +9,19 @@ import { decryptToken } from '@/lib/auth/tokenCrypto'
 /** Revokes Gmail access with Google and removes the user's stored state. Action logs are kept for audit purposes. */
 export async function POST() {
   const auth = await requireUser()
-  if (!auth) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!auth)
+    return Response.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const users = await usersCollection()
   const user = await users.findOne({ _id: auth.userId })
-  if (!user) return Response.json({ error: 'User not found' }, { status: 404 })
+  if (!user)
+    return Response.json(
+      { error: 'User not found', code: 'USER_NOT_FOUND' },
+      { status: 404 },
+    )
 
   const refreshToken = decryptToken(user.gmailTokens.refreshToken)
   await fetch('https://oauth2.googleapis.com/revoke', {

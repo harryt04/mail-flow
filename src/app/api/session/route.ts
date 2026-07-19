@@ -12,7 +12,10 @@ import {
 export async function GET() {
   const auth = await requireUser()
   if (!auth)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const progress = await getActiveSessionProgress(auth.userId)
   if (!progress) {
@@ -34,12 +37,18 @@ export async function GET() {
 export async function POST() {
   const auth = await requireUser()
   if (!auth)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const users = await usersCollection()
   const user = await users.findOne({ _id: auth.userId })
   if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: 'User not found', code: 'USER_NOT_FOUND' },
+      { status: 404 },
+    )
   }
 
   const { gmail } = await getGmailClientForUser(auth.userId.toString())

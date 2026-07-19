@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface UsageData {
   hasKey: boolean
@@ -10,6 +11,7 @@ interface UsageData {
 export function TrialUsageIndicator() {
   const [usage, setUsage] = useState<UsageData | null>(null)
   const [loading, setLoading] = useState(true)
+  const t = useTranslations('trialUsage')
 
   useEffect(() => {
     fetch('/api/settings/openai-key')
@@ -29,9 +31,10 @@ export function TrialUsageIndicator() {
     <div className="bg-surface-warning border-warning text-warning-text flex items-center gap-3 border-b px-4 py-2 text-sm">
       <div className="flex-1">
         <p>
-          <strong>{usage.trialActionsRemaining}/100</strong> free actions left.
-          MailFlow isn&apos;t being paid for this — you&apos;re covering your
-          own OpenAI usage.
+          {t.rich('remaining', {
+            remaining: usage.trialActionsRemaining,
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </p>
       </div>
     </div>

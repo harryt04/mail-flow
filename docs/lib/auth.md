@@ -23,7 +23,7 @@ and encryption for the OAuth tokens stored in Mongo (`tokenCrypto`).
 ## Depended on by
 - Every route under `src/app/api/**` calls `requireUser()` first (see [docs/app/api/README.md](../app/api/README.md)).
 - `src/lib/gmail/client.ts` calls `decryptToken`/`encryptToken` when building an authenticated Gmail client and refreshing tokens.
-- `proxy.ts` (root) gates page routes using the same `auth` session (see [docs/proxy-and-routing.md](../proxy-and-routing.md)).
+- `src/proxy.ts` gates page routes using the same `auth` session (see [docs/proxy-and-routing.md](../proxy-and-routing.md)).
 - `src/app/api/reply/cleanup`, `src/app/api/stt/transcribe`, `src/app/api/tts` call `resolveOpenAiCredential` before calling OpenAI. `src/app/api/actions/{archive,move,reply}` call `incrementTrialActionUsage` after a successful Gmail action. `src/app/(authenticated)/layout.tsx` uses `FREE_TRIAL_ACTION_LIMIT` for the onboarding redirect gate. See [docs/lib/voice.md](./voice.md) and `mvp-docs/user-supplied-api-key-plan.md`.
 
 ## Conventions

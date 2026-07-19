@@ -28,14 +28,14 @@ for the original phase-by-phase build history.
 ## Request flow
 ```
 Browser
-  → proxy.ts (auth gate at the edge — docs/proxy-and-routing.md)
+  → src/proxy.ts (auth gate + locale detection at the edge — docs/proxy-and-routing.md)
   → App Router page (src/app/**) or API route (src/app/api/** — docs/app/api/README.md)
        page: requireUser() / auth() again, then calls into src/lib/* directly (server component)
        route: requireUser() again, then delegates to src/lib/*
   → src/lib/{auth,db,gmail,bookmark,voice} (docs/lib/README.md)
   → MongoDB / Gmail API / OpenAI
 ```
-Two auth checks are deliberate: `proxy.ts` blocks unauthenticated requests at the edge before
+Two auth checks are deliberate: `src/proxy.ts` blocks unauthenticated requests at the edge before
 routing; `requireUser()`/`auth()` inside the page or route guarantees it never runs
 unauthenticated even if reached directly.
 
@@ -44,7 +44,7 @@ unauthenticated even if reached directly.
 ### 1. Login
 `GoogleSignInForm` (docs/components/landing.md) → NextAuth `signIn` → Google OAuth → NextAuth
 callbacks in `src/lib/auth/options.ts` upsert the user doc, encrypt and store Gmail tokens,
-seed `DEFAULT_USER_SETTINGS` → `proxy.ts` now allows the session onto `/home`, `/listen`,
+seed `DEFAULT_USER_SETTINGS` → `src/proxy.ts` now allows the session onto `/home`, `/listen`,
 `/settings`. See [docs/lib/auth.md](./lib/auth.md).
 
 ### 2. Listening session

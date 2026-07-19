@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -10,6 +11,7 @@ import { IconAlert, IconCheck } from '@/components/ui/icons'
 import { ToggleGroup } from '@/components/settings/ToggleGroup'
 import { CategoryChecklist } from '@/components/settings/CategoryChecklist'
 import { useTheme, type ThemePreference } from '@/hooks/useTheme'
+import { translateApiError } from '@/lib/errors/translateApiError'
 import {
   PLAYBACK_SPEEDS,
   type InboxScope,
@@ -35,33 +37,56 @@ type OpenAIKeyState = {
   trialActionsRemaining: number
 } | null
 
-async function fetchSettings(): Promise<UserSettings> {
+type ApiErrorsTranslator = ReturnType<typeof useTranslations<'apiErrors'>>
+
+async function fetchSettings(
+  tApiErrors: ApiErrorsTranslator,
+  errorMessage: string,
+): Promise<UserSettings> {
   const res = await fetch('/api/settings')
-  if (!res.ok) throw new Error('Could not load settings')
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}))
+    throw new Error(translateApiError(tApiErrors, payload, errorMessage))
+  }
   const { settings } = await res.json()
   return settings
 }
 
 async function saveSettings(
   patch: Partial<UserSettings>,
+  tApiErrors: ApiErrorsTranslator,
+  errorMessage: string,
 ): Promise<UserSettings> {
   const res = await fetch('/api/settings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   })
-  if (!res.ok) throw new Error('Could not save settings')
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}))
+    throw new Error(translateApiError(tApiErrors, payload, errorMessage))
+  }
   const { settings } = await res.json()
   return settings
 }
 
-async function fetchOpenAIKeyState(): Promise<OpenAIKeyState> {
+async function fetchOpenAIKeyState(
+  tApiErrors: ApiErrorsTranslator,
+  errorMessage: string,
+): Promise<OpenAIKeyState> {
   const res = await fetch('/api/settings/openai-key')
-  if (!res.ok) throw new Error('Could not load API key state')
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}))
+    throw new Error(translateApiError(tApiErrors, payload, errorMessage))
+  }
   return res.json()
 }
 
-async function saveOpenAIKey(apiKey: string): Promise<OpenAIKeyState> {
+async function saveOpenAIKey(
+  apiKey: string,
+  tApiErrors: ApiErrorsTranslator,
+  errorMessage: string,
+): Promise<OpenAIKeyState> {
   const res = await fetch('/api/settings/openai-key', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -69,21 +94,29 @@ async function saveOpenAIKey(apiKey: string): Promise<OpenAIKeyState> {
   })
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}))
-    throw new Error(errorData.error || 'Could not save API key')
+    throw new Error(translateApiError(tApiErrors, errorData, errorMessage))
   }
   return res.json()
 }
 
-async function deleteOpenAIKey(): Promise<void> {
+async function deleteOpenAIKey(
+  tApiErrors: ApiErrorsTranslator,
+  errorMessage: string,
+): Promise<void> {
   const res = await fetch('/api/settings/openai-key', {
     method: 'DELETE',
   })
-  if (!res.ok) throw new Error('Could not remove API key')
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}))
+    throw new Error(translateApiError(tApiErrors, payload, errorMessage))
+  }
 }
 
 export function SettingsClient() {
   const router = useRouter()
   const { preference: themePreference, setTheme } = useTheme()
+  const t = useTranslations('settings')
+  const tApiErrors = useTranslations('apiErrors')
 
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [settings, setSettings] = useState<UserSettings | null>(null)
@@ -101,7 +134,7 @@ export function SettingsClient() {
   const [openAIKeyError, setOpenAIKeyError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchSettings()
+    fetchSettings(tApiErrors, t('errors.loadSettings'))
       .then((s) => {
         setSettings(s)
         setVoiceToneDraft(s.voiceTone ?? '')
@@ -111,6 +144,7 @@ export function SettingsClient() {
         setError(err.message)
         setLoadState('error')
       })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -123,9 +157,10 @@ export function SettingsClient() {
   }, [])
 
   useEffect(() => {
-    fetchOpenAIKeyState()
+    fetchOpenAIKeyState(tApiErrors, t('errors.loadApiKeyState'))
       .then((state) => setOpenAIKeyState(state))
       .catch((err) => setOpenAIKeyError(err.message))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function flashSaved() {
@@ -137,11 +172,15 @@ export function SettingsClient() {
     setSaving(true)
     setError(null)
     try {
-      const updated = await saveSettings(patch)
+      const updated = await saveSettings(
+        patch,
+        tApiErrors,
+        t('errors.saveSettings'),
+      )
       setSettings(updated)
       flashSaved()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save settings')
+      setError(err instanceof Error ? err.message : t('errors.saveSettings'))
     } finally {
       setSaving(false)
     }
@@ -161,14 +200,15 @@ export function SettingsClient() {
     setError(null)
     try {
       const res = await fetch('/api/settings/disconnect', { method: 'POST' })
-      if (!res.ok) throw new Error('Could not disconnect your account')
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        throw new Error(
+          translateApiError(tApiErrors, payload, t('errors.disconnect')),
+        )
+      }
       await signOut({ redirectTo: '/' })
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Could not disconnect your account',
-      )
+      setError(err instanceof Error ? err.message : t('errors.disconnect'))
       setDisconnectStep('idle')
     }
   }
@@ -177,13 +217,17 @@ export function SettingsClient() {
     setSavingOpenAIKey(true)
     setOpenAIKeyError(null)
     try {
-      const state = await saveOpenAIKey(openAIKeyDraft.trim())
+      const state = await saveOpenAIKey(
+        openAIKeyDraft.trim(),
+        tApiErrors,
+        t('errors.saveApiKey'),
+      )
       setOpenAIKeyState(state)
       setOpenAIKeyDraft('')
       flashSaved()
     } catch (err) {
       setOpenAIKeyError(
-        err instanceof Error ? err.message : 'Could not save API key',
+        err instanceof Error ? err.message : t('errors.saveApiKey'),
       )
     } finally {
       setSavingOpenAIKey(false)
@@ -194,7 +238,7 @@ export function SettingsClient() {
     setSavingOpenAIKey(true)
     setOpenAIKeyError(null)
     try {
-      await deleteOpenAIKey()
+      await deleteOpenAIKey(tApiErrors, t('errors.removeApiKey'))
       setOpenAIKeyState({
         hasKey: false,
         trialActionsUsed: 0,
@@ -203,7 +247,7 @@ export function SettingsClient() {
       flashSaved()
     } catch (err) {
       setOpenAIKeyError(
-        err instanceof Error ? err.message : 'Could not remove API key',
+        err instanceof Error ? err.message : t('errors.removeApiKey'),
       )
     } finally {
       setSavingOpenAIKey(false)
@@ -213,7 +257,7 @@ export function SettingsClient() {
   if (loadState === 'loading') {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-body text-text-secondary">Loading settings…</p>
+        <p className="text-body text-text-secondary">{t('loading')}</p>
       </div>
     )
   }
@@ -223,7 +267,7 @@ export function SettingsClient() {
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-body text-danger">{error}</p>
         <Button variant="secondary" onClick={() => router.push('/home')}>
-          Back home
+          {t('backHome')}
         </Button>
       </div>
     )
@@ -232,10 +276,10 @@ export function SettingsClient() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-4 py-10 sm:px-6">
       <div className="flex w-full items-center justify-between">
-        <h1 className="text-h1 text-text-primary font-bold">Settings</h1>
+        <h1 className="text-h1 text-text-primary font-bold">{t('title')}</h1>
         {savedFlash && (
           <Badge tone="positive" icon={<IconCheck className="h-4 w-4" />}>
-            Saved
+            {t('saved')}
           </Badge>
         )}
       </div>
@@ -246,23 +290,22 @@ export function SettingsClient() {
         <Card className="flex w-full flex-col gap-4">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-h2 text-text-primary font-semibold">
-              OpenAI API key
+              {t('openAiKey.heading')}
             </h2>
-            {openAIKeyState.hasKey && <Badge tone="positive">Connected</Badge>}
+            {openAIKeyState.hasKey && (
+              <Badge tone="positive">{t('openAiKey.connected')}</Badge>
+            )}
             {!openAIKeyState.hasKey && (
               <Badge>
-                Free trial — {openAIKeyState.trialActionsRemaining}/100 free
-                actions left
+                {t('openAiKey.freeTrial', {
+                  remaining: openAIKeyState.trialActionsRemaining,
+                })}
               </Badge>
             )}
           </div>
 
           <p className="text-body text-text-secondary">
-            MailFlow uses its own OpenAI key for your first 100 actions for
-            free. Once you&apos;ve used your free allocation (or any time, if
-            you&apos;d prefer), you can add your own key. You&apos;d only be
-            covering your own OpenAI API usage costs — MailFlow isn&apos;t a
-            paid plan.
+            {t('openAiKey.description')}
           </p>
 
           {!openAIKeyState.hasKey && (
@@ -271,7 +314,7 @@ export function SettingsClient() {
                 <input
                   type="password"
                   className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
-                  placeholder="sk-..."
+                  placeholder={t('openAiKey.placeholder')}
                   value={openAIKeyDraft}
                   onChange={(e) => setOpenAIKeyDraft(e.target.value)}
                   disabled={savingOpenAIKey}
@@ -282,7 +325,7 @@ export function SettingsClient() {
                     onClick={handleSaveOpenAIKey}
                     disabled={savingOpenAIKey || !openAIKeyDraft.trim()}
                   >
-                    Save
+                    {t('openAiKey.save')}
                   </Button>
                 </div>
               </div>
@@ -299,7 +342,7 @@ export function SettingsClient() {
                 onClick={handleRemoveOpenAIKey}
                 disabled={savingOpenAIKey}
               >
-                Remove key
+                {t('openAiKey.removeKey')}
               </Button>
             </div>
           )}
@@ -307,17 +350,19 @@ export function SettingsClient() {
       )}
 
       <Card className="flex w-full flex-col gap-6">
-        <h2 className="text-h2 text-text-primary font-semibold">Inbox</h2>
+        <h2 className="text-h2 text-text-primary font-semibold">
+          {t('inbox.heading')}
+        </h2>
 
         <div className="flex flex-col gap-2">
           <p className="text-label text-text-secondary uppercase">
-            What to read
+            {t('inbox.whatToRead')}
           </p>
           <ToggleGroup<InboxScope>
             value={settings.inboxScope}
             options={[
-              { value: 'unread', label: 'Unread' },
-              { value: 'all', label: 'All mail' },
+              { value: 'unread', label: t('inbox.unread') },
+              { value: 'all', label: t('inbox.allMail') },
             ]}
             onChange={(value) => updateSetting({ inboxScope: value })}
             disabled={saving}
@@ -325,12 +370,14 @@ export function SettingsClient() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="text-label text-text-secondary uppercase">Order</p>
+          <p className="text-label text-text-secondary uppercase">
+            {t('inbox.order')}
+          </p>
           <ToggleGroup<InboxOrder>
             value={settings.inboxOrder}
             options={[
-              { value: 'oldest', label: 'Oldest first' },
-              { value: 'newest', label: 'Newest first' },
+              { value: 'oldest', label: t('inbox.oldestFirst') },
+              { value: 'newest', label: t('inbox.newestFirst') },
             ]}
             onChange={(value) => updateSetting({ inboxOrder: value })}
             disabled={saving}
@@ -338,16 +385,18 @@ export function SettingsClient() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="text-label text-text-secondary uppercase">Category</p>
+          <p className="text-label text-text-secondary uppercase">
+            {t('inbox.category')}
+          </p>
           <ToggleGroup<InboxCategory>
             value={settings.inboxCategory ?? 'primary'}
             options={[
-              { value: 'primary', label: 'Primary' },
-              { value: 'promotions', label: 'Promotions' },
-              { value: 'social', label: 'Social' },
-              { value: 'updates', label: 'Updates' },
-              { value: 'forums', label: 'Forums' },
-              { value: 'all', label: 'All' },
+              { value: 'primary', label: t('inbox.primary') },
+              { value: 'promotions', label: t('inbox.promotions') },
+              { value: 'social', label: t('inbox.social') },
+              { value: 'updates', label: t('inbox.updates') },
+              { value: 'forums', label: t('inbox.forums') },
+              { value: 'all', label: t('inbox.all') },
             ]}
             onChange={(value) => updateSetting({ inboxCategory: value })}
             disabled={saving}
@@ -356,7 +405,7 @@ export function SettingsClient() {
 
         <div className="flex flex-col gap-2">
           <p className="text-label text-text-secondary uppercase">
-            Focus on a label
+            {t('inbox.focusOnLabel')}
           </p>
           <select
             className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
@@ -368,7 +417,7 @@ export function SettingsClient() {
             }
             disabled={saving}
           >
-            <option value="">None (use category above)</option>
+            <option value="">{t('inbox.noneUseCategory')}</option>
             {availableLabels.map((label) => (
               <option key={label.id} value={label.id}>
                 {label.name}
@@ -378,26 +427,24 @@ export function SettingsClient() {
         </div>
 
         <p className="text-meta text-text-muted">
-          Changing scope or order starts a fresh session the next time you
-          listen.
+          {t('inbox.freshSessionNote')}
         </p>
       </Card>
 
       <Card className="flex w-full flex-col gap-4">
         <h2 className="text-h2 text-text-primary font-semibold">
-          Auto-skip while listening
+          {t('autoSkip.heading')}
         </h2>
         <p className="text-body text-text-secondary">
-          Silently skip past emails in these categories instead of reading them
-          aloud.
+          {t('autoSkip.description')}
         </p>
         <CategoryChecklist<InboxCategory>
           values={settings.autoSkipCategories ?? []}
           options={[
-            { value: 'promotions', label: 'Promotions' },
-            { value: 'social', label: 'Social' },
-            { value: 'updates', label: 'Updates' },
-            { value: 'forums', label: 'Forums' },
+            { value: 'promotions', label: t('inbox.promotions') },
+            { value: 'social', label: t('inbox.social') },
+            { value: 'updates', label: t('inbox.updates') },
+            { value: 'forums', label: t('inbox.forums') },
           ]}
           onChange={(values) => updateSetting({ autoSkipCategories: values })}
           disabled={saving}
@@ -406,11 +453,10 @@ export function SettingsClient() {
 
       <Card className="flex w-full flex-col gap-4">
         <h2 className="text-h2 text-text-primary font-semibold">
-          Playback speed
+          {t('playbackSpeed.heading')}
         </h2>
         <p className="text-body text-text-secondary">
-          How fast emails are read aloud. Applies immediately, on the listening
-          screen too.
+          {t('playbackSpeed.description')}
         </p>
         <ToggleGroup<string>
           value={String(settings.playbackSpeed ?? 1)}
@@ -426,13 +472,15 @@ export function SettingsClient() {
       </Card>
 
       <Card className="flex w-full flex-col gap-4">
-        <h2 className="text-h2 text-text-primary font-semibold">Appearance</h2>
+        <h2 className="text-h2 text-text-primary font-semibold">
+          {t('appearance.heading')}
+        </h2>
         <ToggleGroup<ThemePreference>
           value={themePreference}
           options={[
-            { value: 'system', label: 'System' },
-            { value: 'light', label: 'Light' },
-            { value: 'dark', label: 'Dark' },
+            { value: 'system', label: t('appearance.system') },
+            { value: 'light', label: t('appearance.light') },
+            { value: 'dark', label: t('appearance.dark') },
           ]}
           onChange={handleThemeChange}
           disabled={saving}
@@ -440,14 +488,15 @@ export function SettingsClient() {
       </Card>
 
       <Card className="flex w-full flex-col gap-4">
-        <h2 className="text-h2 text-text-primary font-semibold">Voice tone</h2>
+        <h2 className="text-h2 text-text-primary font-semibold">
+          {t('voiceTone.heading')}
+        </h2>
         <p className="text-body text-text-secondary">
-          Optional hint for how emails are read aloud — for example, &quot;a
-          little more upbeat&quot; or &quot;slower pace.&quot;
+          {t('voiceTone.description')}
         </p>
         <textarea
           className="rounded-card border-border bg-surface-sunken text-body text-text-primary min-h-20 w-full border p-4"
-          placeholder="No special tone — calm and unhurried (default)"
+          placeholder={t('voiceTone.placeholder')}
           value={voiceToneDraft}
           onChange={(e) => setVoiceToneDraft(e.target.value)}
           disabled={saving}
@@ -458,13 +507,15 @@ export function SettingsClient() {
             onClick={handleVoiceToneSave}
             disabled={saving || voiceToneDraft === (settings.voiceTone ?? '')}
           >
-            Save
+            {t('openAiKey.save')}
           </Button>
         </div>
       </Card>
 
       <Card className="flex w-full flex-col gap-4">
-        <h2 className="text-h2 text-text-primary font-semibold">Account</h2>
+        <h2 className="text-h2 text-text-primary font-semibold">
+          {t('account.heading')}
+        </h2>
         {disconnectStep === 'idle' && (
           <Button
             variant="danger"
@@ -472,30 +523,29 @@ export function SettingsClient() {
             onClick={() => setDisconnectStep('confirm')}
             className="self-start"
           >
-            Disconnect Google account
+            {t('account.disconnect')}
           </Button>
         )}
         {disconnectStep === 'confirm' && (
           <div className="flex flex-col gap-3">
-            <p className="text-body text-danger">
-              This revokes MailFlow&apos;s access to your Gmail and signs you
-              out. You can reconnect any time by signing in again.
-            </p>
+            <p className="text-body text-danger">{t('account.confirmBody')}</p>
             <div className="flex gap-3">
               <Button
                 variant="secondary"
                 onClick={() => setDisconnectStep('idle')}
               >
-                Cancel
+                {t('account.cancel')}
               </Button>
               <Button variant="danger" onClick={handleDisconnect}>
-                Yes, disconnect
+                {t('account.confirmDisconnect')}
               </Button>
             </div>
           </div>
         )}
         {disconnectStep === 'working' && (
-          <p className="text-body text-text-secondary">Disconnecting…</p>
+          <p className="text-body text-text-secondary">
+            {t('account.disconnecting')}
+          </p>
         )}
       </Card>
     </div>

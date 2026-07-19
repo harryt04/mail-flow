@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Atkinson_Hyperlegible_Next, Fraunces } from 'next/font/google'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import './globals.css'
 import { ThemeScript } from '@/components/ui/ThemeScript'
 import { ServiceWorkerRegister } from '@/components/ui/ServiceWorkerRegister'
@@ -22,15 +24,19 @@ const fraunces = Fraunces({
   style: ['normal', 'italic'],
 })
 
-export const metadata: Metadata = {
-  title: 'MailFlow',
-  description: 'The audiobook app for your inbox.',
-  manifest: '/manifest.webmanifest',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('metadata')
+
+  return {
     title: 'MailFlow',
-  },
+    description: t('description'),
+    manifest: '/manifest.webmanifest',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: 'MailFlow',
+    },
+  }
 }
 
 export const viewport: Viewport = {
@@ -42,22 +48,27 @@ export const viewport: Viewport = {
   ],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${atkinson.variable} ${fraunces.variable} h-full antialiased`}
     >
       <head>
         <ThemeScript />
       </head>
       <body className="bg-bg text-text-primary flex min-h-full flex-col">
-        <SessionProviderClient>{children}</SessionProviderClient>
-        <ServiceWorkerRegister />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <SessionProviderClient>{children}</SessionProviderClient>
+          <ServiceWorkerRegister />
+        </NextIntlClientProvider>
       </body>
     </html>
   )

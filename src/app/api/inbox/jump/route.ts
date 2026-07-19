@@ -8,14 +8,20 @@ import { jumpToMessage, buildCheckpointResponse } from '@/lib/bookmark/session'
 export async function POST(request: Request) {
   const auth = await requireUser()
   if (!auth)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const body = await request.json().catch(() => null)
   const sessionId = body?.sessionId
   const messageId = body?.messageId
   if (typeof sessionId !== 'string' || typeof messageId !== 'string') {
     return NextResponse.json(
-      { error: 'sessionId and messageId are required' },
+      {
+        error: 'sessionId and messageId are required',
+        code: 'SESSION_MESSAGE_REQUIRED',
+      },
       { status: 400 },
     )
   }
@@ -34,6 +40,7 @@ export async function POST(request: Request) {
       {
         error:
           err instanceof Error ? err.message : 'Could not jump to that message',
+        code: 'JUMP_FAILED',
       },
       { status: 400 },
     )

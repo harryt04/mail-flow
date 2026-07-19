@@ -1,148 +1,110 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy — MailFlow',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('privacy')
+  return { title: t('metadataTitle') }
 }
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  const t = await getTranslations('privacy')
+
+  const permissionsLink = (chunks: React.ReactNode) => (
+    <a
+      href="https://myaccount.google.com/permissions"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover:text-text-primary underline"
+    >
+      {chunks}
+    </a>
+  )
+  const emailLink = (chunks: React.ReactNode) => (
+    <a
+      href="mailto:harrison.thomas04@gmail.com"
+      className="hover:text-text-primary underline"
+    >
+      {chunks}
+    </a>
+  )
+
   return (
     <main className="mx-auto flex max-w-2xl flex-1 flex-col gap-6 px-6 py-16">
       <Link
         href="/"
         className="text-body text-text-secondary hover:text-text-primary"
       >
-        ← MailFlow
+        {t('backToBrand')}
       </Link>
-      <h1 className="text-h1 text-text-primary font-bold">Privacy Policy</h1>
-      <p className="text-body-sm text-text-secondary">
-        Last updated: July 18, 2026
-      </p>
+      <h1 className="text-h1 text-text-primary font-bold">{t('title')}</h1>
+      <p className="text-body-sm text-text-secondary">{t('lastUpdated')}</p>
 
       <div className="text-body text-text-secondary flex flex-col gap-6">
         <section className="flex flex-col gap-2">
           <h2 className="text-h3 text-text-primary font-semibold">
-            1. Overview
+            {t('sections.overview.heading')}
           </h2>
-          <p>
-            MailFlow (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is an audiobook-style
-            reader for your inbox. This policy explains what data we access, how
-            we use it, and how you can control it.
-          </p>
+          <p>{t('sections.overview.body')}</p>
         </section>
 
         <section className="flex flex-col gap-2">
           <h2 className="text-h3 text-text-primary font-semibold">
-            2. Google user data
+            {t('sections.googleUserData.heading')}
           </h2>
-          <p>
-            When you sign in with Google, MailFlow requests access to your Gmail
-            account through the Gmail API. We use this access only to:
-          </p>
+          <p>{t('sections.googleUserData.intro')}</p>
           <ul className="list-disc pl-6">
-            <li>
-              Read email content and metadata (sender, subject, body) so it can
-              be read aloud.
-            </li>
-            <li>
-              Perform actions you request by voice or command, such as
-              archiving, replying to, or snoozing a message.
-            </li>
+            <li>{t('sections.googleUserData.bullet1')}</li>
+            <li>{t('sections.googleUserData.bullet2')}</li>
           </ul>
+          <p>{t('sections.googleUserData.outro')}</p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+          <h2 className="text-h3 text-text-primary font-semibold">
+            {t('sections.otherData.heading')}
+          </h2>
+          <p>{t('sections.otherData.body')}</p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+          <h2 className="text-h3 text-text-primary font-semibold">
+            {t('sections.storageAndSecurity.heading')}
+          </h2>
+          <p>{t('sections.storageAndSecurity.body')}</p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+          <h2 className="text-h3 text-text-primary font-semibold">
+            {t('sections.retentionAndDeletion.heading')}
+          </h2>
           <p>
-            We do not use Gmail data for advertising, and we do not sell, rent,
-            or share your Gmail data with third parties. Gmail data is used
-            solely to provide the MailFlow experience to you.
+            {t.rich('sections.retentionAndDeletion.body', {
+              permissionsLink,
+              emailLink,
+            })}
           </p>
         </section>
 
         <section className="flex flex-col gap-2">
           <h2 className="text-h3 text-text-primary font-semibold">
-            3. Other data we collect
+            {t('sections.thirdPartySharing.heading')}
           </h2>
-          <p>
-            We store your Google account identifier and basic profile
-            information (name, email address) to maintain your session, along
-            with app settings and playback state you create while using
-            MailFlow.
-          </p>
+          <p>{t('sections.thirdPartySharing.body')}</p>
         </section>
 
         <section className="flex flex-col gap-2">
           <h2 className="text-h3 text-text-primary font-semibold">
-            4. Data storage and security
+            {t('sections.changes.heading')}
           </h2>
-          <p>
-            Data is stored using industry-standard security practices. Access
-            tokens are used only to communicate with the Gmail API on your
-            behalf and are never exposed to third parties.
-          </p>
+          <p>{t('sections.changes.body')}</p>
         </section>
 
         <section className="flex flex-col gap-2">
           <h2 className="text-h3 text-text-primary font-semibold">
-            5. Data retention and deletion
+            {t('sections.contact.heading')}
           </h2>
-          <p>
-            You may revoke MailFlow&rsquo;s access to your Google account at any
-            time from your{' '}
-            <a
-              href="https://myaccount.google.com/permissions"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-text-primary underline"
-            >
-              Google Account permissions
-            </a>{' '}
-            page. To request deletion of any data MailFlow has stored about you,
-            email{' '}
-            <a
-              href="mailto:harrison.thomas04@gmail.com"
-              className="hover:text-text-primary underline"
-            >
-              harrison.thomas04@gmail.com
-            </a>{' '}
-            and we will delete it within a reasonable time.
-          </p>
-        </section>
-
-        <section className="flex flex-col gap-2">
-          <h2 className="text-h3 text-text-primary font-semibold">
-            6. Third-party sharing
-          </h2>
-          <p>
-            We do not sell your personal data or Gmail data. We do not share it
-            with third parties except as required to operate the Service (e.g.
-            infrastructure providers bound by confidentiality obligations) or as
-            required by law.
-          </p>
-        </section>
-
-        <section className="flex flex-col gap-2">
-          <h2 className="text-h3 text-text-primary font-semibold">
-            7. Changes to this policy
-          </h2>
-          <p>
-            We may update this Privacy Policy from time to time. Continued use
-            of the Service after changes take effect constitutes acceptance of
-            the revised policy.
-          </p>
-        </section>
-
-        <section className="flex flex-col gap-2">
-          <h2 className="text-h3 text-text-primary font-semibold">
-            8. Contact
-          </h2>
-          <p>
-            Questions about this policy can be sent to{' '}
-            <a
-              href="mailto:harrison.thomas04@gmail.com"
-              className="hover:text-text-primary underline"
-            >
-              harrison.thomas04@gmail.com
-            </a>
-            .
-          </p>
+          <p>{t.rich('sections.contact.body', { emailLink })}</p>
         </section>
       </div>
     </main>

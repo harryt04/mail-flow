@@ -30,7 +30,7 @@ this doc goes a level deeper than other module docs because of that.
 - Mount effects: fetch the initial checkpoint (`phase` → `ready`/`done`); apply `initialPlaybackSpeed` to the audio element; fetch `/api/labels` into `labels` state (best-effort — an empty/failed fetch just means the move picker shows "no labels found" copy). Unmount effect bumps `generationRef` and cancels any in-flight voice/audio.
 
 ## Depended on by
-Reached via `/home`'s "Start Listening" button, the sidebar's "Listen" link, and `/inbox`'s "Start here" jump (which resumes the session at a specific message); gated by both `(authenticated)/layout.tsx` and `proxy.ts`.
+Reached via `/home`'s "Start Listening" button, the sidebar's "Listen" link, and `/inbox`'s "Start here" jump (which resumes the session at a specific message); gated by both `(authenticated)/layout.tsx` and `src/proxy.ts`.
 
 ## Conventions
 - All server calls go through a single `postJson()` helper — new calls to `/api/*` from this component should use it rather than calling `fetch` directly, to keep error handling centralized. Fire-and-forget calls (playback speed persistence) intentionally bypass this since they don't need the response.

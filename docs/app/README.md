@@ -9,7 +9,7 @@ unauthenticated `tos/` and `privacy/` pages live alongside them.
 ## Key files
 | File | Role |
 |---|---|
-| `layout.tsx` (65 lines) | Root layout — fonts (Atkinson Hyperlegible Next, Fraunces), `metadata`/`viewport` exports, mounts `ThemeScript` and `ServiceWorkerRegister` once for the whole app. |
+| `layout.tsx` | Root layout — fonts (Atkinson Hyperlegible Next, Fraunces), async `generateMetadata`/`viewport` exports, wraps the app in `NextIntlClientProvider` (locale + messages resolved via `getLocale()`/`getMessages()`, sets `<html lang>` dynamically — see [docs/i18n.md](../i18n.md)), mounts `ThemeScript` and `ServiceWorkerRegister` once for the whole app. |
 | `(authenticated)/layout.tsx` | Shared layout for every authenticated page — the single `auth()` redirect gate (individual pages no longer each re-check it), wraps children in shadcn's `SidebarProvider` + `AppSidebar` + `SidebarInset`, and renders an always-visible `SidebarTrigger` bar above `children` (opens the mobile drawer below the tablet breakpoint, toggles icon-only collapse above it). A route group (parens don't affect the URL), so `(authenticated)/home/page.tsx` still serves `/home` — see [home.md](./home.md), [listen.md](./listen.md), [inbox.md](./inbox.md), [settings.md](./settings.md). |
 | `page.tsx` (24 lines) | Logged-out landing page — redirects to `/home` if already authenticated (checks `auth()` from `src/lib/auth/options`), otherwise renders `LandingNav`, `LandingHero`, `HowItWorks`, `CommandShowcase`, `ClosingCta` from `src/components/landing/`. |
 | `tos/page.tsx` | Static Terms of Service page, no auth check, linked from `GoogleSignInForm`. |
@@ -28,5 +28,5 @@ unauthenticated `tos/` and `privacy/` pages live alongside them.
 ## Where to add new code here
 - A new global animation/CSS variable used across the listening UI → `globals.css`, alongside the existing named keyframes.
 - A new top-level metadata export (robots.txt, PWA icons, etc.) → follow the `manifest.ts`/`sitemap.ts` pattern (a typed default-export function).
-- A new authenticated page → add a subdirectory under `(authenticated)/`, add its link to `NAV_ITEMS` in `src/components/ui/AppSidebar.tsx`, and add its path to `PROTECTED_PREFIXES`/`config.matcher` in `proxy.ts`. It gets the auth gate and sidebar for free from the route group layout — don't re-check `auth()` for redirect purposes or render a header in the page itself.
+- A new authenticated page → add a subdirectory under `(authenticated)/`, add its link to `NAV_ITEMS` in `src/components/ui/AppSidebar.tsx`, and add its path to `PROTECTED_PREFIXES`/`config.matcher` in `src/proxy.ts`. It gets the auth gate and sidebar for free from the route group layout — don't re-check `auth()` for redirect purposes or render a header in the page itself.
 - Do not add page-specific logic to the root `layout.tsx` or `page.tsx` beyond what's already there.

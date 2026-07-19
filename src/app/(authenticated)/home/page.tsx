@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ObjectId } from 'mongodb'
+import { getTranslations } from 'next-intl/server'
 import { auth } from '@/lib/auth/options'
 import {
   getActiveSessionProgress,
@@ -10,30 +11,36 @@ import { getActionCounts } from '@/lib/bookmark/stats'
 import { Button } from '@/components/ui/Button'
 import { DashboardStats } from '@/components/home/DashboardStats'
 
-function buildBookmarkStatus(progress: SessionWithProgress | null): string {
-  if (!progress) return 'Fresh inbox — ready to start.'
+function buildBookmarkStatus(
+  progress: SessionWithProgress | null,
+  t: Awaited<ReturnType<typeof getTranslations>>,
+): string {
+  if (!progress) return t('fresh')
 
   const { remaining, session } = progress
   const totalEstimate = session.totalEstimate ?? session.messageIds.length
   const snapshotSize = session.messageIds.length
 
   if (totalEstimate > snapshotSize) {
-    return `Working through the oldest ${snapshotSize.toLocaleString()} of ~${totalEstimate.toLocaleString()} unread emails — ${remaining.toLocaleString()} left in this batch.`
+    return t('workingThrough', { snapshotSize, totalEstimate, remaining })
   }
 
-  return `You have ${remaining.toLocaleString()} email${remaining === 1 ? '' : 's'} to listen to.`
+  return t('remaining', { remaining })
 }
 
 export default async function HomePage() {
   const session = await auth()
   if (!session?.user?.id) redirect('/')
 
+  const t = await getTranslations('home')
+  const tBookmarkStatus = await getTranslations('home.bookmarkStatus')
+
   const userId = new ObjectId(session.user.id)
   const [progress, counts] = await Promise.all([
     getActiveSessionProgress(userId),
     getActionCounts(userId),
   ])
-  const bookmarkStatus = buildBookmarkStatus(progress)
+  const bookmarkStatus = buildBookmarkStatus(progress, tBookmarkStatus)
 
   return (
     <div className="flex flex-1 flex-col items-center gap-10 px-6 py-12 text-center">
@@ -41,11 +48,11 @@ export default async function HomePage() {
         <p className="text-body text-text-secondary">{bookmarkStatus}</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/listen">
-            <Button size="lg">Start Listening</Button>
+            <Button size="lg">{t('startListening')}</Button>
           </Link>
           <Link href="/inbox">
             <Button size="lg" variant="secondary">
-              Browse inbox
+              {t('browseInbox')}
             </Button>
           </Link>
         </div>

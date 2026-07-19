@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { IconButton } from '@/components/ui/IconButton'
@@ -15,6 +16,7 @@ import { useAudioPlayback } from '@/hooks/useAudioPlayback'
 import { useVoiceSession, preWarmAudio } from '@/hooks/useVoiceSession'
 import { matchCommand } from '@/lib/voice/commandMatcher'
 import { findMatchingLabels } from '@/lib/voice/labelMatcher'
+import { translateApiError } from '@/lib/errors/translateApiError'
 import {
   PLAYBACK_SPEEDS,
   type CheckpointPayload,
@@ -26,8 +28,6 @@ import type { GmailLabel } from '@/lib/gmail/labels'
 type Phase = 'loading' | 'ready' | 'error' | 'done'
 
 const MAX_RETRIES = 3
-const RETRY_PROMPT =
-  'Didn\'t catch that. Say "Continue", "Skip", "Archive", "Reply", or "Move".'
 
 // How much to read before pausing to check in — short paragraphs (a signature
 // line, a lone "a link to example.com") get merged with their neighbors so
@@ -48,6 +48,7 @@ class CancelledError extends Error {}
 
 async function postJson(
   url: string,
+  tApiErrors: ReturnType<typeof useTranslations<'apiErrors'>>,
   body?: unknown,
 ): Promise<CheckpointPayload> {
   const res = await fetch(url, {
@@ -57,7 +58,9 @@ async function postJson(
   })
   if (!res.ok) {
     const payload = await res.json().catch(() => ({}))
-    throw new Error(payload.error ?? `Request to ${url} failed`)
+    throw new Error(
+      translateApiError(tApiErrors, payload, `Request to ${url} failed`),
+    )
   }
   return res.json()
 }
@@ -67,6 +70,8 @@ interface ListenClientProps {
 }
 
 export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
+  const t = useTranslations('listen')
+  const tApiErrors = useTranslations('apiErrors')
   const [phase, setPhase] = useState<Phase>('loading')
   const [playbackSpeed, setPlaybackSpeed] =
     useState<PlaybackSpeed>(initialPlaybackSpeed)
@@ -74,7 +79,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   const [started, setStarted] = useState(false)
   const [paused, setPaused] = useState(false)
   const [uiState, setUiState] = useState<ListeningState>('idle')
-  const [uiLabel, setUiLabel] = useState('Ready')
+  const [uiLabel, setUiLabel] = useState(t('status.ready'))
   const [promptText, setPromptText] = useState<string | null>(null)
   const [paragraphIndex, setParagraphIndex] = useState<number | null>(null)
   const [showContinue, setShowContinue] = useState(false)
@@ -100,7 +105,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   const generationRef = useRef(0)
 
   useEffect(() => {
-    postJson('/api/session')
+    postJson('/api/session', tApiErrors)
       .then((payload) => {
         setCheckpoint(payload)
         setPhase(payload.email ? 'ready' : 'done')
@@ -109,6 +114,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         setError(err.message)
         setPhase('error')
       })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -154,7 +160,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   async function speakAndShow(
     text: string,
     gen: number,
-    label = 'Speaking',
+    label = t('status.speaking'),
     state: ListeningState = 'speaking',
   ) {
     setUiState(state)
@@ -169,7 +175,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     opts?: Parameters<typeof voice.listen>[0],
   ): Promise<string> {
     setUiState('listening')
-    setUiLabel('Listening')
+    setUiLabel(t('status.listening'))
     try {
       const transcript = await voice.listen(opts)
       if (!isCurrent(gen)) throw new CancelledError()
@@ -185,7 +191,8 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
 
   /** Surfaces a fatal loop error and makes sure the UI stops implying we're still listening/speaking. */
   function showFatalError(err: unknown) {
-    const message = err instanceof Error ? err.message : 'Something went wrong'
+    const message =
+      err instanceof Error ? err.message : t('prompts.somethingWentWrong')
     setError(message)
     setUiState('error')
     setUiLabel('Not listening')
@@ -202,8 +209,8 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     extraBody?: Record<string, unknown>,
   ) {
     setUiState('thinking')
-    setUiLabel('Working on it')
-    const payload = await postJson(url, {
+    setUiLabel(t('status.workingOnIt'))
+    const payload = await postJson(url, tApiErrors, {
       sessionId,
       messageId: email.messageId,
       ...extraBody,
@@ -220,7 +227,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     if (!payload.email) {
       setPhase('done')
       setUiState('idle')
-      setUiLabel('Ready')
+      setUiLabel(t('status.ready'))
       setPromptText(null)
       return
     }
@@ -248,18 +255,18 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
 
     if (matches.length === 0) {
       await speakAndShow(
-        "You don't have a Gmail label like that yet. Add it in Gmail, then try again.",
+        t('prompts.noMatchingLabel'),
         gen,
-        'No matching folder',
+        t('move.noMatchingFolderLabel'),
         'error',
       )
       return false
     }
     if (matches.length > 1) {
       await speakAndShow(
-        'More than one folder matches that — try being more specific.',
+        t('prompts.ambiguousLabel'),
         gen,
-        'Ambiguous folder',
+        t('move.ambiguousFolderLabel'),
         'error',
       )
       return false
@@ -267,9 +274,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
 
     const label = matches[0]
     await speakAndShow(
-      `Move to ${label.name}? Say "yes" to confirm, or "redo" to cancel.`,
+      t('prompts.confirmMove', { labelName: label.name }),
       gen,
-      `Move to ${label.name}?`,
+      t('prompts.moveToLabel', { labelName: label.name }),
     )
     if (!isCurrent(gen)) return true
 
@@ -285,7 +292,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           email,
           sessionId,
           gen,
-          `Moved to ${label.name}.`,
+          t('prompts.moved', { labelName: label.name }),
           {
             labelId: label.id,
             labelName: label.name,
@@ -300,16 +307,16 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       retries += 1
       if (retries > MAX_RETRIES) {
         setUiState('error')
-        setUiLabel('Use the buttons below')
-        setPromptText('Having trouble hearing you — use the buttons below.')
+        setUiLabel(t('status.useTheButtonsBelow'))
+        setPromptText(t('prompts.troubleHearingButtons'))
         return true
       }
       setUiState('error')
-      setUiLabel("Didn't catch that")
+      setUiLabel(t('status.didntCatchThat'))
       await speakAndShow(
-        'Say "yes" to confirm the move, or "redo" to cancel.',
+        t('prompts.confirmMoveRetry'),
         gen,
-        "Didn't catch that",
+        t('status.didntCatchThat'),
       )
     }
   }
@@ -318,8 +325,8 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   async function sendReplyAndResume(text: string, gen: number) {
     if (!checkpoint?.email) return
     setUiState('thinking')
-    setUiLabel('Sending')
-    const payload = await postJson('/api/actions/reply', {
+    setUiLabel(t('status.sending'))
+    const payload = await postJson('/api/actions/reply', tApiErrors, {
       sessionId: checkpoint.sessionId,
       messageId: checkpoint.email.messageId,
       replyText: text,
@@ -333,13 +340,18 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     setParagraphIndex(null)
     setShowContinue(false)
 
-    await speakAndShow('Sending your reply.', gen, 'Sent', 'confirmed')
+    await speakAndShow(
+      t('prompts.sendingReply'),
+      gen,
+      t('status.sent'),
+      'confirmed',
+    )
     if (!isCurrent(gen)) return
 
     if (!payload.email) {
       setPhase('done')
       setUiState('idle')
-      setUiLabel('Ready')
+      setUiLabel(t('status.ready'))
       setPromptText(null)
       return
     }
@@ -352,7 +364,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   /** IMPLEMENTATION-PLAN.md §7.4 — dictate, clean up via Claude, read back, confirm/redo. */
   async function runDictationFlow(gen: number) {
     try {
-      await speakAndShow('Go ahead.', gen, 'Speaking')
+      await speakAndShow(t('prompts.goAhead'), gen, t('status.speaking'))
       if (!isCurrent(gen)) return
 
       setReplyStage('dictating')
@@ -364,29 +376,36 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       if (!transcript.trim()) {
         setReplyStage('idle')
         setUiState('idle')
-        setUiLabel('Ready')
-        setPromptText(
-          "Didn't catch anything — type your reply below, or tap Reply to try again.",
-        )
+        setUiLabel(t('status.ready'))
+        setPromptText(t('prompts.didntCatchAnything'))
         return
       }
 
       setReplyText(transcript)
       setReplyStage('cleaning')
       setUiState('thinking')
-      setUiLabel('Cleaning up')
+      setUiLabel(t('status.cleaningUp'))
       const res = await fetch('/api/reply/cleanup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rawTranscript: transcript }),
       })
-      if (!res.ok) throw new Error('Could not clean up your reply')
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        throw new Error(
+          translateApiError(
+            tApiErrors,
+            payload,
+            t('reply.errors.cleanupFailed'),
+          ),
+        )
+      }
       const { cleanedText } = (await res.json()) as { cleanedText: string }
       if (!isCurrent(gen)) return
 
       setReplyText(cleanedText)
       setReplyStage('confirming')
-      await speakAndShow(`Here's your reply: ${cleanedText} Send it?`, gen)
+      await speakAndShow(t('prompts.reviewReply', { cleanedText }), gen)
       if (!isCurrent(gen)) return
 
       let retries = 0
@@ -409,18 +428,16 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         retries += 1
         if (retries > MAX_RETRIES) {
           setUiState('error')
-          setUiLabel('Use the buttons below')
-          setPromptText(
-            'Having trouble hearing you — use Send or Cancel below.',
-          )
+          setUiLabel(t('status.useTheButtonsBelow'))
+          setPromptText(t('prompts.troubleHearingSendCancel'))
           return
         }
         setUiState('error')
-        setUiLabel("Didn't catch that")
+        setUiLabel(t('status.didntCatchThat'))
         await speakAndShow(
-          'Didn\'t catch that. Say "Send", or "Redo".',
+          t('prompts.retrySendOrRedo'),
           gen,
-          "Didn't catch that",
+          t('status.didntCatchThat'),
         )
       }
     } catch (err) {
@@ -438,7 +455,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     setReplyStage('idle')
     setReplyText('')
     setUiState('idle')
-    setUiLabel('Ready')
+    setUiLabel(t('status.ready'))
     setPromptText(null)
     setReplyOpen(true)
     void runDictationFlow(gen)
@@ -474,7 +491,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     setNewFolderName('')
     setNewFolderError(null)
     setUiState('idle')
-    setUiLabel('Ready')
+    setUiLabel(t('status.ready'))
     setPromptText(null)
     setMoveOpen(true)
   }
@@ -517,14 +534,16 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         checkpoint.email,
         checkpoint.sessionId,
         gen,
-        `Moved to ${label.name}.`,
+        t('prompts.moved', { labelName: label.name }),
         {
           labelId: label.id,
           labelName: label.name,
         },
       )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(
+        err instanceof Error ? err.message : t('prompts.somethingWentWrong'),
+      )
     } finally {
       setBusy(false)
     }
@@ -543,7 +562,13 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        throw new Error(data.error ?? 'Could not create folder')
+        throw new Error(
+          translateApiError(
+            tApiErrors,
+            data,
+            t('move.errors.createFolderFailed'),
+          ),
+        )
       }
       const label: GmailLabel = data.label
       setLabels((prev) => [...prev, label])
@@ -552,7 +577,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       setMoveConfirmLabel(label)
     } catch (err) {
       setNewFolderError(
-        err instanceof Error ? err.message : 'Could not create folder',
+        err instanceof Error
+          ? err.message
+          : t('move.errors.createFolderFailed'),
       )
     } finally {
       setCreatingLabel(false)
@@ -569,15 +596,15 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       setParagraphIndex(null)
       setShowContinue(true)
       await speakAndShow(
-        `From ${email.sender}. Subject: ${email.subject}.`,
+        t('prompts.emailIntro', {
+          sender: email.sender,
+          subject: email.subject,
+        }),
         gen,
       )
       if (!isCurrent(gen)) return
 
-      await speakAndShow(
-        'Say "continue" to hear the message, or tell me what to do.',
-        gen,
-      )
+      await speakAndShow(t('prompts.sayContinue'), gen)
       if (!isCurrent(gen)) return
       const result = await listenForCheckpointCommand(email, sessionId, gen, {
         allowContinue: true,
@@ -622,7 +649,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         extraBody,
       )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(
+        err instanceof Error ? err.message : t('prompts.somethingWentWrong'),
+      )
     } finally {
       setBusy(false)
     }
@@ -634,8 +663,8 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     audio.stop()
     setPaused(true)
     setUiState('paused')
-    setUiLabel('Paused')
-    setPromptText('Paused. Tap play to resume.')
+    setUiLabel(t('status.paused'))
+    setPromptText(t('prompts.pausedResume'))
   }
 
   function handleResume() {
@@ -709,7 +738,13 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         return 'handled'
       }
       if (match?.command === 'skip') {
-        await runAction('/api/session/next', email, sessionId, gen, 'Skipped.')
+        await runAction(
+          '/api/session/next',
+          email,
+          sessionId,
+          gen,
+          t('prompts.skipped'),
+        )
         return 'handled'
       }
       if (match?.command === 'archive') {
@@ -719,7 +754,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           email,
           sessionId,
           gen,
-          isDelete ? 'Deleted.' : 'Archived.',
+          isDelete ? t('prompts.deleted') : t('prompts.archived'),
           { delete: isDelete },
         )
         return 'handled'
@@ -742,13 +777,13 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       retries += 1
       if (retries > MAX_RETRIES) {
         setUiState('error')
-        setUiLabel('Use the buttons below')
-        setPromptText('Having trouble hearing you — use the buttons below.')
+        setUiLabel(t('status.useTheButtonsBelow'))
+        setPromptText(t('prompts.troubleHearingButtons'))
         return 'handled'
       }
       setUiState('error')
-      setUiLabel("Didn't catch that")
-      await speakAndShow(RETRY_PROMPT, gen, "Didn't catch that")
+      setUiLabel(t('status.didntCatchThat'))
+      await speakAndShow(t('prompts.retry'), gen, t('status.didntCatchThat'))
     }
   }
 
@@ -785,8 +820,8 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         const hasMore = i < email.paragraphs.length - 1
         setShowContinue(hasMore)
         const prompt = hasMore
-          ? 'There\'s more. Say "continue", or tell me what to do.'
-          : "That's the whole message. What next?"
+          ? t('prompts.moreContinue')
+          : t('prompts.wholeMessage')
         await speakAndShow(prompt, gen)
 
         const result = await listenForCheckpointCommand(email, sessionId, gen, {
@@ -815,7 +850,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     try {
       await sendReplyAndResume(replyText.trim(), gen)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(
+        err instanceof Error ? err.message : t('prompts.somethingWentWrong'),
+      )
     } finally {
       setBusy(false)
     }
@@ -824,7 +861,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   if (phase === 'loading') {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-body text-text-secondary">Loading your inbox…</p>
+        <p className="text-body text-text-secondary">{t('loading')}</p>
       </div>
     )
   }
@@ -834,7 +871,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-body text-danger">{error}</p>
         <Link href="/home">
-          <Button variant="secondary">Back home</Button>
+          <Button variant="secondary">{t('backHome')}</Button>
         </Link>
       </div>
     )
@@ -844,13 +881,11 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-h1 text-text-primary font-semibold">
-          You&apos;re all caught up.
+          {t('caughtUp.title')}
         </p>
-        <p className="text-body text-text-secondary">
-          Nothing left in this session — check back once new mail arrives.
-        </p>
+        <p className="text-body text-text-secondary">{t('caughtUp.body')}</p>
         <Link href="/home">
-          <Button variant="secondary">Back home</Button>
+          <Button variant="secondary">{t('backHome')}</Button>
         </Link>
       </div>
     )
@@ -859,11 +894,14 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
   const { email, remaining, totalEstimate, snapshotSize } = checkpoint
   const sessionLabel =
     totalEstimate > snapshotSize
-      ? `${remaining.toLocaleString()} left in this batch of ${snapshotSize.toLocaleString()} (out of ~${totalEstimate.toLocaleString()} unread)`
-      : `${remaining.toLocaleString()} left to listen to`
+      ? t('sessionLabel.capped', { remaining, snapshotSize, totalEstimate })
+      : t('sessionLabel.uncapped', { remaining })
   const paragraphLabel =
     paragraphIndex !== null
-      ? `Paragraph ${paragraphIndex + 1} of ${email.paragraphs.length}`
+      ? t('paragraphLabel', {
+          current: paragraphIndex + 1,
+          total: email.paragraphs.length,
+        })
       : null
 
   return (
@@ -875,14 +913,16 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           variant="ghost"
           size="md"
           onClick={handleSpeedChange}
-          aria-label="Change playback speed"
+          aria-label={t('changePlaybackSpeed')}
         >
+          {/* "1.5x" style speed multiplier — a non-translatable unit convention, not prose */}
+          {/* eslint-disable-next-line i18next/no-literal-string */}
           {playbackSpeed}x
         </Button>
         {started && !paused && (
           <IconButton
             icon={<IconPause className="h-5 w-5" />}
-            label="Pause session"
+            label={t('pauseSession')}
             variant="default"
             size="md"
             onClick={handlePause}
@@ -897,13 +937,13 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           </p>
           <IconButton
             icon={<IconPlay className="h-7 w-7" />}
-            label="Start listening"
+            label={t('startListening')}
             variant="primary"
             size="lg"
             onClick={handleBegin}
           />
           <span className="text-label text-text-secondary uppercase">
-            Start listening
+            {t('startListening')}
           </span>
         </div>
       ) : paused ? (
@@ -916,13 +956,13 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           )}
           <IconButton
             icon={<IconPlay className="h-7 w-7" />}
-            label="Resume listening"
+            label={t('resumeListening')}
             variant="primary"
             size="lg"
             onClick={handleResume}
           />
           <span className="text-label text-text-secondary uppercase">
-            Resume
+            {t('resume')}
           </span>
         </div>
       ) : (
@@ -963,17 +1003,17 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         <div className="flex w-full flex-col gap-3">
           {replyStage === 'dictating' && (
             <p className="text-meta text-attention text-center">
-              Listening for your reply…
+              {t('reply.listeningForReply')}
             </p>
           )}
           {replyStage === 'cleaning' && (
             <p className="text-meta text-text-secondary text-center">
-              Cleaning up your reply…
+              {t('reply.cleaningUpReply')}
             </p>
           )}
           <textarea
             className="rounded-card border-border bg-surface-sunken text-body text-text-primary min-h-32 w-full border p-4"
-            placeholder="Type your reply, or wait for the mic to capture what you say…"
+            placeholder={t('reply.placeholder')}
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             disabled={busy}
@@ -984,13 +1024,13 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
               onClick={handleCancelReply}
               disabled={busy}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               onClick={handleSendReplyManual}
               disabled={busy || replyText.trim().length === 0}
             >
-              Send
+              {t('send')}
             </Button>
           </div>
         </div>
@@ -999,7 +1039,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           {!moveConfirmLabel ? (
             <>
               <p className="text-body text-text-secondary text-center">
-                Move this email to which folder?
+                {t('move.whichFolder')}
               </p>
               {newFolderMode ? (
                 <div className="flex flex-col items-center gap-2">
@@ -1007,7 +1047,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
                     type="text"
                     autoFocus
                     className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full max-w-xs border p-3"
-                    placeholder="New folder name"
+                    placeholder={t('move.newFolderPlaceholder')}
                     value={newFolderName}
                     onChange={(e) => setNewFolderName(e.target.value)}
                     disabled={creatingLabel}
@@ -1024,7 +1064,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
                       }}
                       disabled={creatingLabel}
                     >
-                      Cancel
+                      {t('cancel')}
                     </Button>
                     <Button
                       onClick={handleCreateLabel}
@@ -1032,7 +1072,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
                         creatingLabel || newFolderName.trim().length === 0
                       }
                     >
-                      {creatingLabel ? 'Creating…' : 'Create'}
+                      {creatingLabel ? t('move.creating') : t('move.create')}
                     </Button>
                   </div>
                 </div>
@@ -1040,8 +1080,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
                 <>
                   {labels.length === 0 ? (
                     <p className="text-meta text-text-muted text-center">
-                      No Gmail labels found yet — create one below, or add one
-                      in Gmail and come back here.
+                      {t('move.noLabelsFound')}
                     </p>
                   ) : (
                     <div className="flex flex-wrap justify-center gap-2">
@@ -1061,12 +1100,12 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
                       variant="secondary"
                       onClick={() => setNewFolderMode(true)}
                     >
-                      New Folder
+                      {t('move.newFolder')}
                     </Button>
                   </div>
                   <div className="flex justify-center">
                     <Button variant="secondary" onClick={handleCancelMove}>
-                      Cancel
+                      {t('cancel')}
                     </Button>
                   </div>
                 </>
@@ -1075,7 +1114,7 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           ) : (
             <>
               <p className="text-body text-text-primary text-center">
-                Move to {moveConfirmLabel.name}?
+                {t('move.confirmHeading', { labelName: moveConfirmLabel.name })}
               </p>
               <div className="flex justify-center gap-3">
                 <Button
@@ -1083,10 +1122,10 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
                   onClick={() => setMoveConfirmLabel(null)}
                   disabled={busy}
                 >
-                  Back
+                  {t('move.back')}
                 </Button>
                 <Button onClick={handleConfirmMove} disabled={busy}>
-                  Confirm
+                  {t('move.confirm')}
                 </Button>
               </div>
             </>
@@ -1094,9 +1133,11 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         </div>
       ) : (
         <ManualControls
-          onSkip={() => handleManualAction('/api/session/next', 'Skipped.')}
+          onSkip={() =>
+            handleManualAction('/api/session/next', t('prompts.skipped'))
+          }
           onArchive={() =>
-            handleManualAction('/api/actions/archive', 'Archived.')
+            handleManualAction('/api/actions/archive', t('prompts.archived'))
           }
           onReply={enterReplyMode}
           onMove={enterMoveMode}

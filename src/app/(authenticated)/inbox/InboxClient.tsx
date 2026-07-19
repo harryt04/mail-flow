@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useFormatter, useTranslations } from 'next-intl'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { IconCheck } from '@/components/ui/icons'
+import { translateApiError } from '@/lib/errors/translateApiError'
 
 interface EmailSummaryItem {
   messageId: string
@@ -37,7 +39,11 @@ const PAGE_SIZE = 25
  * Returns "Just now", "Xm ago", "Xh ago", "Xd ago" for recent messages,
  * or a short absolute date like "Jan 5" for older messages.
  */
-function formatRelativeTime(dateMs: number): string {
+function formatRelativeTime(
+  dateMs: number,
+  t: ReturnType<typeof useTranslations<'inbox.relativeTime'>>,
+  format: ReturnType<typeof useFormatter>,
+): string {
   const now = Date.now()
   const diff = now - dateMs
   const seconds = Math.floor(diff / 1000)
@@ -45,21 +51,21 @@ function formatRelativeTime(dateMs: number): string {
   const hours = Math.floor(minutes / 60)
   const days = Math.floor(hours / 24)
 
-  if (seconds < 60) return 'Just now'
-  if (minutes < 60) return `${minutes}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days < 30) return `${days}d ago`
+  if (seconds < 60) return t('justNow')
+  if (minutes < 60) return t('minutesAgo', { minutes })
+  if (hours < 24) return t('hoursAgo', { hours })
+  if (days < 30) return t('daysAgo', { days })
 
   // For older messages, show short absolute date
-  const date = new Date(dateMs)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
+  return format.dateTime(new Date(dateMs), { month: 'short', day: 'numeric' })
 }
 
 export function InboxClient() {
   const router = useRouter()
+  const t = useTranslations('inbox')
+  const tApiErrors = useTranslations('apiErrors')
+  const tRelativeTime = useTranslations('inbox.relativeTime')
+  const format = useFormatter()
 
   // Accumulated items and session state
   const [items, setItems] = useState<EmailSummaryItem[]>([])
@@ -115,7 +121,7 @@ export function InboxClient() {
         }
 
         const res = await fetch(url.toString())
-        if (!res.ok) throw new Error('Could not load your inbox')
+        if (!res.ok) throw new Error(t('errors.loadInbox'))
         const payload: InboxPageResponse = await res.json()
 
         setItems(payload.items ?? [])
@@ -141,9 +147,7 @@ export function InboxClient() {
 
         setLoadError(null)
       } catch (err) {
-        setLoadError(
-          err instanceof Error ? err.message : 'Could not load your inbox',
-        )
+        setLoadError(err instanceof Error ? err.message : t('errors.loadInbox'))
         setHasMore(false)
       } finally {
         setLoadingMore(false)
@@ -151,6 +155,7 @@ export function InboxClient() {
     }
 
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm])
 
   // Fetch more items on infinite scroll
@@ -174,7 +179,7 @@ export function InboxClient() {
       }
 
       const res = await fetch(url.toString())
-      if (!res.ok) throw new Error('Could not load more emails')
+      if (!res.ok) throw new Error(t('errors.loadMore'))
       const payload: InboxPageResponse = await res.json()
 
       const newItems = payload.items ?? []
@@ -196,9 +201,7 @@ export function InboxClient() {
 
       setLoadError(null)
     } catch (err) {
-      setLoadError(
-        err instanceof Error ? err.message : 'Could not load more emails',
-      )
+      setLoadError(err instanceof Error ? err.message : t('errors.loadMore'))
       setHasMore(false)
     } finally {
       setLoadingMore(false)
@@ -242,13 +245,13 @@ export function InboxClient() {
       })
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}))
-        throw new Error(payload.error ?? 'Could not jump to that email')
+        throw new Error(
+          translateApiError(tApiErrors, payload, t('errors.jump')),
+        )
       }
       router.push('/listen')
     } catch (err) {
-      setJumpError(
-        err instanceof Error ? err.message : 'Could not jump to that email',
-      )
+      setJumpError(err instanceof Error ? err.message : t('errors.jump'))
       setJumpingId(null)
     }
   }
@@ -258,7 +261,7 @@ export function InboxClient() {
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-body text-danger">{loadError}</p>
         <Link href="/home">
-          <Button variant="secondary">Back home</Button>
+          <Button variant="secondary">{t('backHome')}</Button>
         </Link>
       </div>
     )
@@ -267,7 +270,7 @@ export function InboxClient() {
   if (active === null) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-body text-text-secondary">Loading your inbox…</p>
+        <p className="text-body text-text-secondary">{t('loading')}</p>
       </div>
     )
   }
@@ -276,37 +279,33 @@ export function InboxClient() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-h1 text-text-primary font-semibold">
-          No active session yet.
+          {t('noActiveSession.title')}
         </p>
         <p className="text-body text-text-secondary">
-          Start listening once to build your inbox snapshot, then come back here
-          to browse it.
+          {t('noActiveSession.body')}
         </p>
         <Link href="/home">
-          <Button variant="secondary">Back home</Button>
+          <Button variant="secondary">{t('backHome')}</Button>
         </Link>
       </div>
     )
   }
 
   const capNote =
-    totalEstimate > total
-      ? ` (the oldest ${total.toLocaleString()} of ~${totalEstimate.toLocaleString()} unread)`
-      : ''
+    totalEstimate > total ? t('capNote', { total, totalEstimate }) : ''
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-6 px-6 py-10">
       <div className="flex w-full flex-col gap-4">
         <div className="flex w-full flex-col gap-1">
-          <h1 className="text-h1 text-text-primary font-bold">Inbox</h1>
+          <h1 className="text-h1 text-text-primary font-bold">{t('title')}</h1>
           <p className="text-body text-text-secondary">
-            {total.toLocaleString()} emails to listen to{capNote}. Pick one to
-            jump straight there.
+            {t('summary', { total, capNote })}
           </p>
         </div>
         <input
           type="text"
-          placeholder="Search your inbox…"
+          placeholder={t('searchPlaceholder')}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
@@ -318,7 +317,11 @@ export function InboxClient() {
       <div className="flex w-full flex-col gap-3">
         {items.map((item, i) => {
           const isCurrent = i === cursorIndex
-          const relativeTime = formatRelativeTime(Number(item.receivedAt))
+          const relativeTime = formatRelativeTime(
+            Number(item.receivedAt),
+            tRelativeTime,
+            format,
+          )
           return (
             <Card key={item.messageId} className="flex w-full flex-col gap-3">
               <div className="flex items-start justify-between gap-4">
@@ -327,13 +330,15 @@ export function InboxClient() {
                     <p className="text-body-lg text-text-primary truncate font-semibold">
                       {item.sender}
                     </p>
-                    {item.unread && <Badge tone="brand">Unread</Badge>}
+                    {item.unread && (
+                      <Badge tone="brand">{t('unreadBadge')}</Badge>
+                    )}
                     {isCurrent && (
                       <Badge
                         tone="attention"
                         icon={<IconCheck className="h-4 w-4" />}
                       >
-                        Current
+                        {t('currentBadge')}
                       </Badge>
                     )}
                   </div>
@@ -354,7 +359,9 @@ export function InboxClient() {
                   onClick={() => handleStartHere(item.messageId)}
                   disabled={jumpingId !== null}
                 >
-                  {jumpingId === item.messageId ? 'Starting…' : 'Start here'}
+                  {jumpingId === item.messageId
+                    ? t('starting')
+                    : t('startHere')}
                 </Button>
               </div>
             </Card>
@@ -365,10 +372,10 @@ export function InboxClient() {
       <div ref={sentinelRef} className="w-full" />
 
       {loadingMore && (
-        <p className="text-body text-text-secondary">Loading more…</p>
+        <p className="text-body text-text-secondary">{t('loadingMore')}</p>
       )}
       {!hasMore && items.length > 0 && (
-        <p className="text-body text-text-muted">That&apos;s everything</p>
+        <p className="text-body text-text-muted">{t('thatsEverything')}</p>
       )}
     </div>
   )

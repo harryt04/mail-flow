@@ -9,7 +9,10 @@ export async function GET(
 ) {
   const auth = await requireUser()
   if (!auth)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const { id } = await params
   const { gmail } = await getGmailClientForUser(auth.userId.toString())

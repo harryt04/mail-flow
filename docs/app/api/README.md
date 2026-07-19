@@ -29,6 +29,7 @@ for all actual logic (Gmail calls, DB access, voice pipeline) rather than implem
 - Auth check first, always: `const auth = await requireUser(); if (!auth) return 401`.
 - Every route that mutates a listening session (`session/next`, `actions/*`) ends with the same pair of calls — `advanceSession()` then `buildCheckpointResponse()` — and returns the resulting `CheckpointPayload`. New action routes should follow this shape rather than returning a bespoke response.
 - Route bodies are thin: no Gmail API calls, Mongo queries, or LLM calls happen directly in a route file — they call the relevant `src/lib/*` function.
+- Error responses return both a plain-English `error` string (dev/log-friendly fallback) and a stable machine-readable `code` (from `src/lib/errors/apiErrorCodes.ts`), e.g. `{ error: 'Unauthorized', code: 'UNAUTHORIZED' }`. Clients translate via `code`, not the raw `error` string — see [docs/i18n.md](../../i18n.md#api-errors).
 
 ## Where to add new code here
 - A new API endpoint → create `route.ts` under a new/existing subfolder here, call `requireUser()` first, then delegate to `src/lib/*`. Register it in this route table and in [docs/DECISION-TREE.md](../../DECISION-TREE.md) if it's a common target.

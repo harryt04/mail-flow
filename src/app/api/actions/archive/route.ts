@@ -10,7 +10,10 @@ import { incrementTrialActionUsage } from '@/lib/auth/openaiKey'
 export async function POST(request: Request) {
   const auth = await requireUser()
   if (!auth)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const body = await request.json().catch(() => null)
   const sessionId = body?.sessionId
@@ -18,7 +21,10 @@ export async function POST(request: Request) {
   const isDelete = body?.delete === true
   if (typeof sessionId !== 'string' || typeof messageId !== 'string') {
     return NextResponse.json(
-      { error: 'sessionId and messageId are required' },
+      {
+        error: 'sessionId and messageId are required',
+        code: 'SESSION_MESSAGE_REQUIRED',
+      },
       { status: 400 },
     )
   }

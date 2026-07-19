@@ -1,0 +1,429 @@
+{
+  "metadata": {
+    "description": "The audiobook app for your inbox."
+  },
+  "landing": {
+    "brand": "MailFlow",
+    "hero": {
+      "heading": "Your inbox, read aloud.",
+      "body": "MailFlow listens to your inbox for you. Skip, archive, and reply with a word — no scrolling, no tapping."
+    },
+    "howItWorks": {
+      "heading": "How it works",
+      "step": "Step {number}",
+      "steps": {
+        "signIn": {
+          "title": "Sign in with Google",
+          "body": "One consent screen connects your account and your inbox — nothing else to set up."
+        },
+        "startListening": {
+          "title": "Say “start listening”",
+          "body": "MailFlow picks up exactly where you left off, even if that was days ago."
+        },
+        "listen": {
+          "title": "Listen, one paragraph at a time",
+          "body": "It reads each email aloud, then pauses to ask what's next — you're never stuck mid-message."
+        },
+        "sayTheWord": {
+          "title": "Say the word",
+          "body": "”Skip,” “archive,” or “reply.” No typing, no tapping required."
+        }
+      }
+    },
+    "commandShowcase": {
+      "heading": "Four words, hands-free",
+      "body": "The same vocabulary works whether you’re speaking or tapping — say it, or touch it.",
+      "listening": "Listening…",
+      "commands": {
+        "skip": "Skip",
+        "archive": "Archive",
+        "reply": "Reply"
+      }
+    },
+    "closingCta": {
+      "heading": "Close your eyes. Listen. Say a word.",
+      "body": "Free to start — connect your Gmail and hear your first email in under a minute."
+    },
+    "signIn": {
+      "button": "Sign in with Google",
+      "consent": "By continuing you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>."
+    }
+  },
+  "common": {
+    "brand": "MailFlow",
+    "user": "User",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebar": "Sidebar",
+    "sidebarMobileDescription": "Displays the mobile sidebar.",
+    "close": "Close"
+  },
+  "nav": {
+    "home": "Home",
+    "listen": "Listen",
+    "inbox": "Inbox",
+    "settings": "Settings",
+    "signOut": "Sign out"
+  },
+  "trialUsage": {
+    "remaining": "<strong>{remaining}/100</strong> free actions left. MailFlow isn''t being paid for this — you''re covering your own OpenAI usage."
+  },
+  "home": {
+    "bookmarkStatus": {
+      "fresh": "Fresh inbox — ready to start.",
+      "workingThrough": "Working through the oldest {snapshotSize, number} of ~{totalEstimate, number} unread emails — {remaining, number} left in this batch.",
+      "remaining": "You have {remaining, plural, one {# email} other {# emails}} to listen to."
+    },
+    "startListening": "Start Listening",
+    "browseInbox": "Browse inbox"
+  },
+  "dashboardStats": {
+    "empty": "Nothing sorted yet — the first email you process will show up here.",
+    "summary": "You''ve sorted <strong>{total, number}</strong> {total, plural, one {email} other {emails}} so far.",
+    "deletedFootnote": "{count, number} deleted",
+    "tiles": {
+      "archived": "Archived",
+      "replied": "Replied",
+      "snoozed": "Snoozed",
+      "moved": "Moved",
+      "skipped": "Skipped"
+    }
+  },
+  "inbox": {
+    "title": "Inbox",
+    "summary": "{total, plural, one {# email} other {# emails}} to listen to{capNote}. Pick one to jump straight there.",
+    "capNote": " (the oldest {total, number} of ~{totalEstimate, number} unread)",
+    "searchPlaceholder": "Search your inbox…",
+    "loading": "Loading your inbox…",
+    "noActiveSession": {
+      "title": "No active session yet.",
+      "body": "Start listening once to build your inbox snapshot, then come back here to browse it."
+    },
+    "backHome": "Back home",
+    "unreadBadge": "Unread",
+    "currentBadge": "Current",
+    "starting": "Starting…",
+    "startHere": "Start here",
+    "loadingMore": "Loading more…",
+    "thatsEverything": "That''s everything",
+    "relativeTime": {
+      "justNow": "Just now",
+      "minutesAgo": "{minutes}m ago",
+      "hoursAgo": "{hours}h ago",
+      "daysAgo": "{days}d ago"
+    },
+    "errors": {
+      "loadInbox": "Could not load your inbox",
+      "loadMore": "Could not load more emails",
+      "jump": "Could not jump to that email"
+    }
+  },
+  "listen": {
+    "loading": "Loading your inbox…",
+    "backHome": "Back home",
+    "caughtUp": {
+      "title": "You''re all caught up.",
+      "body": "Nothing left in this session — check back once new mail arrives."
+    },
+    "changePlaybackSpeed": "Change playback speed",
+    "pauseSession": "Pause session",
+    "startListening": "Start listening",
+    "resumeListening": "Resume listening",
+    "resume": "Resume",
+    "cancel": "Cancel",
+    "send": "Send",
+    "sessionLabel": {
+      "capped": "{remaining, number} left in this batch of {snapshotSize, number} (out of ~{totalEstimate, number} unread)",
+      "uncapped": "{remaining, number} left to listen to"
+    },
+    "paragraphLabel": "Paragraph {current, number} of {total, number}",
+    "status": {
+      "ready": "Ready",
+      "speaking": "Speaking",
+      "listening": "Listening",
+      "workingOnIt": "Working on it",
+      "notListening": "Not listening",
+      "useTheButtonsBelow": "Use the buttons below",
+      "didntCatchThat": "Didn''t catch that",
+      "paused": "Paused",
+      "sending": "Sending",
+      "sent": "Sent",
+      "cleaningUp": "Cleaning up"
+    },
+    "prompts": {
+      "retry": "Didn''t catch that. Say \"Continue\", \"Skip\", \"Archive\", \"Reply\", or \"Move\".",
+      "noMatchingLabel": "You don''t have a Gmail label like that yet. Add it in Gmail, then try again.",
+      "ambiguousLabel": "More than one folder matches that — try being more specific.",
+      "confirmMove": "Move to {labelName}? Say \"yes\" to confirm, or \"redo\" to cancel.",
+      "moveToLabel": "Move to {labelName}?",
+      "troubleHearingButtons": "Having trouble hearing you — use the buttons below.",
+      "confirmMoveRetry": "Say \"yes\" to confirm the move, or \"redo\" to cancel.",
+      "moved": "Moved to {labelName}.",
+      "sendingReply": "Sending your reply.",
+      "goAhead": "Go ahead.",
+      "didntCatchAnything": "Didn''t catch anything — type your reply below, or tap Reply to try again.",
+      "reviewReply": "Here''s your reply: {cleanedText} Send it?",
+      "troubleHearingSendCancel": "Having trouble hearing you — use Send or Cancel below.",
+      "retrySendOrRedo": "Didn''t catch that. Say \"Send\", or \"Redo\".",
+      "emailIntro": "From {sender}. Subject: {subject}.",
+      "sayContinue": "Say \"continue\" to hear the message, or tell me what to do.",
+      "somethingWentWrong": "Something went wrong",
+      "pausedResume": "Paused. Tap play to resume.",
+      "skipped": "Skipped.",
+      "archived": "Archived.",
+      "deleted": "Deleted.",
+      "moreContinue": "There''s more. Say \"continue\", or tell me what to do.",
+      "wholeMessage": "That''s the whole message. What next?"
+    },
+    "reply": {
+      "listeningForReply": "Listening for your reply…",
+      "cleaningUpReply": "Cleaning up your reply…",
+      "placeholder": "Type your reply, or wait for the mic to capture what you say…",
+      "errors": {
+        "cleanupFailed": "Could not clean up your reply"
+      }
+    },
+    "move": {
+      "noMatchingFolderLabel": "No matching folder",
+      "ambiguousFolderLabel": "Ambiguous folder",
+      "whichFolder": "Move this email to which folder?",
+      "noLabelsFound": "No Gmail labels found yet — create one below, or add one in Gmail and come back here.",
+      "newFolder": "New Folder",
+      "newFolderPlaceholder": "New folder name",
+      "creating": "Creating…",
+      "create": "Create",
+      "confirmHeading": "Move to {labelName}?",
+      "back": "Back",
+      "confirm": "Confirm",
+      "errors": {
+        "createFolderFailed": "Could not create folder"
+      }
+    }
+  },
+  "manualControls": {
+    "continueReading": "Continue Reading",
+    "keepReadingTooltip": "Keep reading this email",
+    "continue": "Continue",
+    "skip": "Skip",
+    "skipTooltip": "Mark as read, keep in inbox",
+    "archive": "Archive",
+    "archiveTooltip": "Remove from inbox",
+    "reply": "Reply",
+    "replyTooltip": "Dictate a reply",
+    "moveToFolder": "Move to folder",
+    "moveToFolderTooltip": "File into a Gmail label",
+    "moveTo": "Move to"
+  },
+  "voice": {
+    "commandPhrases": {
+      "continue": ["continue", "read on", "keep going", "keep reading", "more"],
+      "skip": ["skip", "next"],
+      "archive": ["archive", "delete", "remove"],
+      "reply": ["reply", "respond"],
+      "confirm": ["send", "yes", "confirm", "send it"],
+      "redo": ["redo", "try again", "no"],
+      "pause": ["stop", "pause"]
+    },
+    "moveTriggers": [
+      "\\bmove(?:\\s+it)?\\s+to\\s+(.+)",
+      "\\bsort(?:\\s+it)?\\s+into\\s+(.+)",
+      "\\bfile(?:\\s+it)?\\s+under\\s+(.+)",
+      "\\bput(?:\\s+it)?\\s+in\\s+(.+)"
+    ]
+  },
+  "settings": {
+    "loading": "Loading settings…",
+    "backHome": "Back home",
+    "title": "Settings",
+    "saved": "Saved",
+    "errors": {
+      "loadSettings": "Could not load settings",
+      "saveSettings": "Could not save settings",
+      "loadApiKeyState": "Could not load API key state",
+      "saveApiKey": "Could not save API key",
+      "removeApiKey": "Could not remove API key",
+      "disconnect": "Could not disconnect your account"
+    },
+    "openAiKey": {
+      "heading": "OpenAI API key",
+      "connected": "Connected",
+      "freeTrial": "Free trial — {remaining, number}/100 free actions left",
+      "description": "MailFlow uses its own OpenAI key for your first 100 actions for free. Once you''ve used your free allocation (or any time, if you''d prefer), you can add your own key. You''d only be covering your own OpenAI API usage costs — MailFlow isn''t a paid plan.",
+      "placeholder": "sk-...",
+      "save": "Save",
+      "removeKey": "Remove key"
+    },
+    "inbox": {
+      "heading": "Inbox",
+      "whatToRead": "What to read",
+      "unread": "Unread",
+      "allMail": "All mail",
+      "order": "Order",
+      "oldestFirst": "Oldest first",
+      "newestFirst": "Newest first",
+      "category": "Category",
+      "primary": "Primary",
+      "promotions": "Promotions",
+      "social": "Social",
+      "updates": "Updates",
+      "forums": "Forums",
+      "all": "All",
+      "focusOnLabel": "Focus on a label",
+      "noneUseCategory": "None (use category above)",
+      "freshSessionNote": "Changing scope or order starts a fresh session the next time you listen."
+    },
+    "autoSkip": {
+      "heading": "Auto-skip while listening",
+      "description": "Silently skip past emails in these categories instead of reading them aloud."
+    },
+    "playbackSpeed": {
+      "heading": "Playback speed",
+      "description": "How fast emails are read aloud. Applies immediately, on the listening screen too."
+    },
+    "appearance": {
+      "heading": "Appearance",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "voiceTone": {
+      "heading": "Voice tone",
+      "description": "Optional hint for how emails are read aloud — for example, \"a little more upbeat\" or \"slower pace.\"",
+      "placeholder": "No special tone — calm and unhurried (default)"
+    },
+    "account": {
+      "heading": "Account",
+      "disconnect": "Disconnect Google account",
+      "confirmBody": "This revokes MailFlow''s access to your Gmail and signs you out. You can reconnect any time by signing in again.",
+      "cancel": "Cancel",
+      "confirmDisconnect": "Yes, disconnect",
+      "disconnecting": "Disconnecting…"
+    }
+  },
+  "onboarding": {
+    "metadataTitle": "Complete Setup — MailFlow",
+    "backToBrand": "← MailFlow",
+    "heading": "Add your OpenAI key",
+    "body": "You''ve used your 100 free actions. To keep using MailFlow, add your own OpenAI API key.",
+    "notPaidNote": "MailFlow isn''t being paid for this — you''re just covering your own OpenAI usage so we don''t have to fund it indefinitely.",
+    "apiKeyLabel": "OpenAI API key",
+    "apiKeyPlaceholder": "sk-...",
+    "apiKeyEncryptedNote": "Your key is encrypted and stored securely.",
+    "saving": "Saving…",
+    "save": "Save",
+    "findKey": "Find your OpenAI API key in your <link>account settings</link>.",
+    "billingDocs": "Read OpenAI''s <link>billing documentation</link> to understand your usage and costs.",
+    "errors": {
+      "unknown": "Unknown error",
+      "saveApiKey": "Could not save API key"
+    }
+  },
+  "privacy": {
+    "metadataTitle": "Privacy Policy — MailFlow",
+    "backToBrand": "← MailFlow",
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: July 18, 2026",
+    "sections": {
+      "overview": {
+        "heading": "1. Overview",
+        "body": "MailFlow (“we”, “us”) is an audiobook-style reader for your inbox. This policy explains what data we access, how we use it, and how you can control it."
+      },
+      "googleUserData": {
+        "heading": "2. Google user data",
+        "intro": "When you sign in with Google, MailFlow requests access to your Gmail account through the Gmail API. We use this access only to:",
+        "bullet1": "Read email content and metadata (sender, subject, body) so it can be read aloud.",
+        "bullet2": "Perform actions you request by voice or command, such as archiving, replying to, or snoozing a message.",
+        "outro": "We do not use Gmail data for advertising, and we do not sell, rent, or share your Gmail data with third parties. Gmail data is used solely to provide the MailFlow experience to you."
+      },
+      "otherData": {
+        "heading": "3. Other data we collect",
+        "body": "We store your Google account identifier and basic profile information (name, email address) to maintain your session, along with app settings and playback state you create while using MailFlow."
+      },
+      "storageAndSecurity": {
+        "heading": "4. Data storage and security",
+        "body": "Data is stored using industry-standard security practices. Access tokens are used only to communicate with the Gmail API on your behalf and are never exposed to third parties."
+      },
+      "retentionAndDeletion": {
+        "heading": "5. Data retention and deletion",
+        "body": "You may revoke MailFlow''s access to your Google account at any time from your <permissionsLink>Google Account permissions</permissionsLink> page. To request deletion of any data MailFlow has stored about you, email <emailLink>harrison.thomas04@gmail.com</emailLink> and we will delete it within a reasonable time."
+      },
+      "thirdPartySharing": {
+        "heading": "6. Third-party sharing",
+        "body": "We do not sell your personal data or Gmail data. We do not share it with third parties except as required to operate the Service (e.g. infrastructure providers bound by confidentiality obligations) or as required by law."
+      },
+      "changes": {
+        "heading": "7. Changes to this policy",
+        "body": "We may update this Privacy Policy from time to time. Continued use of the Service after changes take effect constitutes acceptance of the revised policy."
+      },
+      "contact": {
+        "heading": "8. Contact",
+        "body": "Questions about this policy can be sent to <emailLink>harrison.thomas04@gmail.com</emailLink>."
+      }
+    }
+  },
+  "tos": {
+    "metadataTitle": "Terms of Service — MailFlow",
+    "backToBrand": "← MailFlow",
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: July 18, 2026",
+    "sections": {
+      "acceptance": {
+        "heading": "1. Acceptance of terms",
+        "body": "By accessing or using MailFlow (the “Service”), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service."
+      },
+      "description": {
+        "heading": "2. Description of service",
+        "body": "MailFlow connects to your Gmail account to read your inbox aloud and let you manage email (skip, archive, reply) by voice or simple commands. The Service is provided on an “as is” and “as available” basis."
+      },
+      "yourAccount": {
+        "heading": "3. Your account",
+        "body": "You are responsible for maintaining the security of your Google account and for any activity that occurs through your use of the Service. You may revoke MailFlow''s access to your Google account at any time from your <permissionsLink>Google Account permissions</permissionsLink> page."
+      },
+      "acceptableUse": {
+        "heading": "4. Acceptable use",
+        "body": "You agree not to use the Service for any unlawful purpose or in any way that could damage, disable, or impair the Service or interfere with any other party''s use of it."
+      },
+      "disclaimer": {
+        "heading": "5. Disclaimer of warranties",
+        "body": "The Service is provided without warranties of any kind, whether express or implied. We do not guarantee that the Service will be uninterrupted, secure, or error-free."
+      },
+      "limitationOfLiability": {
+        "heading": "6. Limitation of liability",
+        "body": "To the fullest extent permitted by law, MailFlow shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service."
+      },
+      "changes": {
+        "heading": "7. Changes to these terms",
+        "body": "We may update these Terms of Service from time to time. Continued use of the Service after changes take effect constitutes acceptance of the revised terms."
+      },
+      "contact": {
+        "heading": "8. Contact",
+        "body": "Questions about these terms can be sent to <emailLink>harrison.thomas04@gmail.com</emailLink>."
+      }
+    }
+  },
+  "apiErrors": {
+    "UNAUTHORIZED": "Unauthorized",
+    "USER_NOT_FOUND": "User not found",
+    "SESSION_MESSAGE_REQUIRED": "sessionId and messageId are required",
+    "MOVE_FIELDS_REQUIRED": "sessionId, messageId, labelId, and labelName are required",
+    "REPLY_FIELDS_REQUIRED": "sessionId, messageId, and replyText are required",
+    "JUMP_FAILED": "Could not jump to that message",
+    "LABEL_NAME_REQUIRED": "name is required",
+    "LABEL_CREATE_FAILED": "Could not create label",
+    "OPENAI_KEY_REQUIRED": "OpenAI API key required",
+    "TRANSCRIPT_REQUIRED": "rawTranscript is required",
+    "INVALID_INBOX_SCOPE": "Invalid inboxScope",
+    "INVALID_INBOX_ORDER": "Invalid inboxOrder",
+    "INVALID_INBOX_CATEGORY": "Invalid inboxCategory",
+    "INVALID_INBOX_LABEL_ID": "Invalid inboxLabelId",
+    "INVALID_AUTO_SKIP_CATEGORIES": "Invalid autoSkipCategories",
+    "INVALID_THEME": "Invalid theme",
+    "INVALID_VOICE_TONE": "Invalid voiceTone",
+    "INVALID_PLAYBACK_SPEED": "Invalid playbackSpeed",
+    "NO_VALID_FIELDS": "No valid fields to update",
+    "API_KEY_REQUIRED": "apiKey is required",
+    "INVALID_OPENAI_KEY": "Invalid OpenAI API key",
+    "AUDIO_REQUIRED": "audio is required",
+    "TEXT_REQUIRED": "text is required",
+    "VOICE_SERVICE_ERROR": "Couldn''t reach the voice service"
+  }
+}

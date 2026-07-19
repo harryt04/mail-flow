@@ -7,7 +7,10 @@ import { listUserLabels, createLabel } from '@/lib/gmail/labels'
 export async function GET() {
   const auth = await requireUser()
   if (!auth)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const { gmail } = await getGmailClientForUser(auth.userId.toString())
   const labels = await listUserLabels(gmail)
@@ -18,12 +21,18 @@ export async function GET() {
 export async function POST(request: Request) {
   const auth = await requireUser()
   if (!auth)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const body = await request.json().catch(() => null)
   const name = typeof body?.name === 'string' ? body.name.trim() : ''
   if (!name) {
-    return NextResponse.json({ error: 'name is required' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'name is required', code: 'LABEL_NAME_REQUIRED' },
+      { status: 400 },
+    )
   }
 
   const { gmail } = await getGmailClientForUser(auth.userId.toString())
@@ -32,7 +41,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ label })
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Could not create label' },
+      {
+        error: err instanceof Error ? err.message : 'Could not create label',
+        code: 'LABEL_CREATE_FAILED',
+      },
       { status: 400 },
     )
   }

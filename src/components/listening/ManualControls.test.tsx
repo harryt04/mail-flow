@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { renderWithIntl } from '@/test/renderWithIntl'
 import { ManualControls } from './ManualControls'
 
 function renderControls(
@@ -12,7 +13,7 @@ function renderControls(
     onReply: vi.fn(),
     onMove: vi.fn(),
   }
-  render(
+  renderWithIntl(
     <TooltipProvider>
       <ManualControls {...handlers} {...overrides} />
     </TooltipProvider>,

@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import { IconButton } from '@/components/ui/IconButton'
 import {
   IconSkip,
@@ -32,6 +33,8 @@ export function ManualControls({
   showContinue = false,
   disabled,
 }: ManualControlsProps) {
+  const t = useTranslations('manualControls')
+
   return (
     <div className="flex flex-wrap items-center justify-center gap-4">
       {showContinue && onContinue && (
@@ -40,17 +43,17 @@ export function ManualControls({
             <TooltipTrigger asChild>
               <IconButton
                 icon={<IconPlay className="h-6 w-6" />}
-                label="Continue Reading"
+                label={t('continueReading')}
                 variant="primary"
                 size="lg"
                 onClick={onContinue}
                 disabled={disabled}
               />
             </TooltipTrigger>
-            <TooltipContent>Keep reading this email</TooltipContent>
+            <TooltipContent>{t('keepReadingTooltip')}</TooltipContent>
           </Tooltip>
           <span className="text-label text-text-secondary uppercase">
-            Continue
+            {t('continue')}
           </span>
         </div>
       )}
@@ -59,31 +62,33 @@ export function ManualControls({
           <TooltipTrigger asChild>
             <IconButton
               icon={<IconSkip className="h-6 w-6" />}
-              label="Skip"
+              label={t('skip')}
               size="lg"
               onClick={onSkip}
               disabled={disabled}
             />
           </TooltipTrigger>
-          <TooltipContent>Mark as read, keep in inbox</TooltipContent>
+          <TooltipContent>{t('skipTooltip')}</TooltipContent>
         </Tooltip>
-        <span className="text-label text-text-secondary uppercase">Skip</span>
+        <span className="text-label text-text-secondary uppercase">
+          {t('skip')}
+        </span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <IconButton
               icon={<IconArchive className="h-6 w-6" />}
-              label="Archive"
+              label={t('archive')}
               size="lg"
               onClick={onArchive}
               disabled={disabled}
             />
           </TooltipTrigger>
-          <TooltipContent>Remove from inbox</TooltipContent>
+          <TooltipContent>{t('archiveTooltip')}</TooltipContent>
         </Tooltip>
         <span className="text-label text-text-secondary uppercase">
-          Archive
+          {t('archive')}
         </span>
       </div>
       <div className="flex flex-col items-center gap-2">
@@ -91,31 +96,33 @@ export function ManualControls({
           <TooltipTrigger asChild>
             <IconButton
               icon={<IconReply className="h-6 w-6" />}
-              label="Reply"
+              label={t('reply')}
               size="lg"
               onClick={onReply}
               disabled={disabled}
             />
           </TooltipTrigger>
-          <TooltipContent>Dictate a reply</TooltipContent>
+          <TooltipContent>{t('replyTooltip')}</TooltipContent>
         </Tooltip>
-        <span className="text-label text-text-secondary uppercase">Reply</span>
+        <span className="text-label text-text-secondary uppercase">
+          {t('reply')}
+        </span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <IconButton
               icon={<IconFolder className="h-6 w-6" />}
-              label="Move to folder"
+              label={t('moveToFolder')}
               size="lg"
               onClick={onMove}
               disabled={disabled}
             />
           </TooltipTrigger>
-          <TooltipContent>File into a Gmail label</TooltipContent>
+          <TooltipContent>{t('moveToFolderTooltip')}</TooltipContent>
         </Tooltip>
         <span className="text-label text-text-secondary uppercase">
-          Move to
+          {t('moveTo')}
         </span>
       </div>
     </div>

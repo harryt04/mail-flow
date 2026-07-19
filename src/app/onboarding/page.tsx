@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
+import type { Metadata } from 'next'
 import { auth } from '@/lib/auth/options'
 import { OnboardingClient } from './OnboardingClient'
 
-export const metadata = {
-  title: 'Complete Setup — MailFlow',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('onboarding')
+  return { title: t('metadataTitle') }
 }
 
 export default async function OnboardingPage() {

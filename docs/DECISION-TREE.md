@@ -6,13 +6,13 @@
 | Add a new Gmail-mutating action (e.g. "mark spam") | [lib/gmail.md](./lib/gmail.md), [app/api/actions.md](./app/api/actions.md) | `src/lib/gmail/actions.ts`, `src/lib/types.ts` (`EmailAction` union), new route under `src/app/api/actions/` |
 | Change "move to folder" (labels, matching, confirm flow) | [lib/gmail.md](./lib/gmail.md), [lib/voice.md](./lib/voice.md), [app/api/actions.md](./app/api/actions.md), [app/listen.md](./app/listen.md) | `src/lib/gmail/labels.ts`, `src/lib/voice/labelMatcher.ts`, `src/lib/voice/commandMatcher.ts` (`MOVE_TRIGGERS`), `src/app/(authenticated)/listen/ListenClient.tsx` (`runMoveVoiceFlow`/move picker) |
 | Browse/jump the inbox snapshot | [app/inbox.md](./app/inbox.md), [app/api/inbox.md](./app/api/inbox.md) | `src/app/(authenticated)/inbox/InboxClient.tsx`, `src/lib/gmail/list.ts` (`fetchMessageSummaries`), `src/lib/bookmark/session.ts` (`jumpToMessage`) |
-| Add a new API route | [app/api/README.md](./app/api/README.md) | `src/app/api/<name>/route.ts` — call `requireUser()` first; add its prefix to `proxy.ts`'s matcher/`PROTECTED_PREFIXES` if it needs auth gating at the edge |
+| Add a new API route | [app/api/README.md](./app/api/README.md) | `src/app/api/<name>/route.ts` — call `requireUser()` first; add its prefix to `src/proxy.ts`'s matcher/`PROTECTED_PREFIXES` if it needs auth gating at the edge |
 | Change checkpoint/bookmark/session-progress logic | [lib/bookmark.md](./lib/bookmark.md) | `src/lib/bookmark/session.ts` |
 | Add a new user setting | [app/settings.md](./app/settings.md), [app/api/settings.md](./app/api/settings.md) | `src/lib/types.ts` (`UserSettings`, `DEFAULT_USER_SETTINGS`), `src/app/api/settings/route.ts`, `src/app/(authenticated)/settings/SettingsClient.tsx` |
 | Add a generic reusable UI component | [components/ui.md](./components/ui.md) | `src/components/ui/` |
 | Add/change listening-screen visual state | [components/listening.md](./components/listening.md) | `src/components/listening/StatusIndicator.tsx` (the `ListeningState` union + its rendering) |
 | Add a landing-page section | [components/landing.md](./components/landing.md) | `src/components/landing/`, wire into `src/app/page.tsx` |
-| Touch auth, sessions, or Google OAuth scopes | [lib/auth.md](./lib/auth.md), [proxy-and-routing.md](./proxy-and-routing.md) | `src/lib/auth/options.ts`, `proxy.ts` |
+| Touch auth, sessions, or Google OAuth scopes | [lib/auth.md](./lib/auth.md), [proxy-and-routing.md](./proxy-and-routing.md) | `src/lib/auth/options.ts`, `src/proxy.ts` |
 | Manage the user's OpenAI key / free trial | [lib/auth.md](./lib/auth.md), [app/api/settings.md](./app/api/settings.md) | `src/lib/auth/openaiKey.ts`, `src/app/api/settings/openai-key/route.ts`, `src/app/onboarding/` (deferred gate), `src/app/(authenticated)/layout.tsx` (gate check) |
 | Add a new MongoDB collection | [lib/db.md](./lib/db.md) | `src/lib/types.ts` (document type), `src/lib/db/collections.ts` (accessor) |
 | Change PWA/offline/installability behavior | [public-assets.md](./public-assets.md) | `public/sw.js`, `src/app/manifest.ts` |
@@ -20,6 +20,7 @@
 | Change TTS voice/provider | [lib/voice.md](./lib/voice.md) | `src/lib/voice/tts.ts` (implements the swappable `TtsProvider` interface) |
 | Change reply-cleanup (Claude) behavior | [lib/voice.md](./lib/voice.md), [app/api/reply-cleanup.md](./app/api/reply-cleanup.md) | `src/lib/voice/replyCleanup.ts` |
 | Add a test for a module/component | [testing.md](./testing.md) | Colocate as `<source>.test.ts(x)` next to `<source>.ts(x)`, or add to `e2e/` for user-facing flows |
+| Add or translate a UI string | [i18n.md](./i18n.md) | `src/messages/en-US.json` — read via `useTranslations`/`getTranslations`, never a bare JSX string literal |
 | Understand the overall system / a full feature flow end-to-end | [ARCHITECTURE.md](./ARCHITECTURE.md) | — |
 
 If your task isn't in this table, start at [README.md](./README.md) — it links every doc, and

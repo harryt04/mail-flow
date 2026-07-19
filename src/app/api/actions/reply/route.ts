@@ -11,7 +11,10 @@ import { incrementTrialActionUsage } from '@/lib/auth/openaiKey'
 export async function POST(request: Request) {
   const auth = await requireUser()
   if (!auth)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const body = await request.json().catch(() => null)
   const sessionId = body?.sessionId
@@ -24,7 +27,10 @@ export async function POST(request: Request) {
     replyText.trim().length === 0
   ) {
     return NextResponse.json(
-      { error: 'sessionId, messageId, and replyText are required' },
+      {
+        error: 'sessionId, messageId, and replyText are required',
+        code: 'REPLY_FIELDS_REQUIRED',
+      },
       { status: 400 },
     )
   }

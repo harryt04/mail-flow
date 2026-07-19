@@ -11,7 +11,10 @@ const MAX_PAGE_SIZE = 50
 export async function GET(request: Request) {
   const auth = await requireUser()
   if (!auth)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    )
 
   const url = new URL(request.url)
   const search = url.searchParams.get('search')?.trim()

@@ -37,7 +37,8 @@ task → file lookup table.
 | [app/listen.md](./app/listen.md) | The core listening screen + state machine |
 | [app/settings.md](./app/settings.md) | The settings page |
 | [app/api/README.md](./app/api/README.md) | All API routes — route table + conventions |
-| [proxy-and-routing.md](./proxy-and-routing.md) | Auth gating at the edge (`proxy.ts`) |
+| [i18n.md](./i18n.md) | Adding/translating UI strings, the message catalog, locale resolution |
+| [proxy-and-routing.md](./proxy-and-routing.md) | Auth gating and locale detection at the edge (`src/proxy.ts`) |
 | [public-assets.md](./public-assets.md) | The mic-audio worklet and the service worker |
 | [testing.md](./testing.md) | Running unit/component tests (Vitest) and e2e tests (Playwright) |
 

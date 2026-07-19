@@ -19,7 +19,7 @@ playback speed, theme, voice tone, and account disconnect.
 
 ## Depended on by
 Reached via the sidebar (`AppSidebar.tsx`) from any authenticated page; gated by both
-`(authenticated)/layout.tsx` and `proxy.ts` like the rest of the authenticated app.
+`(authenticated)/layout.tsx` and `src/proxy.ts` like the rest of the authenticated app.
 
 ## Conventions
 `SettingsClient.tsx` renders four `ToggleGroup` instances (inbox scope, inbox order, playback

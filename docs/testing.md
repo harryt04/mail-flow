@@ -27,7 +27,11 @@ Run via Vitest + React Testing Library (jsdom environment).
 **Component rendering** (jsdom):
 - `src/components/ui/Button.test.tsx`, `Card.test.tsx`, `Badge.test.tsx`, `IconButton.test.tsx` — basic render/variant/click tests
 - `src/components/listening/StatusIndicator.test.tsx` — render states for the core listening UX
-- `src/components/listening/ManualControls.test.tsx` — fallback manual action buttons
+- `src/components/listening/ManualControls.test.tsx` — fallback manual action buttons; uses `src/test/renderWithIntl.tsx` since the component calls `useTranslations` (see [i18n.md](./i18n.md))
+
+Any component test whose component (or a child it renders) calls `useTranslations` needs
+`renderWithIntl` from `src/test/renderWithIntl.tsx` instead of RTL's plain `render` — it wraps
+the tree in a `NextIntlClientProvider` seeded with the real `en-US` catalog.
 
 **Hooks** (renderHook):
 - `src/hooks/useTheme.test.ts` — theme preference persistence

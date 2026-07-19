@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { getTranslations } from 'next-intl/server'
 import { Card } from '@/components/ui/Card'
 import { Badge, type badgeVariants } from '@/components/ui/Badge'
 import {
@@ -14,7 +15,7 @@ import type { VariantProps } from 'class-variance-authority'
 type Tone = NonNullable<VariantProps<typeof badgeVariants>['tone']>
 
 interface Tile {
-  label: string
+  key: 'archived' | 'replied' | 'snoozed' | 'moved' | 'skipped'
   count: number
   tone: Tone
   icon: ReactNode
@@ -22,48 +23,48 @@ interface Tile {
 }
 
 /** All-time tallies from the emailActionLog, styled per BRAND.md's tone convention — every tile pairs color with an icon and a text label, never color alone. */
-export function DashboardStats({ counts }: { counts: ActionCounts }) {
+export async function DashboardStats({ counts }: { counts: ActionCounts }) {
+  const t = await getTranslations('dashboardStats')
+
   if (counts.total === 0) {
     return (
       <Card className="w-full max-w-2xl">
-        <p className="text-body text-text-secondary">
-          Nothing sorted yet — the first email you process will show up here.
-        </p>
+        <p className="text-body text-text-secondary">{t('empty')}</p>
       </Card>
     )
   }
 
   const tiles: Tile[] = [
     {
-      label: 'Archived',
+      key: 'archived',
       count: counts.archive,
       tone: 'positive',
       icon: <IconArchive className="h-6 w-6" />,
       footnote:
         counts.delete > 0
-          ? `${counts.delete.toLocaleString()} deleted`
+          ? t('deletedFootnote', { count: counts.delete })
           : undefined,
     },
     {
-      label: 'Replied',
+      key: 'replied',
       count: counts.reply,
       tone: 'brand',
       icon: <IconReply className="h-6 w-6" />,
     },
     {
-      label: 'Snoozed',
+      key: 'snoozed',
       count: counts.snooze,
       tone: 'attention',
       icon: <IconSnooze className="h-6 w-6" />,
     },
     {
-      label: 'Moved',
+      key: 'moved',
       count: counts.move,
       tone: 'positive',
       icon: <IconFolder className="h-6 w-6" />,
     },
     {
-      label: 'Skipped',
+      key: 'skipped',
       count: counts.skip,
       tone: 'neutral',
       icon: <IconSkip className="h-6 w-6" />,
@@ -73,20 +74,21 @@ export function DashboardStats({ counts }: { counts: ActionCounts }) {
   return (
     <Card className="w-full max-w-2xl">
       <p className="text-body text-text-secondary">
-        You&apos;ve sorted{' '}
-        <span className="text-text-primary font-semibold">
-          {counts.total.toLocaleString()}
-        </span>{' '}
-        email{counts.total === 1 ? '' : 's'} so far.
+        {t.rich('summary', {
+          total: counts.total,
+          strong: (chunks) => (
+            <span className="text-text-primary font-semibold">{chunks}</span>
+          ),
+        })}
       </p>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {tiles.map((tile) => (
           <div
-            key={tile.label}
+            key={tile.key}
             className="flex flex-col items-center gap-2 text-center"
           >
             <Badge tone={tile.tone} icon={tile.icon}>
-              {tile.label}
+              {t(`tiles.${tile.key}`)}
             </Badge>
             <p className="text-h1 text-text-primary font-bold">
               {tile.count.toLocaleString()}

@@ -18,7 +18,7 @@ queue gave no way to see or choose what's coming up.
 
 ## Depended on by
 Reached via the sidebar's (`AppSidebar.tsx`) "Inbox" link and `/home`'s "Browse inbox" button;
-gated by both `(authenticated)/layout.tsx` and `proxy.ts` (`/inbox` is in
+gated by both `(authenticated)/layout.tsx` and `src/proxy.ts` (`/inbox` is in
 `PROTECTED_PREFIXES`/`config.matcher`).
 
 ## Conventions

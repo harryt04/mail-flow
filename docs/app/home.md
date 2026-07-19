@@ -17,7 +17,7 @@ sorted so far, and buttons into `/listen` and `/inbox`.
 
 ## Depended on by
 Entry point after login — `src/app/page.tsx` redirects here, `(authenticated)/layout.tsx` gates
-access, and `proxy.ts` also protects `/home` at the edge (see
+access, and `src/proxy.ts` also protects `/home` at the edge (see
 [docs/proxy-and-routing.md](../proxy-and-routing.md)).
 
 ## Conventions
