@@ -4,6 +4,7 @@
 
 - `npm run test` — run unit/component tests once (Vitest)
 - `npm run test:watch` — watch mode for unit/component tests
+- `npm run test:coverage` — run unit/component tests with a v8 coverage report (text + `coverage/` HTML report, gitignored)
 - `npm run test:e2e` — run end-to-end tests (Playwright)
 
 ## Unit & component tests
@@ -17,7 +18,10 @@ Run via Vitest + React Testing Library (jsdom environment).
 - `src/lib/voice/commandMatcher.test.ts` — voice command parsing
 - `src/lib/voice/labelMatcher.test.ts` — label fuzzy matching
 - `src/lib/gmail/parse.test.ts` — email parsing (body extraction, quote stripping, URL humanizing)
+- `src/lib/gmail/actions.test.ts` — archive/move/reply mutations against a mocked Gmail client, including reply threading headers
 - `src/lib/auth/tokenCrypto.test.ts` — encrypt/decrypt round-trips
+- `src/lib/auth/requireUser.test.ts` — session → authenticated user resolution, with `@/lib/auth/options` mocked
+- `src/lib/auth/openaiKey.test.ts` — resolving a user's own key vs. the shared trial key vs. exhausted trial
 - `src/lib/utils.test.ts` — tailwind class merging
 
 **Component rendering** (jsdom):
@@ -33,6 +37,11 @@ Run via Vitest + React Testing Library (jsdom environment).
 **Mocked external calls** (vi.mock):
 - `src/lib/voice/stt.test.ts` — OpenAI transcription (mocked)
 - `src/lib/voice/tts.test.ts` — OpenAI TTS synthesis (mocked)
+- `src/lib/voice/replyCleanup.test.ts` — OpenAI chat completion for dictated-reply cleanup (mocked)
+
+### Known gaps
+
+Not yet covered, flagged as follow-up work: `src/hooks/useVoiceSession.ts` (needs `MediaRecorder`/`getUserMedia` mocking), the 16 `src/app/api/**/route.ts` handlers (need Next.js request/response fixtures), and the `(authenticated)` page-level client components (`ListenClient.tsx`, `InboxClient.tsx`, `SettingsClient.tsx`, `OnboardingClient.tsx`).
 
 ## E2E tests
 
@@ -57,3 +66,5 @@ test('landing page displays sign-in flow when unauthenticated', async ({ page })
 Per AGENTS.md, run `npm run prettify && npm run ci` before considering work done. The `ci` script runs prettier check, eslint, and vitest.
 
 E2E tests are kept separate (`npm run test:e2e`) since they require a built, running server and take longer.
+
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs `npm run ci` on every push/PR to `master`, so this gate is now enforced automatically as well as locally.
