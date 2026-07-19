@@ -230,7 +230,7 @@ export function SettingsClient() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-4 py-10 sm:px-6">
       <div className="flex w-full items-center justify-between">
         <h1 className="text-h1 text-text-primary font-bold">Settings</h1>
         {savedFlash && (

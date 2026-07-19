@@ -5,6 +5,10 @@ import { useCallback, useRef, useState } from 'react'
 export type VoiceSessionState =
   'idle' | 'connecting' | 'listening' | 'transcribing' | 'error'
 
+// Module-level cache: reuse AudioContext and worklet across sessions
+let cachedAudioContext: AudioContext | null = null
+let workletLoaded = false
+
 interface ListenOptions {
   /** How long to wait after the last detected speech before treating the utterance as done. */
   silenceTimeoutMs?: number
@@ -33,6 +37,29 @@ function concatPcmFrames(frames: Int16Array[]): Int16Array {
     offset += frame.length
   }
   return result
+}
+
+/** Initialize or return cached AudioContext. */
+async function getOrInitAudioContext(): Promise<AudioContext> {
+  if (cachedAudioContext) return cachedAudioContext
+  const ctx = new AudioContext()
+  if (!workletLoaded) {
+    await ctx.audioWorklet.addModule('/audio/pcm-worklet.js')
+    workletLoaded = true
+  }
+  cachedAudioContext = ctx
+  return ctx
+}
+
+/** Pre-warm getUserMedia permission and audio context (call once early for faster first listen). */
+export async function preWarmAudio(): Promise<void> {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    stream.getTracks().forEach((t) => t.stop())
+    await getOrInitAudioContext()
+  } catch (err) {
+    console.warn('Audio pre-warming failed:', err)
+  }
 }
 
 /** Wraps raw 16-bit mono PCM samples in a minimal WAV header — no encoding dependency needed. */
@@ -216,11 +243,10 @@ export function useVoiceSession() {
           )
         }
 
-        audioContext = new AudioContext()
         try {
-          await audioContext.audioWorklet.addModule('/audio/pcm-worklet.js')
+          audioContext = await getOrInitAudioContext()
         } catch (err) {
-          console.error('audioWorklet.addModule failed:', err)
+          console.error('getOrInitAudioContext failed:', err)
           throw new Error(
             "Couldn't start the microphone — try reloading the page.",
           )

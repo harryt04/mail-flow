@@ -28,7 +28,7 @@ export function CategoryChecklist<T extends string>({
   }
 
   return (
-    <div className="flex flex-wrap gap-2" role="group">
+    <div className="flex flex-col gap-2 sm:flex-wrap" role="group">
       {options.map((option) => {
         const selected = values.includes(option.value)
         return (
@@ -36,10 +36,11 @@ export function CategoryChecklist<T extends string>({
             key={option.value}
             type="button"
             variant={selected ? 'primary' : 'secondary'}
-            size="md"
+            size="sm"
             aria-pressed={selected}
             onClick={() => toggle(option.value)}
             disabled={disabled}
+            className="w-full sm:w-auto"
           >
             {option.label}
           </Button>

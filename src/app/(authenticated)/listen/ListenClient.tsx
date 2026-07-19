@@ -12,7 +12,7 @@ import {
   type ListeningState,
 } from '@/components/listening/StatusIndicator'
 import { useAudioPlayback } from '@/hooks/useAudioPlayback'
-import { useVoiceSession } from '@/hooks/useVoiceSession'
+import { useVoiceSession, preWarmAudio } from '@/hooks/useVoiceSession'
 import { matchCommand } from '@/lib/voice/commandMatcher'
 import { findMatchingLabels } from '@/lib/voice/labelMatcher'
 import {
@@ -109,6 +109,10 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
         setError(err.message)
         setPhase('error')
       })
+  }, [])
+
+  useEffect(() => {
+    void preWarmAudio()
   }, [])
 
   useEffect(() => {

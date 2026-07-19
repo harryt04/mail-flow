@@ -19,16 +19,17 @@ export function ToggleGroup<T extends string>({
   disabled,
 }: ToggleGroupProps<T>) {
   return (
-    <div className="flex flex-wrap gap-2" role="radiogroup">
+    <div className="flex flex-col gap-2 sm:flex-wrap" role="radiogroup">
       {options.map((option) => (
         <Button
           key={option.value}
           type="button"
           variant={value === option.value ? 'primary' : 'secondary'}
-          size="md"
+          size="sm"
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           disabled={disabled}
+          className="w-full sm:w-auto"
         >
           {option.label}
         </Button>
