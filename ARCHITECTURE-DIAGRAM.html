@@ -1,394 +1,1158 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MailFlow Architecture Diagram</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: 'JetBrains Mono', monospace;
-            background: #0f172a;
-            color: #e2e8f0;
-            padding: 40px 20px;
-            min-height: 100vh;
-        }
+      body {
+        font-family: 'JetBrains Mono', monospace;
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 40px 20px;
+        min-height: 100vh;
+      }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
 
-        .header-title {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
+      .header-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
 
-        .header-title h1 {
-            font-size: 28px;
-            font-weight: 500;
-            color: #f1f5f9;
-        }
+      .header-title h1 {
+        font-size: 28px;
+        font-weight: 500;
+        color: #f1f5f9;
+      }
 
-        .pulsing-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #22d3ee;
-            animation: pulse 2s infinite;
-        }
+      .pulsing-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #22d3ee;
+        animation: pulse 2s infinite;
+      }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
         }
-
-        .header-subtitle {
-            font-size: 14px;
-            color: #94a3b8;
+        50% {
+          opacity: 0.5;
         }
+      }
 
-        .diagram-card {
-            background: #0f172a;
-            border: 1px solid #1e293b;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 40px;
-            overflow-x: auto;
-        }
+      .header-subtitle {
+        font-size: 14px;
+        color: #94a3b8;
+      }
 
-        svg {
-            width: 100%;
-            height: auto;
-            min-height: 600px;
-        }
+      .diagram-card {
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 40px;
+        overflow-x: auto;
+      }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
+      svg {
+        width: 100%;
+        height: auto;
+        min-height: 600px;
+      }
 
-        .card {
-            background: #0f172a;
-            border: 1px solid #1e293b;
-            border-radius: 8px;
-            padding: 20px;
-        }
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
 
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
+      .card {
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 20px;
+      }
 
-        .card-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
 
-        .card-dot.cyan { background: #22d3ee; }
-        .card-dot.emerald { background: #34d399; }
-        .card-dot.violet { background: #a78bfa; }
+      .card-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
 
-        .card-header h3 {
-            font-size: 14px;
-            font-weight: 500;
-            color: #f1f5f9;
-        }
+      .card-dot.cyan {
+        background: #22d3ee;
+      }
+      .card-dot.emerald {
+        background: #34d399;
+      }
+      .card-dot.violet {
+        background: #a78bfa;
+      }
 
-        .card ul {
-            list-style: none;
-            font-size: 12px;
-            line-height: 1.8;
-            color: #cbd5e1;
-        }
+      .card-header h3 {
+        font-size: 14px;
+        font-weight: 500;
+        color: #f1f5f9;
+      }
 
-        .card li {
-            margin-bottom: 8px;
-        }
+      .card ul {
+        list-style: none;
+        font-size: 12px;
+        line-height: 1.8;
+        color: #cbd5e1;
+      }
 
-        .card li:before {
-            content: "• ";
-            color: #64748b;
-            margin-right: 6px;
-        }
+      .card li {
+        margin-bottom: 8px;
+      }
 
-        .footer {
-            text-align: center;
-            font-size: 11px;
-            color: #64748b;
-            padding: 20px 0;
-            border-top: 1px solid #1e293b;
-        }
+      .card li:before {
+        content: '• ';
+        color: #64748b;
+        margin-right: 6px;
+      }
+
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #64748b;
+        padding: 20px 0;
+        border-top: 1px solid #1e293b;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-title">
-                <h1>MailFlow Architecture</h1>
-                <div class="pulsing-dot"></div>
-            </div>
-            <p class="header-subtitle">Mobile-first PWA: Gmail inbox voice processing with persistent session bookmarks</p>
+      <!-- Header -->
+      <div class="header">
+        <div class="header-title">
+          <h1>MailFlow Architecture</h1>
+          <div class="pulsing-dot"></div>
+        </div>
+        <p class="header-subtitle">
+          Mobile-first PWA: Gmail inbox voice processing with persistent session
+          bookmarks
+        </p>
+      </div>
+
+      <!-- Diagram -->
+      <div class="diagram-card">
+        <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+          <!-- Grid Pattern -->
+          <defs>
+            <pattern
+              id="grid"
+              width="40"
+              height="40"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 40 0 L 0 0 0 40"
+                fill="none"
+                stroke="#1e293b"
+                stroke-width="0.5"
+              />
+            </pattern>
+
+            <!-- Arrowheads -->
+            <marker
+              id="arrowhead-cyan"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3, 0 6" fill="#22d3ee" />
+            </marker>
+            <marker
+              id="arrowhead-emerald"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3, 0 6" fill="#34d399" />
+            </marker>
+            <marker
+              id="arrowhead-violet"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3, 0 6" fill="#a78bfa" />
+            </marker>
+            <marker
+              id="arrowhead-amber"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3, 0 6" fill="#fbbf24" />
+            </marker>
+          </defs>
+
+          <!-- Background -->
+          <rect width="1200" height="800" fill="#020617" />
+          <rect width="1200" height="800" fill="url(#grid)" />
+
+          <!-- Layer Labels -->
+          <text
+            x="20"
+            y="40"
+            font-size="11"
+            font-weight="500"
+            fill="#64748b"
+            text-anchor="start"
+          >
+            CLIENT
+          </text>
+          <text
+            x="20"
+            y="200"
+            font-size="11"
+            font-weight="500"
+            fill="#64748b"
+            text-anchor="start"
+          >
+            SERVER
+          </text>
+          <text
+            x="20"
+            y="500"
+            font-size="11"
+            font-weight="500"
+            fill="#64748b"
+            text-anchor="start"
+          >
+            EXTERNAL
+          </text>
+
+          <!-- ============ CLIENT LAYER ============ -->
+          <!-- Browser/PWA -->
+          <rect
+            x="60"
+            y="60"
+            width="160"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#22d3ee"
+            stroke-width="1.5"
+          />
+          <rect
+            x="62"
+            y="62"
+            width="156"
+            height="56"
+            rx="6"
+            fill="rgba(8, 51, 68, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="140"
+            y="95"
+            font-size="12"
+            font-weight="500"
+            fill="#22d3ee"
+            text-anchor="middle"
+          >
+            Browser / PWA
+          </text>
+
+          <!-- Mic Audio Worklet -->
+          <rect
+            x="280"
+            y="60"
+            width="160"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#22d3ee"
+            stroke-width="1.5"
+          />
+          <rect
+            x="282"
+            y="62"
+            width="156"
+            height="56"
+            rx="6"
+            fill="rgba(8, 51, 68, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="360"
+            y="85"
+            font-size="12"
+            font-weight="500"
+            fill="#22d3ee"
+            text-anchor="middle"
+          >
+            Audio Capture
+          </text>
+          <text
+            x="360"
+            y="102"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (pcm-worklet)
+          </text>
+
+          <!-- Service Worker -->
+          <rect
+            x="500"
+            y="60"
+            width="160"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#22d3ee"
+            stroke-width="1.5"
+          />
+          <rect
+            x="502"
+            y="62"
+            width="156"
+            height="56"
+            rx="6"
+            fill="rgba(8, 51, 68, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="580"
+            y="85"
+            font-size="12"
+            font-weight="500"
+            fill="#22d3ee"
+            text-anchor="middle"
+          >
+            Service Worker
+          </text>
+          <text
+            x="580"
+            y="102"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (Offline, Cache)
+          </text>
+
+          <!-- React Hooks -->
+          <rect
+            x="720"
+            y="60"
+            width="160"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#22d3ee"
+            stroke-width="1.5"
+          />
+          <rect
+            x="722"
+            y="62"
+            width="156"
+            height="56"
+            rx="6"
+            fill="rgba(8, 51, 68, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="800"
+            y="95"
+            font-size="12"
+            font-weight="500"
+            fill="#22d3ee"
+            text-anchor="middle"
+          >
+            React Hooks
+          </text>
+          <text
+            x="800"
+            y="113"
+            font-size="8"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (useVoiceSession, etc.)
+          </text>
+
+          <!-- ============ SERVER LAYER (Next.js) ============ -->
+          <!-- Proxy/Auth Gate -->
+          <rect
+            x="60"
+            y="220"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#34d399"
+            stroke-width="1.5"
+          />
+          <rect
+            x="62"
+            y="222"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(6, 78, 59, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="130"
+            y="250"
+            font-size="12"
+            font-weight="500"
+            fill="#34d399"
+            text-anchor="middle"
+          >
+            proxy.ts
+          </text>
+          <text
+            x="130"
+            y="267"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (Auth Gate)
+          </text>
+
+          <!-- App Router Pages -->
+          <rect
+            x="240"
+            y="220"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#34d399"
+            stroke-width="1.5"
+          />
+          <rect
+            x="242"
+            y="222"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(6, 78, 59, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="310"
+            y="245"
+            font-size="12"
+            font-weight="500"
+            fill="#34d399"
+            text-anchor="middle"
+          >
+            App Router
+          </text>
+          <text
+            x="310"
+            y="267"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (/listen, /home, etc.)
+          </text>
+
+          <!-- API Routes -->
+          <rect
+            x="420"
+            y="220"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#34d399"
+            stroke-width="1.5"
+          />
+          <rect
+            x="422"
+            y="222"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(6, 78, 59, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="490"
+            y="250"
+            font-size="12"
+            font-weight="500"
+            fill="#34d399"
+            text-anchor="middle"
+          >
+            API Routes
+          </text>
+          <text
+            x="490"
+            y="267"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (/api/session, /api/stt)
+          </text>
+
+          <!-- Domain Layer (lib/) -->
+          <rect
+            x="600"
+            y="220"
+            width="160"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#34d399"
+            stroke-width="1.5"
+          />
+          <rect
+            x="602"
+            y="222"
+            width="156"
+            height="56"
+            rx="6"
+            fill="rgba(6, 78, 59, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="680"
+            y="240"
+            font-size="12"
+            font-weight="500"
+            fill="#34d399"
+            text-anchor="middle"
+          >
+            lib/ Domain Layer
+          </text>
+          <text
+            x="680"
+            y="258"
+            font-size="8"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (auth, db, gmail, voice,
+          </text>
+          <text
+            x="680"
+            y="268"
+            font-size="8"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            bookmark, actions)
+          </text>
+
+          <!-- Next.js Middleware -->
+          <rect
+            x="800"
+            y="220"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#34d399"
+            stroke-width="1.5"
+          />
+          <rect
+            x="802"
+            y="222"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(6, 78, 59, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="870"
+            y="245"
+            font-size="12"
+            font-weight="500"
+            fill="#34d399"
+            text-anchor="middle"
+          >
+            Tailwind CSS
+          </text>
+          <text
+            x="870"
+            y="267"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (Styling, v4)
+          </text>
+
+          <!-- ============ DATA LAYER ============ -->
+          <!-- MongoDB -->
+          <rect
+            x="100"
+            y="380"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#a78bfa"
+            stroke-width="1.5"
+          />
+          <rect
+            x="102"
+            y="382"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(76, 29, 149, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="170"
+            y="410"
+            font-size="12"
+            font-weight="500"
+            fill="#a78bfa"
+            text-anchor="middle"
+          >
+            MongoDB
+          </text>
+          <text
+            x="170"
+            y="427"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (User data, sessions)
+          </text>
+
+          <!-- Session Bookmark Store -->
+          <rect
+            x="300"
+            y="380"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#a78bfa"
+            stroke-width="1.5"
+          />
+          <rect
+            x="302"
+            y="382"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(76, 29, 149, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="370"
+            y="410"
+            font-size="12"
+            font-weight="500"
+            fill="#a78bfa"
+            text-anchor="middle"
+          >
+            Bookmarks
+          </text>
+          <text
+            x="370"
+            y="427"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (Session progress)
+          </text>
+
+          <!-- Token Encryption -->
+          <rect
+            x="500"
+            y="380"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#a78bfa"
+            stroke-width="1.5"
+          />
+          <rect
+            x="502"
+            y="382"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(76, 29, 149, 0.4)"
+            stroke="none"
+          />
+          <text
+            x="570"
+            y="410"
+            font-size="12"
+            font-weight="500"
+            fill="#a78bfa"
+            text-anchor="middle"
+          >
+            Token Store
+          </text>
+          <text
+            x="570"
+            y="427"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (Gmail + OpenAI keys)
+          </text>
+
+          <!-- ============ EXTERNAL SERVICES ============ -->
+          <!-- Gmail API -->
+          <rect
+            x="100"
+            y="540"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#fbbf24"
+            stroke-width="1.5"
+          />
+          <rect
+            x="102"
+            y="542"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(120, 53, 15, 0.3)"
+            stroke="none"
+          />
+          <text
+            x="170"
+            y="570"
+            font-size="12"
+            font-weight="500"
+            fill="#fbbf24"
+            text-anchor="middle"
+          >
+            Gmail API
+          </text>
+          <text
+            x="170"
+            y="587"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (googleapis)
+          </text>
+
+          <!-- Google OAuth -->
+          <rect
+            x="300"
+            y="540"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#fbbf24"
+            stroke-width="1.5"
+          />
+          <rect
+            x="302"
+            y="542"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(120, 53, 15, 0.3)"
+            stroke="none"
+          />
+          <text
+            x="370"
+            y="570"
+            font-size="12"
+            font-weight="500"
+            fill="#fbbf24"
+            text-anchor="middle"
+          >
+            Google OAuth
+          </text>
+          <text
+            x="370"
+            y="587"
+            font-size="9"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (Auth.js / NextAuth)
+          </text>
+
+          <!-- OpenAI API -->
+          <rect
+            x="500"
+            y="540"
+            width="140"
+            height="60"
+            rx="6"
+            fill="#0f172a"
+            stroke="#fbbf24"
+            stroke-width="1.5"
+          />
+          <rect
+            x="502"
+            y="542"
+            width="136"
+            height="56"
+            rx="6"
+            fill="rgba(120, 53, 15, 0.3)"
+            stroke="none"
+          />
+          <text
+            x="570"
+            y="555"
+            font-size="12"
+            font-weight="500"
+            fill="#fbbf24"
+            text-anchor="middle"
+          >
+            OpenAI API
+          </text>
+          <text
+            x="570"
+            y="572"
+            font-size="8"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            (TTS, STT, Reply
+          </text>
+          <text
+            x="570"
+            y="583"
+            font-size="8"
+            fill="#cbd5e1"
+            text-anchor="middle"
+          >
+            Cleanup)
+          </text>
+
+          <!-- ============ ARROWS / FLOWS ============ -->
+          <!-- Browser to Server -->
+          <line
+            x1="220"
+            y1="90"
+            x2="200"
+            y2="250"
+            stroke="#22d3ee"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-cyan)"
+          />
+
+          <!-- Proxy to API Routes -->
+          <line
+            x1="200"
+            y1="250"
+            x2="420"
+            y2="250"
+            stroke="#34d399"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-emerald)"
+          />
+
+          <!-- Proxy to App Router -->
+          <line
+            x1="200"
+            y1="250"
+            x2="310"
+            y2="250"
+            stroke="#34d399"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-emerald)"
+          />
+
+          <!-- API Routes to Domain Layer -->
+          <line
+            x1="560"
+            y1="250"
+            x2="620"
+            y2="250"
+            stroke="#34d399"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-emerald)"
+          />
+
+          <!-- App Router to Domain Layer -->
+          <line
+            x1="380"
+            y1="250"
+            x2="620"
+            y2="250"
+            stroke="#34d399"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-emerald)"
+          />
+
+          <!-- Domain Layer to MongoDB -->
+          <line
+            x1="640"
+            y1="280"
+            x2="170"
+            y2="380"
+            stroke="#a78bfa"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-violet)"
+          />
+
+          <!-- Domain Layer to Bookmarks -->
+          <line
+            x1="660"
+            y1="280"
+            x2="370"
+            y2="380"
+            stroke="#a78bfa"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-violet)"
+          />
+
+          <!-- Domain Layer to Token Store -->
+          <line
+            x1="680"
+            y1="280"
+            x2="570"
+            y2="380"
+            stroke="#a78bfa"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-violet)"
+          />
+
+          <!-- Domain Layer to Gmail API -->
+          <line
+            x1="620"
+            y1="280"
+            x2="170"
+            y2="540"
+            stroke="#fbbf24"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-amber)"
+          />
+
+          <!-- Domain Layer to Google OAuth -->
+          <line
+            x1="650"
+            y1="280"
+            x2="370"
+            y2="540"
+            stroke="#fbbf24"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-amber)"
+          />
+
+          <!-- Domain Layer to OpenAI API -->
+          <line
+            x1="680"
+            y1="280"
+            x2="570"
+            y2="540"
+            stroke="#fbbf24"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-amber)"
+          />
+
+          <!-- Audio Capture to STT -->
+          <line
+            x1="360"
+            y1="120"
+            x2="380"
+            y2="220"
+            stroke="#22d3ee"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-cyan)"
+            stroke-dasharray="4,4"
+          />
+
+          <!-- Service Worker (offline caching) -->
+          <line
+            x1="580"
+            y1="120"
+            x2="500"
+            y2="220"
+            stroke="#22d3ee"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-cyan)"
+            stroke-dasharray="4,4"
+          />
+
+          <!-- React Hooks -->
+          <line
+            x1="800"
+            y1="120"
+            x2="750"
+            y2="220"
+            stroke="#22d3ee"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead-cyan)"
+            stroke-dasharray="4,4"
+          />
+
+          <!-- Legend -->
+          <text x="50" y="720" font-size="11" font-weight="500" fill="#64748b">
+            LEGEND:
+          </text>
+
+          <rect
+            x="50"
+            y="735"
+            width="12"
+            height="12"
+            rx="2"
+            fill="rgba(8, 51, 68, 0.4)"
+            stroke="#22d3ee"
+            stroke-width="1"
+          />
+          <text x="70" y="744" font-size="10" fill="#cbd5e1">
+            Frontend / Client
+          </text>
+
+          <rect
+            x="280"
+            y="735"
+            width="12"
+            height="12"
+            rx="2"
+            fill="rgba(6, 78, 59, 0.4)"
+            stroke="#34d399"
+            stroke-width="1"
+          />
+          <text x="300" y="744" font-size="10" fill="#cbd5e1">
+            Backend / API
+          </text>
+
+          <rect
+            x="500"
+            y="735"
+            width="12"
+            height="12"
+            rx="2"
+            fill="rgba(76, 29, 149, 0.4)"
+            stroke="#a78bfa"
+            stroke-width="1"
+          />
+          <text x="520" y="744" font-size="10" fill="#cbd5e1">
+            Database / Storage
+          </text>
+
+          <rect
+            x="750"
+            y="735"
+            width="12"
+            height="12"
+            rx="2"
+            fill="rgba(120, 53, 15, 0.3)"
+            stroke="#fbbf24"
+            stroke-width="1"
+          />
+          <text x="770" y="744" font-size="10" fill="#cbd5e1">
+            External Services
+          </text>
+        </svg>
+      </div>
+
+      <!-- Info Cards -->
+      <div class="info-grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-dot cyan"></div>
+            <h3>Frontend Stack</h3>
+          </div>
+          <ul>
+            <li>Next.js 16 (App Router, Turbopack)</li>
+            <li>React 19 with custom hooks</li>
+            <li>Tailwind CSS v4 styling</li>
+            <li>Service Worker (offline support)</li>
+            <li>PCM Worklet (audio capture)</li>
+          </ul>
         </div>
 
-        <!-- Diagram -->
-        <div class="diagram-card">
-            <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
-                <!-- Grid Pattern -->
-                <defs>
-                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
-                    </pattern>
-                    
-                    <!-- Arrowheads -->
-                    <marker id="arrowhead-cyan" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                        <polygon points="0 0, 10 3, 0 6" fill="#22d3ee" />
-                    </marker>
-                    <marker id="arrowhead-emerald" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                        <polygon points="0 0, 10 3, 0 6" fill="#34d399" />
-                    </marker>
-                    <marker id="arrowhead-violet" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                        <polygon points="0 0, 10 3, 0 6" fill="#a78bfa" />
-                    </marker>
-                    <marker id="arrowhead-amber" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                        <polygon points="0 0, 10 3, 0 6" fill="#fbbf24" />
-                    </marker>
-                </defs>
-
-                <!-- Background -->
-                <rect width="1200" height="800" fill="#020617"/>
-                <rect width="1200" height="800" fill="url(#grid)"/>
-
-                <!-- Layer Labels -->
-                <text x="20" y="40" font-size="11" font-weight="500" fill="#64748b" text-anchor="start">CLIENT</text>
-                <text x="20" y="200" font-size="11" font-weight="500" fill="#64748b" text-anchor="start">SERVER</text>
-                <text x="20" y="500" font-size="11" font-weight="500" fill="#64748b" text-anchor="start">EXTERNAL</text>
-
-                <!-- ============ CLIENT LAYER ============ -->
-                <!-- Browser/PWA -->
-                <rect x="60" y="60" width="160" height="60" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1.5"/>
-                <rect x="62" y="62" width="156" height="56" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="none"/>
-                <text x="140" y="95" font-size="12" font-weight="500" fill="#22d3ee" text-anchor="middle">Browser / PWA</text>
-
-                <!-- Mic Audio Worklet -->
-                <rect x="280" y="60" width="160" height="60" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1.5"/>
-                <rect x="282" y="62" width="156" height="56" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="none"/>
-                <text x="360" y="85" font-size="12" font-weight="500" fill="#22d3ee" text-anchor="middle">Audio Capture</text>
-                <text x="360" y="102" font-size="9" fill="#cbd5e1" text-anchor="middle">(pcm-worklet)</text>
-
-                <!-- Service Worker -->
-                <rect x="500" y="60" width="160" height="60" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1.5"/>
-                <rect x="502" y="62" width="156" height="56" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="none"/>
-                <text x="580" y="85" font-size="12" font-weight="500" fill="#22d3ee" text-anchor="middle">Service Worker</text>
-                <text x="580" y="102" font-size="9" fill="#cbd5e1" text-anchor="middle">(Offline, Cache)</text>
-
-                <!-- React Hooks -->
-                <rect x="720" y="60" width="160" height="60" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1.5"/>
-                <rect x="722" y="62" width="156" height="56" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="none"/>
-                <text x="800" y="95" font-size="12" font-weight="500" fill="#22d3ee" text-anchor="middle">React Hooks</text>
-                <text x="800" y="113" font-size="8" fill="#cbd5e1" text-anchor="middle">(useVoiceSession, etc.)</text>
-
-                <!-- ============ SERVER LAYER (Next.js) ============ -->
-                <!-- Proxy/Auth Gate -->
-                <rect x="60" y="220" width="140" height="60" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.5"/>
-                <rect x="62" y="222" width="136" height="56" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="none"/>
-                <text x="130" y="250" font-size="12" font-weight="500" fill="#34d399" text-anchor="middle">proxy.ts</text>
-                <text x="130" y="267" font-size="9" fill="#cbd5e1" text-anchor="middle">(Auth Gate)</text>
-
-                <!-- App Router Pages -->
-                <rect x="240" y="220" width="140" height="60" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.5"/>
-                <rect x="242" y="222" width="136" height="56" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="none"/>
-                <text x="310" y="245" font-size="12" font-weight="500" fill="#34d399" text-anchor="middle">App Router</text>
-                <text x="310" y="267" font-size="9" fill="#cbd5e1" text-anchor="middle">(/listen, /home, etc.)</text>
-
-                <!-- API Routes -->
-                <rect x="420" y="220" width="140" height="60" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.5"/>
-                <rect x="422" y="222" width="136" height="56" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="none"/>
-                <text x="490" y="250" font-size="12" font-weight="500" fill="#34d399" text-anchor="middle">API Routes</text>
-                <text x="490" y="267" font-size="9" fill="#cbd5e1" text-anchor="middle">(/api/session, /api/stt)</text>
-
-                <!-- Domain Layer (lib/) -->
-                <rect x="600" y="220" width="160" height="60" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.5"/>
-                <rect x="602" y="222" width="156" height="56" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="none"/>
-                <text x="680" y="240" font-size="12" font-weight="500" fill="#34d399" text-anchor="middle">lib/ Domain Layer</text>
-                <text x="680" y="258" font-size="8" fill="#cbd5e1" text-anchor="middle">(auth, db, gmail, voice,</text>
-                <text x="680" y="268" font-size="8" fill="#cbd5e1" text-anchor="middle">bookmark, actions)</text>
-
-                <!-- Next.js Middleware -->
-                <rect x="800" y="220" width="140" height="60" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.5"/>
-                <rect x="802" y="222" width="136" height="56" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="none"/>
-                <text x="870" y="245" font-size="12" font-weight="500" fill="#34d399" text-anchor="middle">Tailwind CSS</text>
-                <text x="870" y="267" font-size="9" fill="#cbd5e1" text-anchor="middle">(Styling, v4)</text>
-
-                <!-- ============ DATA LAYER ============ -->
-                <!-- MongoDB -->
-                <rect x="100" y="380" width="140" height="60" rx="6" fill="#0f172a" stroke="#a78bfa" stroke-width="1.5"/>
-                <rect x="102" y="382" width="136" height="56" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="none"/>
-                <text x="170" y="410" font-size="12" font-weight="500" fill="#a78bfa" text-anchor="middle">MongoDB</text>
-                <text x="170" y="427" font-size="9" fill="#cbd5e1" text-anchor="middle">(User data, sessions)</text>
-
-                <!-- Session Bookmark Store -->
-                <rect x="300" y="380" width="140" height="60" rx="6" fill="#0f172a" stroke="#a78bfa" stroke-width="1.5"/>
-                <rect x="302" y="382" width="136" height="56" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="none"/>
-                <text x="370" y="410" font-size="12" font-weight="500" fill="#a78bfa" text-anchor="middle">Bookmarks</text>
-                <text x="370" y="427" font-size="9" fill="#cbd5e1" text-anchor="middle">(Session progress)</text>
-
-                <!-- Token Encryption -->
-                <rect x="500" y="380" width="140" height="60" rx="6" fill="#0f172a" stroke="#a78bfa" stroke-width="1.5"/>
-                <rect x="502" y="382" width="136" height="56" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="none"/>
-                <text x="570" y="410" font-size="12" font-weight="500" fill="#a78bfa" text-anchor="middle">Token Store</text>
-                <text x="570" y="427" font-size="9" fill="#cbd5e1" text-anchor="middle">(Gmail + OpenAI keys)</text>
-
-                <!-- ============ EXTERNAL SERVICES ============ -->
-                <!-- Gmail API -->
-                <rect x="100" y="540" width="140" height="60" rx="6" fill="#0f172a" stroke="#fbbf24" stroke-width="1.5"/>
-                <rect x="102" y="542" width="136" height="56" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="none"/>
-                <text x="170" y="570" font-size="12" font-weight="500" fill="#fbbf24" text-anchor="middle">Gmail API</text>
-                <text x="170" y="587" font-size="9" fill="#cbd5e1" text-anchor="middle">(googleapis)</text>
-
-                <!-- Google OAuth -->
-                <rect x="300" y="540" width="140" height="60" rx="6" fill="#0f172a" stroke="#fbbf24" stroke-width="1.5"/>
-                <rect x="302" y="542" width="136" height="56" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="none"/>
-                <text x="370" y="570" font-size="12" font-weight="500" fill="#fbbf24" text-anchor="middle">Google OAuth</text>
-                <text x="370" y="587" font-size="9" fill="#cbd5e1" text-anchor="middle">(Auth.js / NextAuth)</text>
-
-                <!-- OpenAI API -->
-                <rect x="500" y="540" width="140" height="60" rx="6" fill="#0f172a" stroke="#fbbf24" stroke-width="1.5"/>
-                <rect x="502" y="542" width="136" height="56" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="none"/>
-                <text x="570" y="555" font-size="12" font-weight="500" fill="#fbbf24" text-anchor="middle">OpenAI API</text>
-                <text x="570" y="572" font-size="8" fill="#cbd5e1" text-anchor="middle">(TTS, STT, Reply</text>
-                <text x="570" y="583" font-size="8" fill="#cbd5e1" text-anchor="middle">Cleanup)</text>
-
-                <!-- ============ ARROWS / FLOWS ============ -->
-                <!-- Browser to Server -->
-                <line x1="220" y1="90" x2="200" y2="250" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)"/>
-                
-                <!-- Proxy to API Routes -->
-                <line x1="200" y1="250" x2="420" y2="250" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
-                
-                <!-- Proxy to App Router -->
-                <line x1="200" y1="250" x2="310" y2="250" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
-                
-                <!-- API Routes to Domain Layer -->
-                <line x1="560" y1="250" x2="620" y2="250" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
-
-                <!-- App Router to Domain Layer -->
-                <line x1="380" y1="250" x2="620" y2="250" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
-
-                <!-- Domain Layer to MongoDB -->
-                <line x1="640" y1="280" x2="170" y2="380" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead-violet)"/>
-
-                <!-- Domain Layer to Bookmarks -->
-                <line x1="660" y1="280" x2="370" y2="380" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead-violet)"/>
-
-                <!-- Domain Layer to Token Store -->
-                <line x1="680" y1="280" x2="570" y2="380" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead-violet)"/>
-
-                <!-- Domain Layer to Gmail API -->
-                <line x1="620" y1="280" x2="170" y2="540" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead-amber)"/>
-
-                <!-- Domain Layer to Google OAuth -->
-                <line x1="650" y1="280" x2="370" y2="540" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead-amber)"/>
-
-                <!-- Domain Layer to OpenAI API -->
-                <line x1="680" y1="280" x2="570" y2="540" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead-amber)"/>
-
-                <!-- Audio Capture to STT -->
-                <line x1="360" y1="120" x2="380" y2="220" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)" stroke-dasharray="4,4"/>
-
-                <!-- Service Worker (offline caching) -->
-                <line x1="580" y1="120" x2="500" y2="220" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)" stroke-dasharray="4,4"/>
-
-                <!-- React Hooks -->
-                <line x1="800" y1="120" x2="750" y2="220" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)" stroke-dasharray="4,4"/>
-
-                <!-- Legend -->
-                <text x="50" y="720" font-size="11" font-weight="500" fill="#64748b">LEGEND:</text>
-                
-                <rect x="50" y="735" width="12" height="12" rx="2" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1"/>
-                <text x="70" y="744" font-size="10" fill="#cbd5e1">Frontend / Client</text>
-                
-                <rect x="280" y="735" width="12" height="12" rx="2" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1"/>
-                <text x="300" y="744" font-size="10" fill="#cbd5e1">Backend / API</text>
-                
-                <rect x="500" y="735" width="12" height="12" rx="2" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1"/>
-                <text x="520" y="744" font-size="10" fill="#cbd5e1">Database / Storage</text>
-                
-                <rect x="750" y="735" width="12" height="12" rx="2" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1"/>
-                <text x="770" y="744" font-size="10" fill="#cbd5e1">External Services</text>
-            </svg>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-dot emerald"></div>
+            <h3>Backend Stack</h3>
+          </div>
+          <ul>
+            <li>Next.js API Routes (Node.js)</li>
+            <li>Auth.js v5 (NextAuth)</li>
+            <li>Domain Layer (lib/)</li>
+            <li>Edge Middleware (proxy.ts)</li>
+            <li>Token encryption (AES-256-GCM)</li>
+          </ul>
         </div>
 
-        <!-- Info Cards -->
-        <div class="info-grid">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-dot cyan"></div>
-                    <h3>Frontend Stack</h3>
-                </div>
-                <ul>
-                    <li>Next.js 16 (App Router, Turbopack)</li>
-                    <li>React 19 with custom hooks</li>
-                    <li>Tailwind CSS v4 styling</li>
-                    <li>Service Worker (offline support)</li>
-                    <li>PCM Worklet (audio capture)</li>
-                </ul>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-dot emerald"></div>
-                    <h3>Backend Stack</h3>
-                </div>
-                <ul>
-                    <li>Next.js API Routes (Node.js)</li>
-                    <li>Auth.js v5 (NextAuth)</li>
-                    <li>Domain Layer (lib/)</li>
-                    <li>Edge Middleware (proxy.ts)</li>
-                    <li>Token encryption (AES-256-GCM)</li>
-                </ul>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-dot violet"></div>
-                    <h3>Data & External</h3>
-                </div>
-                <ul>
-                    <li>MongoDB (user data, sessions)</li>
-                    <li>Session bookmarks (progress)</li>
-                    <li>Gmail API (googleapis)</li>
-                    <li>OpenAI API (TTS, STT, cleanup)</li>
-                    <li>Google OAuth (authentication)</li>
-                </ul>
-            </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-dot violet"></div>
+            <h3>Data & External</h3>
+          </div>
+          <ul>
+            <li>MongoDB (user data, sessions)</li>
+            <li>Session bookmarks (progress)</li>
+            <li>Gmail API (googleapis)</li>
+            <li>OpenAI API (TTS, STT, cleanup)</li>
+            <li>Google OAuth (authentication)</li>
+          </ul>
         </div>
+      </div>
 
-        <!-- Footer -->
-        <div class="footer">
-            <p>MailFlow Architecture Diagram • Generated 2026-07-20 • Mobile-first PWA for voice-driven Gmail processing</p>
-        </div>
+      <!-- Footer -->
+      <div class="footer">
+        <p>
+          MailFlow Architecture Diagram • Generated 2026-07-20 • Mobile-first
+          PWA for voice-driven Gmail processing
+        </p>
+      </div>
     </div>
-</body>
+  </body>
 </html>
