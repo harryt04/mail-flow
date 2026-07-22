@@ -41,6 +41,7 @@ task → file lookup table.
 | [proxy-and-routing.md](./proxy-and-routing.md) | Auth gating and locale detection at the edge (`src/proxy.ts`) |
 | [public-assets.md](./public-assets.md) | The mic-audio worklet and the service worker |
 | [testing.md](./testing.md) | Running unit/component tests (Vitest) and e2e tests (Playwright) |
+| [hermes-kanban.md](./hermes-kanban.md) | Hermes Kanban ops: tenant `mail-flow`, jarvis/coder roles, PR + review-required flow |
 
 ## Other docs in this repo
 `mvp-docs/` holds pre-implementation planning docs (PRD, brand guide, provider analysis,
