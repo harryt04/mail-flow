@@ -4,3 +4,7 @@ node_modules
 dist
 build
 .claude/*
+# generated test / report artifacts (prevent ci prettier failures after e2e runs)
+playwright-report
+test-results
+coverage
