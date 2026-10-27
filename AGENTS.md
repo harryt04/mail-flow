@@ -16,4 +16,4 @@ at that level rather than documenting internal logic line-by-line.
 
 
 # Important
-Before considering your work done, please format/validate by running `npm run prettify; npm run ci`
+Before considering your work done, please format/validate by running `pnpm run prettify; pnpm run ci`

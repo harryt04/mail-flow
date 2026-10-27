@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=24"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "prettify": "prettier --write .",
-    "ci": "prettier --check . && npm run lint && npm run test && npm run build",
+    "ci": "prettier --check . && pnpm run lint && pnpm run test && pnpm run build",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -56,5 +56,6 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.10"
-  }
+  },
+  "packageManager": "pnpm@11.24.0"
 }

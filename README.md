@@ -57,7 +57,7 @@ Full detail on every directory is in [docs/](docs/README.md).
 
 Copy `.env.local.example` to `.env.local` and fill in:
 
-- `AUTH_SECRET` — generate with `npx auth secret`
+- `AUTH_SECRET` — generate with `pnpm dlx auth secret`
 - `NEXTAUTH_URL` — `http://localhost:3000` for local dev
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — from the [Google Cloud Console](https://console.cloud.google.com/apis/credentials); enable the Gmail API and add the `gmail.modify` scope under OAuth consent screen > Scopes; authorized redirect URI is `http://localhost:3000/api/auth/callback/google`
 - `MONGODB_URI` / `MONGODB_DB` — a MongoDB Atlas connection string (`MONGODB_DB` defaults to `mailflow`)
@@ -67,12 +67,12 @@ Copy `.env.local.example` to `.env.local` and fill in:
 Then:
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Other scripts: `npm run build`,
-`npm run start`, `npm run lint`.
+Open [http://localhost:3000](http://localhost:3000). Other scripts: `pnpm run build`,
+`pnpm run start`, `pnpm run lint`.
 
 ## Free trial & BYOK
 
@@ -91,3 +91,15 @@ Contributing? See [CONTRIBUTING.md](CONTRIBUTING.md).
 Read [AGENTS.md](AGENTS.md) — this Next.js version has breaking changes from training-data
 assumptions, and it points to [docs/README.md](docs/README.md) as the first stop before
 exploring the codebase.
+
+## Package manager
+
+Use pnpm 11.24.0, pinned in `package.json`. Install it with
+`npm install --global pnpm@11.24.0` if pnpm is not available.
+Run `pnpm install --frozen-lockfile` after cloning. Commit `pnpm-lock.yaml`
+when dependencies change; do not generate npm or Yarn lockfiles.
+
+## Node.js runtime
+
+Use Node.js 24 for local development, validation, and deployment.
+The runtime is declared in `package.json` and `.nvmrc`.

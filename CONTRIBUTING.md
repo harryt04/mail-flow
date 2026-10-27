@@ -8,7 +8,7 @@ contributor, you don't need a personal OpenAI key just to develop locally: the a
 ## Getting started
 
 1. Fork the repo and clone your fork.
-2. Follow "Getting started" in [README.md](README.md) to set up `.env.local` and run `npm install && npm run dev`.
+2. Follow "Getting started" in [README.md](README.md) to set up `.env.local` and run `pnpm install && pnpm run dev`.
 3. Read [docs/README.md](docs/README.md) before exploring the codebase — it indexes a `docs/`
    tree that mirrors `src/` and answers "where does X live" for most tasks.
 
@@ -18,10 +18,10 @@ contributor, you don't need a personal OpenAI key just to develop locally: the a
 2. Keep changes focused — one logical change per PR.
 3. Before opening a PR, run:
    ```bash
-   npm run prettify
-   npm run ci
+   pnpm run prettify
+   pnpm run ci
    ```
-   `npm run ci` runs formatting checks, lint, tests, and a production build — all must pass.
+   `pnpm run ci` runs formatting checks, lint, tests, and a production build — all must pass.
 4. If your change affects where code lives or how a module works, update the relevant
    `docs/*.md` file in the same change (see [AGENTS.md](AGENTS.md) for the convention).
 
