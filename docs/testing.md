@@ -2,10 +2,10 @@
 
 ## Scripts
 
-- `npm run test` — run unit/component tests once (Vitest)
-- `npm run test:watch` — watch mode for unit/component tests
-- `npm run test:coverage` — run unit/component tests with a v8 coverage report (text + `coverage/` HTML report, gitignored)
-- `npm run test:e2e` — run end-to-end tests (Playwright)
+- `pnpm run test` — run unit/component tests once (Vitest)
+- `pnpm run test:watch` — watch mode for unit/component tests
+- `pnpm run test:coverage` — run unit/component tests with a v8 coverage report (text + `coverage/` HTML report, gitignored)
+- `pnpm run test:e2e` — run end-to-end tests (Playwright)
 
 ## Unit & component tests
 
@@ -71,8 +71,8 @@ test('landing page displays sign-in flow when unauthenticated', async ({ page })
 
 ## CI integration
 
-Per AGENTS.md, run `npm run prettify && npm run ci` before considering work done. The `ci` script runs prettier check, eslint, and vitest.
+Per AGENTS.md, run `pnpm run prettify && pnpm run ci` before considering work done. The `ci` script runs prettier check, eslint, and vitest.
 
-E2E tests are kept separate (`npm run test:e2e`) since they require a built, running server and take longer.
+E2E tests are kept separate (`pnpm run test:e2e`) since they require a built, running server and take longer.
 
-A GitHub Actions workflow (`.github/workflows/ci.yml`) runs `npm run ci` on every push/PR to `master`, so this gate is now enforced automatically as well as locally.
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs `pnpm run ci` on every push/PR to `master`, so this gate is now enforced automatically as well as locally.

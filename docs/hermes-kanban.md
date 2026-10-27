@@ -17,7 +17,7 @@ This is ops process for agents/humans — not application runtime code.
 1. `kanban_show` — read body, parent handoffs, comments, workspace path/branch.
 2. Work only inside `$HERMES_KANBAN_WORKSPACE` (usually a git worktree).
 3. Follow repo conventions: read `docs/` first; for JS/TS changes finish with
-   `npm run prettify && npm run ci`.
+   `pnpm run prettify && pnpm run ci`.
 4. Prefer a small branch + PR over pushing `master` directly. Do not merge.
 5. End the run with exactly one terminator:
    - `kanban_complete` — docs-only / no review needed, or
