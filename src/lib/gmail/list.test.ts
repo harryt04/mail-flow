@@ -111,7 +111,9 @@ describe('buildInboxSnapshot', () => {
     await buildInboxSnapshot(mockGmail, 'all', 'oldest', 'primary', 'Label_123')
 
     const call = (
-      mockGmail.users.messages.list as unknown as Record<string, unknown>
+      mockGmail.users.messages.list as unknown as {
+        mock: { calls: unknown[][] }
+      }
     ).mock.calls[0][0] as Record<string, unknown>
     expect(call.labelIds).toContain('Label_123')
     expect(call.labelIds).not.toContain('CATEGORY_PERSONAL')
