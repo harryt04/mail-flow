@@ -31,7 +31,7 @@ export async function CommandShowcase() {
               />
               <IconMic className="h-7 w-7" />
             </span>
-            <span className="text-label text-text-muted tracking-wide uppercase">
+            <span className="text-label text-text-secondary tracking-wide uppercase">
               {t('listening')}
             </span>
           </div>

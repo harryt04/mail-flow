@@ -24,7 +24,7 @@ export async function HowItWorks() {
               <span className="bg-brand/10 text-brand flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
                 <Icon className="h-5 w-5" />
               </span>
-              <span className="text-label text-text-muted tracking-wide uppercase">
+              <span className="text-label text-text-secondary tracking-wide uppercase">
                 {t('step', { number: i + 1 })}
               </span>
             </div>
