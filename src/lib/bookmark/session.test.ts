@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ObjectId } from 'mongodb'
 import type { gmail_v1 } from 'googleapis'
 import { buildCheckpointResponse } from './session'
-import type { ListeningSessionDoc, SessionWithProgress } from '@/lib/types'
+import type { ListeningSessionDoc } from '@/lib/types'
+import type { SessionWithProgress } from './session'
 
 vi.mock('@/lib/db/collections', () => ({
   sessionsCollection: vi.fn(),
@@ -78,7 +79,9 @@ describe('buildCheckpointResponse', () => {
       }),
     }
     vi.mocked(usersCollection).mockResolvedValue(
-      usersCollectionMock as unknown as typeof usersCollection,
+      usersCollectionMock as unknown as Awaited<
+        ReturnType<typeof usersCollection>
+      >,
     )
 
     const parsedEmail = {
@@ -115,7 +118,9 @@ describe('buildCheckpointResponse', () => {
       }),
     }
     vi.mocked(usersCollection).mockResolvedValue(
-      usersCollectionMock as unknown as typeof usersCollection,
+      usersCollectionMock as unknown as Awaited<
+        ReturnType<typeof usersCollection>
+      >,
     )
 
     // First message (msg-1) has promotions label and should be skipped
@@ -136,21 +141,27 @@ describe('buildCheckpointResponse', () => {
       updateOne: vi.fn().mockResolvedValue({}),
     }
     vi.mocked(sessionsCollection).mockResolvedValue(
-      sessionsCollectionMock as unknown as typeof sessionsCollection,
+      sessionsCollectionMock as unknown as Awaited<
+        ReturnType<typeof sessionsCollection>
+      >,
     )
 
     const bookmarksCollectionMock = {
       updateOne: vi.fn().mockResolvedValue({}),
     }
     vi.mocked(bookmarksCollection).mockResolvedValue(
-      bookmarksCollectionMock as unknown as typeof bookmarksCollection,
+      bookmarksCollectionMock as unknown as Awaited<
+        ReturnType<typeof bookmarksCollection>
+      >,
     )
 
     const logsCollectionMock = {
       insertOne: vi.fn().mockResolvedValue({}),
     }
     vi.mocked(emailActionLogsCollection).mockResolvedValue(
-      logsCollectionMock as unknown as typeof emailActionLogsCollection,
+      logsCollectionMock as unknown as Awaited<
+        ReturnType<typeof emailActionLogsCollection>
+      >,
     )
 
     const parsedEmail = {
@@ -199,7 +210,9 @@ describe('buildCheckpointResponse', () => {
       }),
     }
     vi.mocked(usersCollection).mockResolvedValue(
-      usersCollectionMock as unknown as typeof usersCollection,
+      usersCollectionMock as unknown as Awaited<
+        ReturnType<typeof usersCollection>
+      >,
     )
 
     // Both messages are promotional, so loop will keep advancing
@@ -233,21 +246,27 @@ describe('buildCheckpointResponse', () => {
       updateOne: vi.fn().mockResolvedValue({}),
     }
     vi.mocked(sessionsCollection).mockResolvedValue(
-      sessionsCollectionMock as unknown as typeof sessionsCollection,
+      sessionsCollectionMock as unknown as Awaited<
+        ReturnType<typeof sessionsCollection>
+      >,
     )
 
     const bookmarksCollectionMock = {
       updateOne: vi.fn().mockResolvedValue({}),
     }
     vi.mocked(bookmarksCollection).mockResolvedValue(
-      bookmarksCollectionMock as unknown as typeof bookmarksCollection,
+      bookmarksCollectionMock as unknown as Awaited<
+        ReturnType<typeof bookmarksCollection>
+      >,
     )
 
     const logsCollectionMock = {
       insertOne: vi.fn().mockResolvedValue({}),
     }
     vi.mocked(emailActionLogsCollection).mockResolvedValue(
-      logsCollectionMock as unknown as typeof emailActionLogsCollection,
+      logsCollectionMock as unknown as Awaited<
+        ReturnType<typeof emailActionLogsCollection>
+      >,
     )
 
     vi.mocked(fetchMessage).mockResolvedValue(
@@ -288,7 +307,9 @@ describe('buildCheckpointResponse', () => {
       }),
     }
     vi.mocked(usersCollection).mockResolvedValue(
-      usersCollectionMock as unknown as typeof usersCollection,
+      usersCollectionMock as unknown as Awaited<
+        ReturnType<typeof usersCollection>
+      >,
     )
 
     const result = await buildCheckpointResponse(mockGmail, userId, progress)
@@ -317,7 +338,9 @@ describe('buildCheckpointResponse', () => {
       }),
     }
     vi.mocked(usersCollection).mockResolvedValue(
-      usersCollectionMock as unknown as typeof usersCollection,
+      usersCollectionMock as unknown as Awaited<
+        ReturnType<typeof usersCollection>
+      >,
     )
 
     // All messages return promotions label
@@ -343,21 +366,27 @@ describe('buildCheckpointResponse', () => {
     })
 
     vi.mocked(sessionsCollection).mockResolvedValue(
-      sessionsCollectionMock as unknown as typeof sessionsCollection,
+      sessionsCollectionMock as unknown as Awaited<
+        ReturnType<typeof sessionsCollection>
+      >,
     )
 
     const bookmarksCollectionMock = {
       updateOne: vi.fn().mockResolvedValue({}),
     }
     vi.mocked(bookmarksCollection).mockResolvedValue(
-      bookmarksCollectionMock as unknown as typeof bookmarksCollection,
+      bookmarksCollectionMock as unknown as Awaited<
+        ReturnType<typeof bookmarksCollection>
+      >,
     )
 
     const logsCollectionMock = {
       insertOne: vi.fn().mockResolvedValue({}),
     }
     vi.mocked(emailActionLogsCollection).mockResolvedValue(
-      logsCollectionMock as unknown as typeof emailActionLogsCollection,
+      logsCollectionMock as unknown as Awaited<
+        ReturnType<typeof emailActionLogsCollection>
+      >,
     )
 
     const parsedEmail = {
