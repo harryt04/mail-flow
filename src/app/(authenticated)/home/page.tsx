@@ -47,14 +47,17 @@ export default async function HomePage() {
       <div className="flex flex-col items-center gap-6">
         <p className="text-body text-text-secondary">{bookmarkStatus}</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/listen">
-            <Button size="lg">{t('startListening')}</Button>
-          </Link>
-          <Link href="/inbox">
-            <Button size="lg" variant="secondary">
-              {t('browseInbox')}
-            </Button>
-          </Link>
+          <Button asChild size="lg">
+            <Link href="/listen">{t('startListening')}</Link>
+          </Button>
+          <Button
+            asChild
+            data-agent-control="navigation"
+            size="lg"
+            variant="secondary"
+          >
+            <Link href="/inbox">{t('browseInbox')}</Link>
+          </Button>
         </div>
       </div>
 

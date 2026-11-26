@@ -45,7 +45,10 @@ export function OnboardingClient() {
   }
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-1 flex-col gap-6 px-6 py-16">
+    <main
+      data-agent-confirm="Account setup"
+      className="mx-auto flex max-w-2xl flex-1 flex-col gap-6 px-6 py-16"
+    >
       <Link
         href="/"
         className="text-body text-text-secondary hover:text-text-primary"
@@ -75,6 +78,7 @@ export function OnboardingClient() {
               {t('apiKeyLabel')}
             </label>
             <input
+              data-agent-secret
               id="apiKey"
               type="password"
               value={apiKey}

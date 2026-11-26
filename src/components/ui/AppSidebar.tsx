@@ -80,7 +80,7 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter data-agent-hidden>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -91,7 +91,7 @@ export function AppSidebar() {
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage
-                      src={user?.image || ''}
+                      src={user?.image || undefined}
                       alt={displayName}
                       className="rounded-lg"
                     />
@@ -120,7 +120,11 @@ export function AppSidebar() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <form action={signOutAction} className="w-full">
+                  <form
+                    data-agent-confirm="Sign out"
+                    action={signOutAction}
+                    className="w-full"
+                  >
                     <button type="submit" className="w-full text-left">
                       {t('signOut')}
                     </button>

@@ -17,3 +17,13 @@ at that level rather than documenting internal logic line-by-line.
 
 # Important
 Before considering your work done, please format/validate by running `pnpm run prettify; pnpm run ci`
+
+## UI SDK
+
+UI SDK supplies unstyled React primitives for keyboard interaction, focus management, accessibility and agent actions. Both packages are beta and exact-pinned. Before changing components, read `node_modules/@ui-sdk/react/docs/llms.txt` and `node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md`. The library postdates model training data. Check each component's installed documentation.
+
+App code imports the wrappers in `src/components/ui`. Add a wrapper around parts from a per-component entry such as `@ui-sdk/react/dialog`. Never run `shadcn add` or regenerate the wrappers, which reintroduces Radix or Base UI. Preserve Tailwind v4 classes, theme tokens and accessible names. MailFlow omits the optional global SDK stylesheet. The SDK owns `data-slot`; use app-specific markers for custom selectors. Connect controlled fields with `value` and `onValueChange` so browser-agent edits reach React. Mount form popups outside forms, and check Escape, focus return and hydration.
+
+The root layout mounts `src/components/providers/AgentBridge.tsx`. WebMCP exposes reads of visible SDK state. Every new interactive control needs a decision in `src/lib/agent/policy.ts` and tests for any new permission. Only explicitly marked home/inbox navigation and inbox search edits are enabled. Keep mail actions, authentication, settings, account changes and irreversible actions denied. Use `data-agent-confirm` to reserve controls for people. Use `data-agent-secret` for private values and `data-agent-hidden` for private content or labels.
+
+Sidebar composition remains local. Its Slot helper and Badge's Slot preserve polymorphic children. Dropdown Menu remains on Radix for the profile menu's slotted Next link and server-action sign-out form, nested menu contracts and tri-state checkboxes (the beta accepts only boolean checked values). Keep the presentational Card, Badge, Skeleton and SVG icons, and the app-specific PWA and account components, in their current roles.

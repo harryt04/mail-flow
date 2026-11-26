@@ -1,3 +1,6 @@
+'use client'
+
+import { Button as SdkButton } from '@ui-sdk/react/button'
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
@@ -30,6 +33,7 @@ interface IconButtonProps
   extends
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof iconButtonVariants> {
+  onClick?: React.MouseEventHandler<HTMLElement>
   icon: React.ReactNode
   label: string
 }
@@ -44,15 +48,15 @@ function IconButton({
   ...props
 }: IconButtonProps) {
   return (
-    <button
-      data-slot="icon-button"
+    <SdkButton
+      type={props.type ?? 'submit'}
       aria-label={label}
       title={label}
       className={cn(iconButtonVariants({ variant, size, className }))}
       {...props}
     >
       {icon}
-    </button>
+    </SdkButton>
   )
 }
 

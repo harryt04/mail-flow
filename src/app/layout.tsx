@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import './globals.css'
 import { ThemeScript } from '@/components/ui/ThemeScript'
+import { AgentBridge } from '@/components/providers/AgentBridge'
 import { ServiceWorkerRegister } from '@/components/ui/ServiceWorkerRegister'
 import { SessionProviderClient } from '@/components/providers/SessionProviderClient'
 
@@ -67,6 +68,7 @@ export default async function RootLayout({
       <body className="bg-bg text-text-primary flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SessionProviderClient>{children}</SessionProviderClient>
+          <AgentBridge />
           <ServiceWorkerRegister />
         </NextIntlClientProvider>
       </body>

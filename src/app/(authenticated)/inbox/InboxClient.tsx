@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useFormatter, useTranslations } from 'next-intl'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/Badge'
 import { IconCheck } from '@/components/ui/icons'
 import { translateApiError } from '@/lib/errors/translateApiError'
@@ -260,9 +261,9 @@ export function InboxClient() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-body text-danger">{loadError}</p>
-        <Link href="/home">
-          <Button variant="secondary">{t('backHome')}</Button>
-        </Link>
+        <Button asChild data-agent-control="navigation" variant="secondary">
+          <Link href="/home">{t('backHome')}</Link>
+        </Button>
       </div>
     )
   }
@@ -284,9 +285,9 @@ export function InboxClient() {
         <p className="text-body text-text-secondary">
           {t('noActiveSession.body')}
         </p>
-        <Link href="/home">
-          <Button variant="secondary">{t('backHome')}</Button>
-        </Link>
+        <Button asChild data-agent-control="navigation" variant="secondary">
+          <Link href="/home">{t('backHome')}</Link>
+        </Button>
       </div>
     )
   }
@@ -303,11 +304,13 @@ export function InboxClient() {
             {t('summary', { total, capNote })}
           </p>
         </div>
-        <input
+        <Input
+          aria-label={t('searchPlaceholder')}
+          data-agent-control="inbox-search"
           type="text"
           placeholder={t('searchPlaceholder')}
           value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
+          onValueChange={setSearchInput}
           className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
         />
       </div>
@@ -323,7 +326,12 @@ export function InboxClient() {
             format,
           )
           return (
-            <Card key={item.messageId} className="flex w-full flex-col gap-3">
+            <Card
+              data-agent-secret
+              data-agent-hidden
+              key={item.messageId}
+              className="flex w-full flex-col gap-3"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex flex-wrap items-center gap-2">
