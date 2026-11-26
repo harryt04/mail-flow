@@ -1,12 +1,16 @@
 import { test, expect } from '@playwright/test'
+import messages from '../src/messages/en-US.json'
 
 test('landing page displays sign-in flow when unauthenticated', async ({
   page,
 }) => {
   await page.goto('/')
-  await expect(page.locator('h1')).toContainText('MailFlow')
-  // The landing should have a sign-in button / CTA
-  await expect(
-    page.getByRole('link', { name: /sign in|login|google/i }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    messages.landing.hero.heading,
+  )
+  const buttons = page.getByRole('button', {
+    name: messages.landing.signIn.button,
+  })
+  await expect(buttons).toHaveCount(2)
+  await expect(buttons.first()).toBeVisible()
 })
