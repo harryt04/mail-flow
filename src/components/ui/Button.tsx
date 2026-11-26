@@ -1,5 +1,7 @@
+'use client'
+
+import { Button as SdkButton } from '@ui-sdk/react/button'
 import * as React from 'react'
-import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
@@ -44,6 +46,7 @@ interface ButtonProps
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  onClick?: React.MouseEventHandler<HTMLElement>
   icon?: React.ReactNode
 }
 
@@ -57,16 +60,20 @@ function Button({
   children,
   ...props
 }: ButtonProps) {
-  const Comp = asChild ? Slot : 'button'
+  const child = asChild ? React.Children.only(children) : null
+  const element = React.isValidElement<{ children?: React.ReactNode }>(child)
+    ? child
+    : undefined
   return (
-    <Comp
-      data-slot="button"
+    <SdkButton
+      render={element}
+      type={element ? undefined : (props.type ?? 'submit')}
       className={cn(buttonVariants({ variant, size, fullWidth, className }))}
       {...props}
     >
       {icon}
-      {children}
-    </Comp>
+      {element ? element.props.children : children}
+    </SdkButton>
   )
 }
 

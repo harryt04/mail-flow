@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Avatar as AvatarPrimitive } from 'radix-ui'
+import * as AvatarPrimitive from '@ui-sdk/react/avatar'
 
 import { cn } from '@/lib/utils'
 
@@ -9,12 +9,14 @@ function Avatar({
   className,
   size = 'default',
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root> & {
+}: Omit<React.ComponentProps<typeof AvatarPrimitive.Avatar>, 'className'> & {
+  className?: string
+} & {
   size?: 'default' | 'sm' | 'lg'
 }) {
   return (
-    <AvatarPrimitive.Root
-      data-slot="avatar"
+    <AvatarPrimitive.Avatar
+      data-mailflow-avatar=""
       data-size={size}
       className={cn(
         'group/avatar relative flex size-8 shrink-0 overflow-hidden rounded-full select-none data-[size=lg]:size-10 data-[size=sm]:size-6',
@@ -28,10 +30,12 @@ function Avatar({
 function AvatarImage({
   className,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+}: Omit<
+  React.ComponentProps<typeof AvatarPrimitive.AvatarImage>,
+  'className'
+> & { className?: string }) {
   return (
-    <AvatarPrimitive.Image
-      data-slot="avatar-image"
+    <AvatarPrimitive.AvatarImage
       className={cn('aspect-square size-full', className)}
       {...props}
     />
@@ -39,12 +43,16 @@ function AvatarImage({
 }
 
 function AvatarFallback({
+  delayMs,
   className,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+}: Omit<
+  React.ComponentProps<typeof AvatarPrimitive.AvatarFallback>,
+  'className'
+> & { className?: string; delayMs?: number }) {
   return (
-    <AvatarPrimitive.Fallback
-      data-slot="avatar-fallback"
+    <AvatarPrimitive.AvatarFallback
+      delay={delayMs}
       className={cn(
         'bg-muted text-muted-foreground flex size-full items-center justify-center rounded-full text-sm group-data-[size=sm]/avatar:text-xs',
         className,
@@ -75,7 +83,7 @@ function AvatarGroup({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="avatar-group"
       className={cn(
-        'group/avatar-group *:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2',
+        'group/avatar-group *:data-[mailflow-avatar]:ring-background flex -space-x-2 *:data-[mailflow-avatar]:ring-2',
         className,
       )}
       {...props}

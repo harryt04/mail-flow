@@ -11,6 +11,7 @@ export async function GoogleSignInForm() {
   return (
     <div className="flex flex-col items-center gap-3">
       <form
+        data-agent-confirm="Sign in"
         action={async () => {
           'use server'
           await signIn('google', { redirectTo: '/home' })

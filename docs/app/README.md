@@ -30,3 +30,5 @@ unauthenticated `tos/` and `privacy/` pages live alongside them.
 - A new top-level metadata export (robots.txt, PWA icons, etc.) → follow the `manifest.ts`/`sitemap.ts` pattern (a typed default-export function).
 - A new authenticated page → add a subdirectory under `(authenticated)/`, add its link to `NAV_ITEMS` in `src/components/ui/AppSidebar.tsx`, and add its path to `PROTECTED_PREFIXES`/`config.matcher` in `src/proxy.ts`. It gets the auth gate and sidebar for free from the route group layout — don't re-check `auth()` for redirect purposes or render a header in the page itself.
 - Do not add page-specific logic to the root `layout.tsx` or `page.tsx` beyond what's already there.
+
+The root layout mounts `AgentBridge` from `src/components/providers` to register WebMCP tools. Its action allowlist lives in `src/lib/agent/policy.ts`.

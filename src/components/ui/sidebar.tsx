@@ -187,7 +187,7 @@ function Sidebar({
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent
           data-sidebar="sidebar"
-          data-slot="sidebar"
+          finalFocus='[data-sidebar="trigger"]'
           data-mobile="true"
           className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
           style={
@@ -266,7 +266,7 @@ function SidebarTrigger({
   return (
     <Button
       data-sidebar="trigger"
-      data-slot="sidebar-trigger"
+      type="button"
       variant="ghost"
       size="icon"
       className={cn('size-7', className)}
@@ -328,7 +328,6 @@ function SidebarInput({
 }: React.ComponentProps<typeof Input>) {
   return (
     <Input
-      data-slot="sidebar-input"
       data-sidebar="input"
       className={cn('bg-background h-8 w-full shadow-none', className)}
       {...props}
@@ -364,7 +363,6 @@ function SidebarSeparator({
 }: React.ComponentProps<typeof Separator>) {
   return (
     <Separator
-      data-slot="sidebar-separator"
       data-sidebar="separator"
       className={cn('bg-sidebar-border mx-2 w-auto', className)}
       {...props}

@@ -870,9 +870,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-body text-danger">{error}</p>
-        <Link href="/home">
-          <Button variant="secondary">{t('backHome')}</Button>
-        </Link>
+        <Button asChild data-agent-control="navigation" variant="secondary">
+          <Link href="/home">{t('backHome')}</Link>
+        </Button>
       </div>
     )
   }
@@ -884,9 +884,9 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
           {t('caughtUp.title')}
         </p>
         <p className="text-body text-text-secondary">{t('caughtUp.body')}</p>
-        <Link href="/home">
-          <Button variant="secondary">{t('backHome')}</Button>
-        </Link>
+        <Button asChild data-agent-control="navigation" variant="secondary">
+          <Link href="/home">{t('backHome')}</Link>
+        </Button>
       </div>
     )
   }
@@ -905,7 +905,11 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
       : null
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-6 py-10">
+    <div
+      data-agent-secret
+      data-agent-hidden
+      className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center gap-8 px-6 py-10"
+    >
       <div className="flex items-center gap-3">
         <p className="text-meta text-text-muted">{sessionLabel}</p>
         <Button
