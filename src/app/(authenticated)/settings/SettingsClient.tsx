@@ -441,7 +441,9 @@ export function SettingsClient() {
                 inboxLabelId: value === NO_INBOX_LABEL ? null : value,
               })
             }
-            disabled={saving}
+            // Read-only, not disabled, while saving: a disabled trigger drops
+            // keyboard focus to the page body after every choice.
+            readOnly={saving}
           >
             <SelectLabel className="text-label text-text-secondary mb-2 uppercase">
               {t('inbox.focusOnLabel')}
