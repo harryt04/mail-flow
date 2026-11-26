@@ -1,4 +1,7 @@
-import { Button } from '@/components/ui/Button'
+import {
+  ToggleGroup as UiToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group'
 
 interface Option<T extends string> {
   value: T
@@ -10,6 +13,7 @@ interface CategoryChecklistProps<T extends string> {
   options: Option<T>[]
   onChange: (values: T[]) => void
   disabled?: boolean
+  'aria-label': string
 }
 
 /** Multi-select checklist (unlike ToggleGroup, options aren't mutually exclusive) — used for picking which categories to silently auto-skip while listening. */
@@ -18,34 +22,21 @@ export function CategoryChecklist<T extends string>({
   options,
   onChange,
   disabled,
+  'aria-label': label,
 }: CategoryChecklistProps<T>) {
-  function toggle(value: T) {
-    if (values.includes(value)) {
-      onChange(values.filter((v) => v !== value))
-    } else {
-      onChange([...values, value])
-    }
-  }
-
   return (
-    <div className="flex flex-col gap-2 sm:flex-wrap" role="group">
-      {options.map((option) => {
-        const selected = values.includes(option.value)
-        return (
-          <Button
-            key={option.value}
-            type="button"
-            variant={selected ? 'primary' : 'secondary'}
-            size="sm"
-            aria-pressed={selected}
-            onClick={() => toggle(option.value)}
-            disabled={disabled}
-            className="w-full sm:w-auto"
-          >
-            {option.label}
-          </Button>
-        )
-      })}
-    </div>
+    <UiToggleGroup
+      aria-label={label}
+      disabled={disabled}
+      multiple
+      value={values}
+      onValueChange={onChange}
+    >
+      {options.map((option) => (
+        <ToggleGroupItem key={option.value} value={option.value}>
+          {option.label}
+        </ToggleGroupItem>
+      ))}
+    </UiToggleGroup>
   )
 }

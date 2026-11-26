@@ -26,4 +26,6 @@ App code imports the wrappers in `src/components/ui`. Add a wrapper around parts
 
 The root layout mounts `src/components/providers/AgentBridge.tsx`. WebMCP exposes reads of visible SDK state. Every new interactive control needs a decision in `src/lib/agent/policy.ts` and tests for any new permission. Only explicitly marked home/inbox navigation and inbox search edits are enabled. Keep mail actions, authentication, settings, account changes and irreversible actions denied. Use `data-agent-confirm` to reserve controls for people. Use `data-agent-secret` for private values and `data-agent-hidden` for private content or labels.
 
+Use `toggle-group.tsx`, `select.tsx`, and `textarea.tsx` for grouped choices, popup choices, and multiline text. Settings choices use UI SDK toggle groups that keep focus on the activated item while saving disables the group.
+
 Sidebar uses local layout components and shares the local Slot helper (`src/components/ui/slot.tsx`) with Badge. Dropdown Menu wraps UI SDK Menu. Its tri-state checkbox uses MenuCheckboxItem for interaction and renders mixed ARIA state and a minus indicator for indeterminate values. The UI has no Radix dependencies. Keep the presentational Card, Badge, Skeleton and SVG icons, and the app-specific PWA and account components, in their current roles.

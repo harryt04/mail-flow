@@ -1,5 +1,6 @@
 'use client'
 
+import { Input } from '@/components/ui/input'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -77,15 +78,15 @@ export function OnboardingClient() {
             >
               {t('apiKeyLabel')}
             </label>
-            <input
+            <Input
               data-agent-secret
               id="apiKey"
               type="password"
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onValueChange={setApiKey}
               disabled={saving}
               placeholder={t('apiKeyPlaceholder')}
-              className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
+              className="rounded-card border-border bg-surface-sunken text-body text-text-primary md:text-body dark:bg-surface-sunken h-auto w-full border p-3 shadow-none"
             />
             <p className="text-meta text-text-muted">
               {t('apiKeyEncryptedNote')}

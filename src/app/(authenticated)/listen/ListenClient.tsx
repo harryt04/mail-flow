@@ -1,5 +1,7 @@
 'use client'
 
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
@@ -1015,11 +1017,12 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
               {t('reply.cleaningUpReply')}
             </p>
           )}
-          <textarea
+          <Textarea
             className="rounded-card border-border bg-surface-sunken text-body text-text-primary min-h-32 w-full border p-4"
+            aria-label={t('reply.placeholder')}
             placeholder={t('reply.placeholder')}
             value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
+            onValueChange={setReplyText}
             disabled={busy}
           />
           <div className="flex justify-center gap-3">
@@ -1047,13 +1050,14 @@ export function ListenClient({ initialPlaybackSpeed = 1 }: ListenClientProps) {
               </p>
               {newFolderMode ? (
                 <div className="flex flex-col items-center gap-2">
-                  <input
+                  <Input
                     type="text"
                     autoFocus
-                    className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full max-w-xs border p-3"
+                    className="rounded-card border-border bg-surface-sunken text-body text-text-primary md:text-body dark:bg-surface-sunken h-auto w-full max-w-xs border p-3 shadow-none"
+                    aria-label={t('move.newFolder')}
                     placeholder={t('move.newFolderPlaceholder')}
                     value={newFolderName}
-                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onValueChange={setNewFolderName}
                     disabled={creatingLabel}
                   />
                   {newFolderError && (
