@@ -1,4 +1,7 @@
-import { Button } from '@/components/ui/Button'
+import {
+  ToggleGroup as UiToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group'
 
 interface Option<T extends string> {
   value: T
@@ -10,6 +13,7 @@ interface ToggleGroupProps<T extends string> {
   options: Option<T>[]
   onChange: (value: T) => void
   disabled?: boolean
+  'aria-label': string
 }
 
 export function ToggleGroup<T extends string>({
@@ -17,23 +21,23 @@ export function ToggleGroup<T extends string>({
   options,
   onChange,
   disabled,
+  'aria-label': label,
 }: ToggleGroupProps<T>) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-wrap" role="radiogroup">
+    <UiToggleGroup
+      aria-label={label}
+      disabled={disabled}
+      deselectable={false}
+      value={[value]}
+      onValueChange={([next]) => {
+        if (next !== undefined) onChange(next)
+      }}
+    >
       {options.map((option) => (
-        <Button
-          key={option.value}
-          type="button"
-          variant={value === option.value ? 'primary' : 'secondary'}
-          size="sm"
-          aria-pressed={value === option.value}
-          onClick={() => onChange(option.value)}
-          disabled={disabled}
-          className="w-full sm:w-auto"
-        >
+        <ToggleGroupItem key={option.value} value={option.value}>
           {option.label}
-        </Button>
+        </ToggleGroupItem>
       ))}
-    </div>
+    </UiToggleGroup>
   )
 }

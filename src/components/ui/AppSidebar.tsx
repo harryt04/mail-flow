@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -33,6 +34,7 @@ const NAV_ITEMS = [
 ] as const
 
 export function AppSidebar() {
+  const signOutForm = useRef<HTMLFormElement>(null)
   const pathname = usePathname()
   const { data: session } = useSession()
   const t = useTranslations('nav')
@@ -81,13 +83,14 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter data-agent-hidden>
+        <form ref={signOutForm} action={signOutAction} hidden />
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage
@@ -110,7 +113,8 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
+                className="w-(--anchor-width) min-w-56"
+                data-agent-hidden
                 side="top"
                 align="end"
                 sideOffset={4}
@@ -119,16 +123,11 @@ export function AppSidebar() {
                   <Link href="/settings">{t('settings')}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <form
-                    data-agent-confirm="Sign out"
-                    action={signOutAction}
-                    className="w-full"
-                  >
-                    <button type="submit" className="w-full text-left">
-                      {t('signOut')}
-                    </button>
-                  </form>
+                <DropdownMenuItem
+                  data-agent-confirm="Sign out"
+                  onSelect={() => signOutForm.current?.requestSubmit()}
+                >
+                  {t('signOut')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

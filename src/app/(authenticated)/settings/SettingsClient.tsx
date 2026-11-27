@@ -1,5 +1,15 @@
 'use client'
 
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
@@ -52,8 +62,14 @@ async function fetchSettings(
   return settings
 }
 
+const NO_INBOX_LABEL = '__none__'
+
+type SettingsPatch = Omit<Partial<UserSettings>, 'inboxLabelId'> & {
+  inboxLabelId?: string | null
+}
+
 async function saveSettings(
-  patch: Partial<UserSettings>,
+  patch: SettingsPatch,
   tApiErrors: ApiErrorsTranslator,
   errorMessage: string,
 ): Promise<UserSettings> {
@@ -168,7 +184,7 @@ export function SettingsClient() {
     setTimeout(() => setSavedFlash(false), 1500)
   }
 
-  async function updateSetting(patch: Partial<UserSettings>) {
+  async function updateSetting(patch: SettingsPatch) {
     setSaving(true)
     setError(null)
     try {
@@ -273,6 +289,11 @@ export function SettingsClient() {
     )
   }
 
+  const inboxLabelOptions = [
+    { value: NO_INBOX_LABEL, label: t('inbox.noneUseCategory') },
+    ...availableLabels.map(({ id, name }) => ({ value: id, label: name })),
+  ]
+
   return (
     <div
       data-agent-confirm="Settings changes"
@@ -314,13 +335,14 @@ export function SettingsClient() {
           {!openAIKeyState.hasKey && (
             <>
               <div className="flex flex-col gap-3">
-                <input
+                <Input
+                  aria-label={t('openAiKey.heading')}
                   data-agent-secret
                   type="password"
-                  className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
+                  className="rounded-card border-border bg-surface-sunken text-body text-text-primary md:text-body dark:bg-surface-sunken h-auto w-full border p-3 shadow-none"
                   placeholder={t('openAiKey.placeholder')}
                   value={openAIKeyDraft}
-                  onChange={(e) => setOpenAIKeyDraft(e.target.value)}
+                  onValueChange={setOpenAIKeyDraft}
                   disabled={savingOpenAIKey}
                 />
                 <div>
@@ -363,6 +385,7 @@ export function SettingsClient() {
             {t('inbox.whatToRead')}
           </p>
           <ToggleGroup<InboxScope>
+            aria-label={t('inbox.whatToRead')}
             value={settings.inboxScope}
             options={[
               { value: 'unread', label: t('inbox.unread') },
@@ -378,6 +401,7 @@ export function SettingsClient() {
             {t('inbox.order')}
           </p>
           <ToggleGroup<InboxOrder>
+            aria-label={t('inbox.order')}
             value={settings.inboxOrder}
             options={[
               { value: 'oldest', label: t('inbox.oldestFirst') },
@@ -393,6 +417,7 @@ export function SettingsClient() {
             {t('inbox.category')}
           </p>
           <ToggleGroup<InboxCategory>
+            aria-label={t('inbox.category')}
             value={settings.inboxCategory ?? 'primary'}
             options={[
               { value: 'primary', label: t('inbox.primary') },
@@ -408,26 +433,32 @@ export function SettingsClient() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="text-label text-text-secondary uppercase">
-            {t('inbox.focusOnLabel')}
-          </p>
-          <select
-            className="rounded-card border-border bg-surface-sunken text-body text-text-primary w-full border p-3"
-            value={settings.inboxLabelId ?? ''}
-            onChange={(e) =>
+          <Select
+            items={inboxLabelOptions}
+            value={settings.inboxLabelId ?? NO_INBOX_LABEL}
+            onValueChange={(value) =>
               updateSetting({
-                inboxLabelId: (e.target.value || null) as string | undefined,
+                inboxLabelId: value === NO_INBOX_LABEL ? null : value,
               })
             }
-            disabled={saving}
+            // Read-only, not disabled, while saving: a disabled trigger drops
+            // keyboard focus to the page body after every choice.
+            readOnly={saving}
           >
-            <option value="">{t('inbox.noneUseCategory')}</option>
-            {availableLabels.map((label) => (
-              <option key={label.id} value={label.id}>
-                {label.name}
-              </option>
-            ))}
-          </select>
+            <SelectLabel className="text-label text-text-secondary mb-2 uppercase">
+              {t('inbox.focusOnLabel')}
+            </SelectLabel>
+            <SelectTrigger>
+              <SelectValue className="truncate" />
+            </SelectTrigger>
+            <SelectContent>
+              {inboxLabelOptions.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <p className="text-meta text-text-muted">
@@ -443,6 +474,7 @@ export function SettingsClient() {
           {t('autoSkip.description')}
         </p>
         <CategoryChecklist<InboxCategory>
+          aria-label={t('autoSkip.heading')}
           values={settings.autoSkipCategories ?? []}
           options={[
             { value: 'promotions', label: t('inbox.promotions') },
@@ -463,6 +495,7 @@ export function SettingsClient() {
           {t('playbackSpeed.description')}
         </p>
         <ToggleGroup<string>
+          aria-label={t('playbackSpeed.heading')}
           value={String(settings.playbackSpeed ?? 1)}
           options={PLAYBACK_SPEEDS.map((speed) => ({
             value: String(speed),
@@ -480,6 +513,7 @@ export function SettingsClient() {
           {t('appearance.heading')}
         </h2>
         <ToggleGroup<ThemePreference>
+          aria-label={t('appearance.heading')}
           value={themePreference}
           options={[
             { value: 'system', label: t('appearance.system') },
@@ -498,11 +532,12 @@ export function SettingsClient() {
         <p className="text-body text-text-secondary">
           {t('voiceTone.description')}
         </p>
-        <textarea
+        <Textarea
+          aria-label={t('voiceTone.heading')}
           className="rounded-card border-border bg-surface-sunken text-body text-text-primary min-h-20 w-full border p-4"
           placeholder={t('voiceTone.placeholder')}
           value={voiceToneDraft}
-          onChange={(e) => setVoiceToneDraft(e.target.value)}
+          onValueChange={setVoiceToneDraft}
           disabled={saving}
         />
         <div>
